@@ -1,28 +1,53 @@
-import { computed, effect, reactive } from "@vue/reactivity";
+import { computed, effect, reactive, ref, toRaw, unref, watch } from "@vue/reactivity";
 
-const a = { a: 1 };
-const b = { b: 2 };
-const ra = reactive(a);
-const rb = reactive(b);
+const arr: { funcs?: (() => void)[] } = reactive({});
 
-const result = computed(() => {
-    // 监听
-    ra.a;
-    rb.b;
-
-    // 执行
-    console.log("......");
-    return 0;
+const r = computed(() => {
+    arr.funcs?.forEach(func => func());
 });
 
+function getValue() {
+    r.value;
+}
+
 effect(() => {
-    result.value; 
+    getValue();
+
+    console.log(`,,,,,,,,,,,,,,,,,`);
 })
 
-// result.value;
+arr.funcs = [() => { console.log(1) }, () => { console.log(2) }];
+arr.funcs.push(() => { console.log(3) });
 
-// 修改值
-reactive(a).a = 2;
-// result.value;
-reactive(a).a = 3;
-// result.value;
+// console.log(toRaw(arr) === unref(arr));
+// console.log(arr === ref(arr));
+
+// watch(arr, (newValue, oldValue) => {
+//     console.log(newValue, oldValue);
+// });
+
+// arr.push(4);
+// arr.pop();
+arr[0] = 5;
+// arr[10] = 1;
+
+// arr.a.aa = 2;
+// arr.a.aa = 3;
+// arr.a.aa = 4;
+
+// arr[0] = { a: 1 } as any;
+// arr[0].a = 2;
+// arr[0] = { a: 2 } as any;
+// arr[0] = { a: 2 } as any;
+// arr[0] = { a: 2 } as any;
+
+// console.time();
+// for (let i = 0; i < 10000000; i++) {
+//     arr.forEach(() => {});
+// }
+// console.timeEnd();
+// console.time();
+// for (let i = 0; i < 1000000; i++) {
+//     Object.keys(arr);
+// }
+// console.timeEnd();
