@@ -1,53 +1,73 @@
-import { computed, effect, reactive, ref, toRaw, unref, watch } from "@vue/reactivity";
+import { computed, ComputedRef, effect, reactive, ref } from "@vue/reactivity";
 
-const arr: { funcs?: (() => void)[] } = reactive({});
+let _gpuRenderPipelineDescriptor = {} as any;
+const renderPipeline = {} as any;
 
-const r = computed(() => {
-    arr.funcs?.forEach(func => func());
+const updateVertex = computed(() => {
+    console.log(0);
+    //
+    reactive(renderPipeline).vertex
+
+    //
+    _gpuRenderPipelineDescriptor.vertex = renderPipeline.vertex;
+
+    // 
+    _gpuRenderPipelineDescriptor.dirty = true;
 });
 
-function getValue() {
-    r.value;
+const updateFragment = computed(() => {
+    console.log(1);
+
+    reactive(renderPipeline).fragment
+
+    //
+    _gpuRenderPipelineDescriptor.fragment = renderPipeline.fragment;
+
+    // 
+    _gpuRenderPipelineDescriptor.dirty = true;
+});
+
+const result = computed(() => {
+    console.log(2);
+
+    updateVertex.value;
+    updateFragment.value;
+
+    return _gpuRenderPipelineDescriptor;
+});
+
+function getResult() {
+    if (result.value.dirty) {
+        console.log(`version`, _gpuRenderPipelineDescriptor.version);
+        result.value.dirty = false;
+        result["_"] = Math.random();
+    }
+    return result["_"];
 }
 
-effect(() => {
-    getValue();
+console.log(result.value);
+// console.log(`version`, _gpuRenderPipelineDescriptor.version);
 
-    console.log(`,,,,,,,,,,,,,,,,,`);
-})
+reactive(renderPipeline).vertex = 1;
 
-arr.funcs = [() => { console.log(1) }, () => { console.log(2) }];
-arr.funcs.push(() => { console.log(3) });
+reactive(renderPipeline).vertex = 1;
+console.log(getResult());
 
-// console.log(toRaw(arr) === unref(arr));
-// console.log(arr === ref(arr));
+reactive(renderPipeline).fragment = 1;
+console.log(getResult());
+reactive(renderPipeline).fragment = 1;
+console.log(getResult());
 
-// watch(arr, (newValue, oldValue) => {
-//     console.log(newValue, oldValue);
-// });
-
-// arr.push(4);
-// arr.pop();
-arr[0] = 5;
-// arr[10] = 1;
-
-// arr.a.aa = 2;
-// arr.a.aa = 3;
-// arr.a.aa = 4;
-
-// arr[0] = { a: 1 } as any;
-// arr[0].a = 2;
-// arr[0] = { a: 2 } as any;
-// arr[0] = { a: 2 } as any;
-// arr[0] = { a: 2 } as any;
-
-// console.time();
-// for (let i = 0; i < 10000000; i++) {
-//     arr.forEach(() => {});
-// }
-// console.timeEnd();
-// console.time();
-// for (let i = 0; i < 1000000; i++) {
-//     Object.keys(arr);
-// }
-// console.timeEnd();
+// reactive(renderPipeline).vertex = 2;
+// console.log(create.value);
+// reactive(renderPipeline).vertex = 3;
+// console.log(create.value);
+// console.log(create.value);
+// reactive(renderPipeline).fragment = 2;
+// // console.log(create.value);
+// reactive(renderPipeline).fragment = 2;
+// console.log(create.value);
+// console.log(`version`,_gpuRenderPipelineDescriptor.version);
+// console.log(gpuRenderPipelineDescriptor.value);
+// reactive(renderPipeline).fragment = 3;
+// console.log(gpuRenderPipelineDescriptor.value);
