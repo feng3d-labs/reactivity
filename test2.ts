@@ -1,47 +1,37 @@
-import { computed, ComputedRef, reactive } from "@vue/reactivity";
-
-const a = { a: 1 };
-const b = { a, b: 2 };
-const c = { a, b, c: 3 };
 
 function getA(a: { a: number }) {
+    if (!a) return 0;
 
-    const ca = a["_"] ??= computed(() => {
-        console.log("ca");
-        return reactive(a).a;
-    });
-
-    return ca.value;
+    return a.a;
 }
 
 function getB(b: { a: { a: number, }, b: number }) {
-    const cb = b["_"] ??= computed(() => {
+    if (!b) return 0;
 
-        console.log("cb");
-        return reactive(b).b + getA(b.a);
-
-    });
-    return cb.value;
+    const ba = getA(b.a);
+    return b.b + ba;
 }
 
 function getC(c: { a: { a: number, }, b: { a: { a: number, }, b: number }, c: number }) {
-    let cc: ComputedRef<number> = c["_"];
-    if (cc) return cc.value;
+    if (!c) return 0;
 
-    console.log("getC");
-
-    cc = computed(() => {
-        console.log("cc");
-        return getA(c.a) + getB(c.b) + reactive(c).c;
-    });
-    c["_"] = cc;
-
-    return cc.value;
+    const ca = getA(c.a);
+    const cb = getB(c.b);
+    return ca + cb + c.c;
 }
 
 export function test2(num: number) {
+    const a = { a: 1 };
+    const b = { a, b: 2 };
+    const c = { a, b, c: 3 };
+
+    console.log(getC(c));
+    c.b = null as any;
+    console.log(getC(c));
+
     for (let i = 0; i < num; i++) {
-        reactive(a).a++;
+        a.a++;
+        a.a--;
         getC(c);
     }
 }

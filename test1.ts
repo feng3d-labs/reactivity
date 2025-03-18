@@ -1,47 +1,58 @@
 import { computed, ComputedRef, reactive } from "@vue/reactivity";
-
-const a = { a: 1 };
-const b = { a, b: 2 };
-const c = { a, b, c: 3 };
+import { func } from "./func";
 
 function getA(a: { a: number }) {
-
+    if (!a) return 0;
     const ca = a["_"] ??= computed(() => {
-        console.log("ca");
-        return reactive(a).a;
-    });
+        // 监听
+        reactive(a).a;
 
+        return a.a;
+    });
     return ca.value;
 }
 
 function getB(b: { a: { a: number, }, b: number }) {
+    if (!b) return 0;
     const cb = b["_"] ??= computed(() => {
+        // 监听
+        const rb = reactive(b);
+        rb.a;
+        rb.b;
 
-        console.log("cb");
-        return reactive(b).b + getA(b.a);
-
+        // 计算
+        return b.b + getA(b.a);
     });
     return cb.value;
 }
 
 function getC(c: { a: { a: number, }, b: { a: { a: number, }, b: number }, c: number }) {
-    let cc: ComputedRef<number> = c["_"];
-    if (cc) return cc.value;
+    if (!c) return 0;
+    const cc: ComputedRef<number> = c["_"] ??= computed(() => {
+        // 监听
+        const rc = reactive(c);
+        rc.a;
+        rc.b;
+        rc.c;
 
-    console.log("getC");
-
-    cc = computed(() => {
-        console.log("cc");
-        return getA(c.a) + getB(c.b) + reactive(c).c;
+        // 计算
+        return getA(c.a) + getB(c.b) + c.c;
     });
-    c["_"] = cc;
-
     return cc.value;
 }
 
 export function test1(num: number) {
+    const a = { a: 1 };
+    const b = { a, b: 2 };
+    const c = { a, b, c: 3 };
+
+    console.log(getC(c));
+    reactive(c).b = null as any;
+    console.log(getC(c));
+
     for (let i = 0; i < num; i++) {
         reactive(a).a++;
+        reactive(a).a--;
         getC(c);
     }
 }
