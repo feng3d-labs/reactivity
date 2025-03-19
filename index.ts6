@@ -1,0 +1,41 @@
+const a = { a: 1 };
+
+const map = new Map([
+    [a, 1],
+])
+
+map.set("a", 1);
+
+const count = 1000000;
+
+console.log(a.a);
+console.log(map.get("a"));
+
+let num = 0;
+console.time("a.a");
+for (let i = 0; i < count; i++) {
+    num += a.a;
+}
+console.timeEnd("a.a")
+console.log(num);
+
+console.time("map.get")
+for (let i = 0; i < count; i++) {
+    num += map.get(a);
+}
+console.timeEnd("map.get")
+console.log(num);
+
+console.time("a.a");
+for (let i = 0; i < count; i++) {
+    num += a.a;
+}
+console.timeEnd("a.a")
+console.log(num);
+
+console.time("map.get")
+for (let i = 0; i < count; i++) {
+    num += map.get(a);
+}
+console.timeEnd("map.get")
+console.log(num);

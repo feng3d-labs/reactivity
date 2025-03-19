@@ -29,9 +29,9 @@ export function test2(num: number) {
     c.b = null as any;
     console.log(getC(c));
 
+    a.a++;
+    a.a--;
     for (let i = 0; i < num; i++) {
-        a.a++;
-        a.a--;
         getC(c);
     }
 }

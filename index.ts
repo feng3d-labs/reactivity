@@ -1,30 +1,23 @@
-import { test1 } from "./test1";
-import { test2 } from "./test2";
-import { test3 } from "./test3";
+import { computed, effect, reactive } from "@vue/reactivity";
 
-const num = 100000;
+class A {
+    a = 1;
+}
 
-console.time("test1");
-test1(num);
-console.timeEnd("test1");
-console.log("-------------");
-console.time("test2");
-test2(num);
-console.timeEnd("test2");
-console.log("-------------");
-console.time("test3");
-test3(num);
-console.timeEnd("test3");
-console.log("-------------");
-console.time("test1");
-test1(num);
-console.timeEnd("test1");
-console.log("-------------");
-console.time("test2");
-test2(num);
-console.timeEnd("test2");
-console.log("-------------");
-console.time("test3");
-test3(num);
-console.timeEnd("test3");
+function getValue(a: A) {
+    const result = computed(() => {
+        // 监听
+        reactive(a).a;
 
+        // 计算
+        return a.a;
+    });
+
+    return result.value;
+}
+
+const a = new A();
+
+effect(() => {
+    console.log(getValue(a));
+});

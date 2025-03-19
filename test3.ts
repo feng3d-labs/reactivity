@@ -25,6 +25,8 @@ export function test3(num: number) {
     for (let i = 0; i < num; i++) {
         reactive(a).a++;
         reactive(a).a--;
+    }
+    for (let i = 0; i < num; i++) {
         cc.value;
     }
 }
