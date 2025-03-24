@@ -1,4 +1,5 @@
 // 存储依赖关系的 WeakMap，键为目标对象，值为一个 Map，
+
 // 该 Map 的键为对象的属性名，值为一个 Set，存储依赖该属性的副作用函数
 const targetMap = new WeakMap<object, Map<string | symbol, Set<() => void>>>();
 
@@ -52,6 +53,68 @@ function trigger(target: object, key: string | symbol)
     }
 }
 
+const proxyMap = new WeakMap();
+
+
+enum TargetType
+{
+    INVALID = 0,
+    COMMON = 1,
+    COLLECTION = 2,
+}
+
+function targetTypeMap(rawType: string)
+{
+    switch (rawType)
+    {
+        case 'Object':
+        case 'Array':
+            return TargetType.COMMON
+        case 'Map':
+        case 'Set':
+        case 'WeakMap':
+        case 'WeakSet':
+            return TargetType.COLLECTION
+        default:
+            return TargetType.INVALID
+    }
+}
+/**
+ * 响应式标志枚举，用于标识响应式对象的特殊属性或状态
+ */
+export enum ReactiveFlags
+{
+    SKIP = '__v_skip', // 跳过该对象的响应式处理
+    IS_REACTIVE = '__v_isReactive', // 标识对象是否为响应式对象
+    RAW = '__v_raw', // 获取对象的原始非响应式版本
+    IS_REF = '__v_isRef', // 标识对象是否为 ref 对象
+}
+
+export interface Target
+{
+    [ReactiveFlags.SKIP]?: boolean
+    [ReactiveFlags.IS_REACTIVE]?: boolean
+    [ReactiveFlags.RAW]?: any
+}
+
+export const objectToString: typeof Object.prototype.toString =
+    Object.prototype.toString
+export const toTypeString = (value: unknown): string =>
+    objectToString.call(value)
+// 获取值的原始类型
+const toRawType = (value: unknown): string =>
+{
+    // 从类似 "[object RawType]" 的字符串中提取 "RawType"
+    return toTypeString(value).slice(8, -1)
+}
+
+function getTargetType(value: Target)
+{
+    return !Object.isExtensible(value)
+        ? TargetType.INVALID
+        : targetTypeMap(toRawType(value))
+}
+
 /**
  * 创建响应式对象的函数
  * 使用 Proxy 代理目标对象，拦截属性的访问和设置操作，实现依赖收集和触发
@@ -60,24 +123,43 @@ function trigger(target: object, key: string | symbol)
  */
 export function reactive<T extends object>(target: T): T
 {
-    return new Proxy(target, {
-        get(target, key)
+    // only specific value types can be observed.
+    const targetType = getTargetType(target)
+    if (targetType === TargetType.INVALID)
+    {
+        return target
+    }
+    // target already has corresponding Proxy
+    const existingProxy = proxyMap.get(target)
+    if (existingProxy)
+    {
+        return existingProxy
+    }
+
+    const proxy = new Proxy(
+        target,
         {
-            // 访问属性时，收集依赖
-            track(target, key);
-            return target[key as keyof T];
-        },
-        set(target, key, value)
-        {
-            // 设置属性时，更新属性值并触发依赖
-            if (target[key as keyof T] !== value)
+            get(target, key)
             {
-                target[key as keyof T] = value;
-                trigger(target, key);
+                // 访问属性时，收集依赖
+                track(target, key);
+                return target[key as keyof T];
+            },
+            set(target, key, value)
+            {
+                // 设置属性时，更新属性值并触发依赖
+                if (target[key as keyof T] !== value)
+                {
+                    target[key as keyof T] = value;
+                    trigger(target, key);
+                }
+                return true;
             }
-            return true;
         }
-    });
+    )
+    proxyMap.set(target, proxy);
+
+    return proxy;
 }
 
 /**
@@ -102,14 +184,25 @@ export function effect(fn: () => void)
 }
 
 /**
+ * 创建响应式值的引用。
+ *
+ * @param value 
+ * @returns 
+ */
+export function ref<T>(value: T): { value: T }
+{
+    return new ValueReactiveNode<T>(value);
+}
+
+/**
  * 创建计算属性的函数
  * 计算属性的值会根据其依赖的响应式数据自动更新
- * @param getter 计算属性的 getter 函数
+ * @param func 计算属性的 getter 函数
  * @returns 包含 value 属性的对象，用于获取计算属性的值
  */
-export function computed<T>(getter: () => T)
+export function computed<T>(func: () => T)
 {
-    const node = new FunctionReactiveNode(getter);
+    const node = new FunctionReactiveNode(func);
 
     return node;
 }
@@ -172,9 +265,9 @@ class ReactiveNode<T = any>
      */
     run()
     {
-        if (!this.dirty)
+        if (this.invalid)
         {
-            if (this.invalid)
+            if (!this.dirty)
             {
                 this.invalidChildren.forEach(child =>
                 {
@@ -190,27 +283,28 @@ class ReactiveNode<T = any>
                     this.markDirty();
                 }
             }
+            this.invalid = false;
+            this.invalidChildren.clear();
         }
         //
+        // 保存当前节点作为父节点。
+        // 设置当前节点为父节点。
         if (this.dirty)
         {
-            // 保存当前节点作为父节点。
             const parentReactiveNode = activeReactiveNode;
-            // 设置当前节点为父节点。
             activeReactiveNode = this;
             this._value = this._runSelf();
             // 执行完毕后恢复父节点。
             activeReactiveNode = parentReactiveNode;
-            if (parentReactiveNode)
-            {
-                parentReactiveNode.children.set(this, this._value);
-                this.parents.add(parentReactiveNode);
-            }
+        }
+        // 连接父节点和子节点。
+        if (activeReactiveNode)
+        {
+            activeReactiveNode.children.set(this, this._value);
+            this.parents.add(activeReactiveNode);
         }
         //
         this.dirty = false;
-        this.invalid = false;
-        this.invalidChildren.clear();
     }
 
     /**
@@ -316,7 +410,3 @@ class ValueReactiveNode<V> extends ReactiveNode<V>
     }
 }
 
-export function ref<T>(value: T): { value: T }
-{
-    return new ValueReactiveNode<T>(value);
-}
