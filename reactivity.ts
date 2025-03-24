@@ -11,15 +11,19 @@ let activeEffect: (() => void) | null = null;
  * @param target 目标对象
  * @param key 访问的属性名
  */
-function track(target: object, key: string | symbol) {
-    if (activeEffect) {
+function track(target: object, key: string | symbol)
+{
+    if (activeEffect)
+    {
         let depsMap = targetMap.get(target);
-        if (!depsMap) {
+        if (!depsMap)
+        {
             // 如果目标对象还没有对应的依赖映射，创建一个新的 Map
             targetMap.set(target, (depsMap = new Map()));
         }
         let dep = depsMap.get(key);
-        if (!dep) {
+        if (!dep)
+        {
             // 如果该属性还没有对应的依赖集合，创建一个新的 Set
             depsMap.set(key, (dep = new Set()));
         }
@@ -34,11 +38,14 @@ function track(target: object, key: string | symbol) {
  * @param target 目标对象
  * @param key 设置的属性名
  */
-function trigger(target: object, key: string | symbol) {
+function trigger(target: object, key: string | symbol)
+{
     const depsMap = targetMap.get(target);
-    if (depsMap) {
+    if (depsMap)
+    {
         const dep = depsMap.get(key);
-        if (dep) {
+        if (dep)
+        {
             // 遍历该属性的依赖集合，执行所有副作用函数
             dep.forEach(effect => effect());
         }
@@ -51,16 +58,20 @@ function trigger(target: object, key: string | symbol) {
  * @param target 要转换为响应式对象的目标对象
  * @returns 响应式对象
  */
-export function reactive<T extends object>(target: T): T {
+export function reactive<T extends object>(target: T): T
+{
     return new Proxy(target, {
-        get(target, key) {
+        get(target, key)
+        {
             // 访问属性时，收集依赖
             track(target, key);
             return target[key as keyof T];
         },
-        set(target, key, value) {
+        set(target, key, value)
+        {
             // 设置属性时，更新属性值并触发依赖
-            if (target[key as keyof T] !== value) {
+            if (target[key as keyof T] !== value)
+            {
                 target[key as keyof T] = value;
                 trigger(target, key);
             }
@@ -75,8 +86,10 @@ export function reactive<T extends object>(target: T): T {
  * @param fn 要执行的副作用函数
  * @returns 包装后的副作用函数
  */
-export function effect(fn: () => void) {
-    const effectFn = () => {
+export function effect(fn: () => void)
+{
+    const effectFn = () =>
+    {
         // 将当前副作用函数设为活动的副作用函数
         activeEffect = effectFn;
         fn();
@@ -94,8 +107,8 @@ export function effect(fn: () => void) {
  * @param getter 计算属性的 getter 函数
  * @returns 包含 value 属性的对象，用于获取计算属性的值
  */
-export function computed<T>(getter: () => T) {
-
+export function computed<T>(getter: () => T)
+{
     const node = new FunctionReactiveNode(getter);
 
     return node;
@@ -109,8 +122,8 @@ let activeReactiveNode: ReactiveNode;
 /**
  * 反应式节点。
  */
-class ReactiveNode<T = any> {
-
+class ReactiveNode<T = any>
+{
     /**
      * 子反应节点。
      * 
@@ -143,34 +156,44 @@ class ReactiveNode<T = any> {
     /**
      * 当前节点值。
      */
-    get value() {
+    get value()
+    {
         this.run();
         return this._value;
     }
     protected _value: T;
 
-    constructor() {
+    constructor()
+    {
     }
 
     /**
      * 执行当前节点。
      */
-    run() {
-
-        if (!this.dirty) {
-            if (this.invalid) {
-                this.invalidChildren.forEach(child => {
+    run()
+    {
+        if (!this.dirty)
+        {
+            if (this.invalid)
+            {
+                this.invalidChildren.forEach(child =>
+                {
                     const oldValue = this.children.get(child);
                     const newValue = child.value;
-                    if (oldValue !== newValue) {
+                    if (oldValue !== newValue)
+                    {
                         this.dirty = true;
                     }
                 });
-                this.markDirty();
+                if (this.dirty)
+                {
+                    this.markDirty();
+                }
             }
         }
         //
-        if (this.dirty) {
+        if (this.dirty)
+        {
             // 保存当前节点作为父节点。
             const parentReactiveNode = activeReactiveNode;
             // 设置当前节点为父节点。
@@ -178,8 +201,10 @@ class ReactiveNode<T = any> {
             this._value = this._runSelf();
             // 执行完毕后恢复父节点。
             activeReactiveNode = parentReactiveNode;
-            if (parentReactiveNode) {
+            if (parentReactiveNode)
+            {
                 parentReactiveNode.children.set(this, this._value);
+                this.parents.add(parentReactiveNode);
             }
         }
         //
@@ -188,15 +213,21 @@ class ReactiveNode<T = any> {
         this.invalidChildren.clear();
     }
 
-    markDirty() {
-        if (this.dirty) {
+    /**
+     * 标记为脏，触发更新。
+     */
+    markDirty()
+    {
+        if (this.dirty)
+        {
             return;
         }
         this.dirty = true;
         this.invalidate();
 
         // 断开与子节点的连接，在下次执行时重新连接。
-        this.children.forEach((value, child) => {
+        this.children.forEach((value, child) =>
+        {
             child.parents.delete(this);
         });
         this.children.clear();
@@ -205,14 +236,18 @@ class ReactiveNode<T = any> {
     /**
      * 把当前节点添加到父节点的失效队列中。
      */
-    invalidate() {
-        if (this.invalid) {
+    invalidate()
+    {
+        if (this.invalid)
+        {
             return;
         }
         this.invalid = true;
 
-        this.parents.forEach(parent => {
-            if (!parent.invalidChildren.has(this)) {
+        this.parents.forEach(parent =>
+        {
+            if (!parent.invalidChildren.has(this))
+            {
                 parent.invalidChildren.add(this);
                 parent.invalidate();
             }
@@ -222,7 +257,8 @@ class ReactiveNode<T = any> {
     /**
      * 执行当前节点自身。
      */
-    protected _runSelf(): T {
+    protected _runSelf(): T
+    {
         return this._value;
     }
 }
@@ -234,18 +270,21 @@ class ReactiveNode<T = any> {
  * 
  * 当获取value值时，会执行func函数，返回结果。
  */
-class FunctionReactiveNode<T> extends ReactiveNode {
+class FunctionReactiveNode<T> extends ReactiveNode
+{
     /**
      * 监听的函数。
      */
     func: () => T;
 
-    constructor(func: () => T) {
+    constructor(func: () => T)
+    {
         super();
         this.func = func;
     }
 
-    protected _runSelf() {
+    protected _runSelf()
+    {
         return this.func();
     }
 }
@@ -257,9 +296,27 @@ class FunctionReactiveNode<T> extends ReactiveNode {
  * 
  * 当设置反应式对象对应属性值时，会触发该节点。
  */
-class ValueReactiveNode<T, K extends keyof T, V extends T[K]> extends ReactiveNode<V> {
-
-    constructor(public readonly host: T, public readonly property: K) {
-        super();
+class ValueReactiveNode<V> extends ReactiveNode<V>
+{
+    get value()
+    {
+        this.run();
+        return this._value;
     }
+    set value(v: V)
+    {
+        this._value = v;
+        this.markDirty();
+    }
+
+    constructor(value: V)
+    {
+        super();
+        this._value = value;
+    }
+}
+
+export function ref<T>(value: T): { value: T }
+{
+    return new ValueReactiveNode<T>(value);
 }

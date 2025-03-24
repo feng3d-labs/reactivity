@@ -1,28 +1,40 @@
 import { watcher, WatchSession } from "@feng3d/watcher";
-import { computed, effect, reactive } from "./reactivity";
+import { computed, effect, reactive, ref } from "./reactivity";
 // import { computed, effect, reactive } from "@vue/reactivity";
 
-const a = { a: 1 };
-const b = { b: 2 };
-const ra = reactive(a);
-const rb = reactive(b);
+const a = ref(1);
+const b = ref(2);
 
-const result = computed(() => {
-    // 监听
-    ra.a;
-    rb.b;
+const ca = computed(()=>{
+    console.log("computed a");
+    return a.value;
+})
 
-    // 执行
-    console.log("......");
-    return 0;
+const cb = computed(()=>{
+    console.log("computed b");
+    return b.value; 
+})
+
+const result = computed(() =>
+{
+    console.log("computed");
+    return ca.value + cb.value;
 });
 
-const watchSession : WatchSession =watcher.on()
+console.log(result.value);
+
+a.value = 2;
+a.value = 3;
+a.value = 4;
+a.value = 1;
+console.log(result.value);
+
+// const watchSession: WatchSession = watcher.on()
 
 // result.value;
 
 // effect(() => {
-//     result.value; 
+//     result.value;
 // })
 
 // result.value;
