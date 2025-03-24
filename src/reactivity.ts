@@ -399,6 +399,7 @@ class ValueReactiveNode<V> extends ReactiveNode<V>
     }
     set value(v: V)
     {
+        if (this._value === v) return;
         this._value = v;
         this.markDirty();
     }
