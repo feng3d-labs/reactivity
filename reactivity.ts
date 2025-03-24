@@ -116,4 +116,108 @@ export function computed<T>(getter: () => T) {
             return value;
         }
     };
-}    
+}
+
+/**
+ * 反应式节点。
+ */
+class ReactiveNode {
+
+    /**
+     * 子反应节点。
+     * 
+     * 记录了当前节点调用了哪些反应节点。
+     */
+    children = new Set<ReactiveNode>();
+
+    /**
+     * 父反应节点。
+     * 
+     * 记录了哪些节点调用了当前节点。
+     */
+    parent = new Set<ReactiveNode>();
+
+    /**
+     * 是否脏，是否需要重新计算。
+     */
+    dirty = true;
+
+    /**
+     * 当前节点值。
+     */
+    value: any;
+
+    constructor() {
+    }
+
+    /**
+     * 执行当前节点。
+     */
+    run() {
+        if (this.dirty) {
+            // 先执行子节点保障子节点的计算结果是最新的。
+            this._runChildren();
+            // 再执行自身。
+            this.value = this._runSelf();
+            this.dirty = false;
+        }
+    }
+
+    /**
+     * 标记当前节点为脏。
+     * 
+     * 会递归标记父节点为脏。
+     */
+    invalidate() {
+        this.dirty = true;
+        this.parent.forEach(node => node.invalidate());
+    }
+
+    /**
+     * 执行子节点。
+     */
+    protected _runChildren() {
+
+    }
+
+    /**
+     * 执行当前节点自身。
+     */
+    protected _runSelf() {
+
+    }
+}
+
+/**
+ * 反应式函数节点。
+ * 
+ * 当使用 computed 函数时，会创建一个 ReactiveFunctionNode 对象。
+ * 
+ * 当获取value值时，会执行func函数，返回结果。
+ */
+class FunctionReactiveNode<T> extends ReactiveNode {
+    /**
+     * 监听的函数。
+     */
+    func: () => T;
+
+    constructor(func: () => T) {
+        super();
+        this.func = func;
+    }
+}
+
+/**
+ * 属性值反应式节点。
+ * 
+ * 当使用 reactive 函数创建一个反应式对象后，访问该对象的属性时，会创建一个 ReactiveGetValueNode 对象。
+ * 
+ * 当设置反应式对象对应属性值时，会触发该节点。
+ */
+class ValueReactiveNode<T, K extends keyof T> extends ReactiveNode {
+    value: T[K];
+
+    constructor(public readonly host: T, public readonly property: K) {
+        super();
+    }
+}
