@@ -1,5 +1,5 @@
-import { computed, effect, reactive, ref } from "./src/reactivity";
-// import { computed, effect, reactive, ref } from "@vue/reactivity";
+// import { computed, effect, reactive, ref } from "./src/reactivity";
+import { computed, effect, reactive, ref } from "@vue/reactivity";
 
 const a = ref(1);
 const b = ref(2);
@@ -52,8 +52,11 @@ console.time("time");
 for (let i = 0; i < count; i++)
 {
     // a.value = 
-    // result.value;
-    a.value = 1;
+    result.value;
+    // a.value = 1;
+    // a.value = 4;
+    // a.value = 1;
+    // a.value = 4;
     // result.value;
 }
 console.timeEnd("time");

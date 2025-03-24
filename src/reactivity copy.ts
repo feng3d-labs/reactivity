@@ -242,6 +242,11 @@ class ReactiveNode<T = any>
     invalid = false;
 
     /**
+     * 失效的子节点，需要在执行时检查子节点值是否发生变化。
+     */
+    invalidChildren = new Set<ReactiveNode>();
+
+    /**
      * 当前节点值。
      */
     get value()
@@ -264,8 +269,9 @@ class ReactiveNode<T = any>
         {
             if (!this.dirty)
             {
-                this.children.forEach((oldValue, child) =>
+                this.invalidChildren.forEach(child =>
                 {
+                    const oldValue = this.children.get(child);
                     const newValue = child.value;
                     if (oldValue !== newValue)
                     {
@@ -278,6 +284,7 @@ class ReactiveNode<T = any>
                 }
             }
             this.invalid = false;
+            this.invalidChildren.clear();
         }
         //
         // 保存当前节点作为父节点。
@@ -333,7 +340,11 @@ class ReactiveNode<T = any>
 
         this.parents.forEach(parent =>
         {
-            parent.invalidate();
+            if (!parent.invalidChildren.has(this))
+            {
+                parent.invalidChildren.add(this);
+                parent.invalidate();
+            }
         });
     }
 
