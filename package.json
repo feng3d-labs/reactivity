@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@feng3d/event": "^0.8.4",
-    "@feng3d/watcher": "^0.8.11",
+    "@feng3d/watcher": "^0.8.12",
     "@vue/reactivity": "^3.5.13"
   }
 }

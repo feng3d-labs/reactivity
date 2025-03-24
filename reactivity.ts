@@ -98,11 +98,13 @@ export function computed<T>(getter: () => T) {
     let value: T;
     let dirty = true;
 
-    const effectFn = effect(() => {
-        // 标记为需要重新计算
-        dirty = true;
+    const effectFn = () => {
+        // 将当前副作用函数设为活动的副作用函数
+        activeEffect = effectFn;
         value = getter();
-    });
+        // 执行完函数后，将活动的副作用函数置为 null
+        activeEffect = null;
+    };
 
     return {
         get value() {

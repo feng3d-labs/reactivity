@@ -1,3 +1,4 @@
+import { watcher, WatchSession } from "@feng3d/watcher";
 import { computed, effect, reactive } from "./reactivity";
 // import { computed, effect, reactive } from "@vue/reactivity";
 
@@ -16,15 +17,19 @@ const result = computed(() => {
     return 0;
 });
 
+const watchSession : WatchSession =watcher.on()
+
+// result.value;
+
 // effect(() => {
 //     result.value; 
 // })
 
 // result.value;
 
-// // 修改值
+// // // 修改值
 // reactive(a).a = 2;
 // reactive(a).a = 2;
-// // result.value;
+// // // result.value;
 // reactive(a).a = 3;
-// // result.value;
+// // // result.value;
