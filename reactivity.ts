@@ -95,47 +95,35 @@ export function effect(fn: () => void) {
  * @returns 包含 value 属性的对象，用于获取计算属性的值
  */
 export function computed<T>(getter: () => T) {
-    let value: T;
-    let dirty = true;
 
-    const effectFn = () => {
-        // 将当前副作用函数设为活动的副作用函数
-        activeEffect = effectFn;
-        value = getter();
-        // 执行完函数后，将活动的副作用函数置为 null
-        activeEffect = null;
-    };
+    const node = new FunctionReactiveNode(getter);
 
-    return {
-        get value() {
-            if (dirty) {
-                // 如果需要重新计算，执行副作用函数
-                effectFn();
-                dirty = false;
-            }
-            return value;
-        }
-    };
+    return node;
 }
+
+/**
+ * 当前正在执行的反应式节点。
+ */
+let activeReactiveNode: ReactiveNode;
 
 /**
  * 反应式节点。
  */
-class ReactiveNode {
+class ReactiveNode<T = any> {
 
     /**
      * 子反应节点。
      * 
      * 记录了当前节点调用了哪些反应节点。
      */
-    children = new Set<ReactiveNode>();
+    children = new Map<ReactiveNode, any>();
 
     /**
      * 父反应节点。
      * 
      * 记录了哪些节点调用了当前节点。
      */
-    parent = new Set<ReactiveNode>();
+    parents = new Set<ReactiveNode>();
 
     /**
      * 是否脏，是否需要重新计算。
@@ -143,9 +131,23 @@ class ReactiveNode {
     dirty = true;
 
     /**
+     * 是否已经被标记为失效，需要检查失效子节点值是否发生变化。
+     */
+    invalid = false;
+
+    /**
+     * 失效的子节点，需要在执行时检查子节点值是否发生变化。
+     */
+    invalidChildren = new Set<ReactiveNode>();
+
+    /**
      * 当前节点值。
      */
-    value: any;
+    get value() {
+        this.run();
+        return this._value;
+    }
+    protected _value: T;
 
     constructor() {
     }
@@ -154,37 +156,74 @@ class ReactiveNode {
      * 执行当前节点。
      */
     run() {
-        if (this.dirty) {
-            // 先执行子节点保障子节点的计算结果是最新的。
-            this._runChildren();
-            // 再执行自身。
-            this.value = this._runSelf();
-            this.dirty = false;
+
+        if (!this.dirty) {
+            if (this.invalid) {
+                this.invalidChildren.forEach(child => {
+                    const oldValue = this.children.get(child);
+                    const newValue = child.value;
+                    if (oldValue !== newValue) {
+                        this.dirty = true;
+                    }
+                });
+                this.markDirty();
+            }
         }
+        //
+        if (this.dirty) {
+            // 保存当前节点作为父节点。
+            const parentReactiveNode = activeReactiveNode;
+            // 设置当前节点为父节点。
+            activeReactiveNode = this;
+            this._value = this._runSelf();
+            // 执行完毕后恢复父节点。
+            activeReactiveNode = parentReactiveNode;
+            if (parentReactiveNode) {
+                parentReactiveNode.children.set(this, this._value);
+            }
+        }
+        //
+        this.dirty = false;
+        this.invalid = false;
+        this.invalidChildren.clear();
+    }
+
+    markDirty() {
+        if (this.dirty) {
+            return;
+        }
+        this.dirty = true;
+        this.invalidate();
+
+        // 断开与子节点的连接，在下次执行时重新连接。
+        this.children.forEach((value, child) => {
+            child.parents.delete(this);
+        });
+        this.children.clear();
     }
 
     /**
-     * 标记当前节点为脏。
-     * 
-     * 会递归标记父节点为脏。
+     * 把当前节点添加到父节点的失效队列中。
      */
     invalidate() {
-        this.dirty = true;
-        this.parent.forEach(node => node.invalidate());
-    }
+        if (this.invalid) {
+            return;
+        }
+        this.invalid = true;
 
-    /**
-     * 执行子节点。
-     */
-    protected _runChildren() {
-
+        this.parents.forEach(parent => {
+            if (!parent.invalidChildren.has(this)) {
+                parent.invalidChildren.add(this);
+                parent.invalidate();
+            }
+        });
     }
 
     /**
      * 执行当前节点自身。
      */
-    protected _runSelf() {
-
+    protected _runSelf(): T {
+        return this._value;
     }
 }
 
@@ -205,6 +244,10 @@ class FunctionReactiveNode<T> extends ReactiveNode {
         super();
         this.func = func;
     }
+
+    protected _runSelf() {
+        return this.func();
+    }
 }
 
 /**
@@ -214,8 +257,7 @@ class FunctionReactiveNode<T> extends ReactiveNode {
  * 
  * 当设置反应式对象对应属性值时，会触发该节点。
  */
-class ValueReactiveNode<T, K extends keyof T> extends ReactiveNode {
-    value: T[K];
+class ValueReactiveNode<T, K extends keyof T, V extends T[K]> extends ReactiveNode<V> {
 
     constructor(public readonly host: T, public readonly property: K) {
         super();
