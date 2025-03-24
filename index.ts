@@ -1,13 +1,15 @@
-// import { computed, effect, reactive, ref } from "./src/reactivity";
-import { computed, effect, reactive, ref } from "@vue/reactivity";
+import { computed, effect, reactive, ref } from "./src/reactivity";
+// import { computed, effect, reactive, ref } from "@vue/reactivity";
 
-const a = ref(1);
+const arr = new Array(100).fill(ref(1));
 const b = ref(2);
 
 const ca = computed(() =>
 {
     // console.log("computed a");
-    return a.value;
+    // return a.value;
+
+    return arr.reduce((acc, cur) => acc + cur.value, 0);
 })
 
 const cb = computed(() =>
@@ -33,10 +35,10 @@ const result1 = computed(func1);
 console.log(result.value);
 console.log(result1.value);
 
-a.value = 2;
-a.value = 3;
-a.value = 4;
-a.value = 1;
+arr[0].value = 2;
+arr[0].value = 3;
+arr[0].value = 4;
+arr[0].value = 1;
 console.log(result.value);
 console.log(result1.value);
 
@@ -52,11 +54,11 @@ console.time("time");
 for (let i = 0; i < count; i++)
 {
     // a.value = 
-    result.value;
-    // a.value = 1;
-    // a.value = 4;
-    // a.value = 1;
-    // a.value = 4;
+    // result.value;
+    arr[0].value = 1;
+    arr[0].value = 4;
+    arr[0].value = 1;
+    arr[0].value = 4;
     // result.value;
 }
 console.timeEnd("time");
