@@ -1,5 +1,3 @@
-import { watcher } from "@feng3d/watcher";
-// import { reactive } from "@vue/reactivity";
 import { computed, effect, reactive } from "./reactivity";
 // import { computed, effect, reactive } from "@vue/reactivity";
 
