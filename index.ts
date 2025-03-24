@@ -18,9 +18,9 @@ const result = computed(() => {
     return 0;
 });
 
-effect(() => {
-    result.value; 
-})
+// effect(() => {
+//     result.value; 
+// })
 
 // result.value;
 
