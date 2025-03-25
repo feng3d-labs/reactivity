@@ -6,10 +6,10 @@ import { TrackOpTypes, TriggerOpTypes } from "./shared/constants";
  * 当属性被访问时，将会追踪属性的变化。
  *
  * @param target 目标对象。
- * @param property  属性名。
+ * @param key  属性名。
  * @returns 
  */
-export function track<T, K extends keyof T>(target: T, type: TrackOpTypes, property: K): void
+export function track<T, K extends keyof T>(target: T, type: TrackOpTypes, key: K): void
 {
     let depsMap = targetMap.get(target);
     if (!depsMap)
@@ -19,11 +19,11 @@ export function track<T, K extends keyof T>(target: T, type: TrackOpTypes, prope
     }
 
     //
-    let dep = depsMap.get(property);
+    let dep = depsMap.get(key);
     if (!dep)
     {
         dep = new Dep();
-        depsMap.set(property, dep);
+        depsMap.set(key, dep);
     }
 
     // 取值，建立依赖关系。
@@ -36,17 +36,17 @@ const targetMap: WeakMap<any, Map<any, Dep>> = new WeakMap()
  * 
  * @param target 目标对象。
  * @param type    操作类型。
- * @param property 属性名。
+ * @param key 属性名。
  * @param newValue 新值。
  * @param oldValue 旧值。
  * @returns 
  */
-export function trigger<T, K extends keyof T>(target: T, type: TriggerOpTypes, property: K, newValue?: T[K], oldValue?: T[K]): void
+export function trigger<T, K extends keyof T>(target: T, type: TriggerOpTypes, key: K, newValue?: T[K], oldValue?: T[K]): void
 {
     const depsMap = targetMap.get(target);
     if (!depsMap) return;
 
-    const dep = depsMap.get(property);
+    const dep = depsMap.get(key);
     if (!dep) return;
 
     // 触发属性的变化。

@@ -1,5 +1,5 @@
 import { mutableHandlers } from "./baseHandlers"
-import { TargetType } from "./shared/constants"
+import { ReactiveFlags, TargetType } from "./shared/constants"
 import { getTargetType, isObject, Target } from "./shared/general"
 
 export function reactive<T extends object>(target: T): T
@@ -36,3 +36,8 @@ export function reactive<T extends object>(target: T): T
     return proxy
 }
 const reactiveMap = new WeakMap<Target, any>();
+
+export function isReactive(value: unknown): boolean
+{
+    return !!(value && (value as Target)[ReactiveFlags.IS_REACTIVE])
+}
