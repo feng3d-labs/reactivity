@@ -55,15 +55,20 @@ async function init()
 
     if (window.location.hash !== "")
     {
-        const file = window.location.hash.substring(1);
+        let file = window.location.hash.substring(1);
 
         // use a predefined map of redirects to avoid untrusted URL redirection due to user-provided value
 
+        file = decodeURIComponent(file);
         if (validRedirects.has(file) === true)
         {
             selectFile(file);
             viewer.src = validRedirects.get(file);
             viewer.style.display = "unset";
+        }
+        else
+        {
+            console.warn(`Invalid redirect for ${file}`);
         }
     }
 
@@ -316,4 +321,13 @@ function createElementFromHTML(htmlString)
     div.innerHTML = htmlString.trim();
 
     return div.firstChild;
+}
+
+function unescapeUnicode(escapedStr)
+{
+    const regex = /\\u([0-9a-fA-F]{4})/g;
+    return escapedStr.replace(regex, (match, p1) =>
+    {
+        return String.fromCodePoint(parseInt(p1, 16));
+    });
 }

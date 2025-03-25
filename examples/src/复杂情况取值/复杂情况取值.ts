@@ -1,4 +1,4 @@
-export function 复杂场景取值性能(ref: <T>(value: T) => { value: T; }, computed: <T>(func: () => T) => { value: T; })
+export function 复杂情况取值(ref: <T>(value: T) => { value: T; }, computed: <T>(func: () => T) => { value: T; })
 {
     const result = { time: undefined, values: [] };
 
