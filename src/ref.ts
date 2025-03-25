@@ -7,7 +7,7 @@ import { ReactiveFlags } from "./shared/constants";
  * @param value 引用的值。
  * @returns 包含 value 属性的对象，用于获取和设置引用的值。
  */
-export function ref<T>(value?: T): Ref<T>
+export function ref<T>(value?: T): { value: T }
 {
     if (isRef(value))
     {
@@ -17,16 +17,10 @@ export function ref<T>(value?: T): Ref<T>
     return new RefReactivity<T>(value);
 }
 
-export function isRef<T>(r: Ref<T> | unknown): r is Ref<T>
-export function isRef(r: any): r is Ref
+export function isRef<T>(r: { value: T } | unknown): r is { value: T }
+export function isRef(r: any): r is { value: any }
 {
     return r ? r[ReactiveFlags.IS_REF] === true : false
-}
-
-export interface Ref<T = any, S = T>
-{
-    get value(): T
-    set value(_: S)
 }
 
 /**

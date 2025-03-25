@@ -1,3 +1,4 @@
 export { computed } from "./computed";
 export { effect } from "./effect";
-export { ref, Ref } from "./ref";
+export { ref } from "./ref";
+export { reactive } from "./reactive";

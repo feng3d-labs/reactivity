@@ -1,28 +1,40 @@
 import { Reactivity } from "./Reactivity";
-import { TrackOpTypes } from "./shared/constants";
 
-export const targetMap: WeakMap<object, Map<any, Reactivity>> = new WeakMap()
-
-export function track(target: object, type: TrackOpTypes, property: unknown): void
+/**
+ * 追踪属性的变化。
+ * 
+ * 当属性被访问时，将会追踪属性的变化。
+ *
+ * @param target 目标对象。
+ * @param property 
+ * @returns 
+ */
+export function property<T, K extends keyof T>(target: T, property: K): { value: T }
 {
-    let depMap = targetMap.get(target);
-    if (!depMap)
+    let propertyReactivityMap = targetMap.get(target);
+    if (!propertyReactivityMap)
     {
-        depMap = new Map();
-        targetMap.set(target, depMap);
+        propertyReactivityMap = new Map();
+        targetMap.set(target, propertyReactivityMap);
     }
 
-    let dep = depMap.get(property);
-    if (!dep)
+    //
+    let propertyReactivity = propertyReactivityMap.get(property);
+    if (!propertyReactivity)
     {
-        dep = new PropertyReactivity(target, property);
-        depMap.set(property, dep);
+        propertyReactivity = new PropertyReactivity(target as any, property);
+        propertyReactivityMap.set(property, propertyReactivity);
     }
-    // 取值
-    dep.value;
+
+    // 取值，建立依赖关系。
+    propertyReactivity.value;
+
+    //
+    return propertyReactivity;
 }
+const targetMap: WeakMap<any, Map<any, PropertyReactivity>> = new WeakMap()
 
-class PropertyReactivity<T> extends Reactivity<T>
+class PropertyReactivity extends Reactivity
 {
     get value()
     {

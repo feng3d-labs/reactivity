@@ -1,5 +1,6 @@
 import { mutableHandlers } from "./baseHandlers"
-import { getTargetType, isObject, Target, TargetType } from "./shared/general"
+import { TargetType } from "./shared/constants"
+import { getTargetType, isObject, Target } from "./shared/general"
 
 export function reactive<T extends object>(target: T): T
 {

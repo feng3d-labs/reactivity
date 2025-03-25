@@ -8,7 +8,7 @@ import { Reactivity } from "./Reactivity";
  * @param func 检测的可能包含响应式的函数。
  * @returns 包含 value 属性的对象，用于获取计算结果。
  */
-export function computed<T>(func: (oldValue?: T) => T): { value: T }
+export function computed<T>(func: (oldValue?: T) => T): { readonly value: T }
 {
     return new ComputedReactivity(func);
 }

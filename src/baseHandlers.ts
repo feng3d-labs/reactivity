@@ -1,18 +1,17 @@
 import { reactive } from "./reactive";
 import { isRef } from "./ref";
-import { TrackOpTypes } from "./shared/constants";
 import { isArray, isIntegerKey, isObject, Target } from "./shared/general";
-import { track } from "./track";
+import { property } from "./track";
 
 class BaseReactiveHandler implements ProxyHandler<Target>
 {
-    get(target: Target, property: string | symbol, receiver: object): any
+    get(target: Target, propertyKey: string | symbol, receiver: object): any
     {
         const targetIsArray = isArray(target)
 
         const res = Reflect.get(
             target,
-            property,
+            propertyKey,
             // if this is a proxy wrapping a ref, return methods using the raw ref
             // as receiver so that we don't have to call `toRaw` on the ref in all
             // its class methods
@@ -20,12 +19,12 @@ class BaseReactiveHandler implements ProxyHandler<Target>
         )
 
         //
-        track(target, TrackOpTypes.GET, property)
+        property(target, propertyKey as any)
 
         if (isRef(res))
         {
             // ref unwrapping - skip unwrap for Array + integer key.
-            return targetIsArray && isIntegerKey(property) ? res : res.value
+            return targetIsArray && isIntegerKey(propertyKey) ? res : res.value
         }
 
         if (isObject(res))
