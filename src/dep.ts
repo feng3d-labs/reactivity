@@ -1,14 +1,71 @@
+import { TrackOpTypes, TriggerOpTypes } from "./shared/constants";
+
 /**
- * 反应式节点。
+ * 追踪属性的变化。
+ * 
+ * 当属性被访问时，将会追踪属性的变化。
+ *
+ * @param target 目标对象。
+ * @param property  属性名。
+ * @returns 
  */
-export class Reactivity<T = any>
+export function track<T, K extends keyof T>(target: T, type: TrackOpTypes, property: K): void
+{
+    let depsMap = targetMap.get(target);
+    if (!depsMap)
+    {
+        depsMap = new Map();
+        targetMap.set(target, depsMap);
+    }
+
+    //
+    let dep = depsMap.get(property);
+    if (!dep)
+    {
+        dep = new Dep();
+        depsMap.set(property, dep);
+    }
+
+    // 取值，建立依赖关系。
+    dep.track();
+}
+const targetMap: WeakMap<any, Map<any, Dep>> = new WeakMap()
+
+/**
+ * 触发属性的变化。
+ * 
+ * @param target 目标对象。
+ * @param type    操作类型。
+ * @param property 属性名。
+ * @param newValue 新值。
+ * @param oldValue 旧值。
+ * @returns 
+ */
+export function trigger<T, K extends keyof T>(target: T, type: TriggerOpTypes, property: K, newValue?: T[K], oldValue?: T[K]): void
+{
+    const depsMap = targetMap.get(target);
+    if (!depsMap) return;
+
+    const dep = depsMap.get(property);
+    if (!dep) return;
+
+    // 触发属性的变化。
+    dep.trigger(newValue, oldValue);
+}
+
+/**
+ * 反应节点。
+ *
+ * 用于记录依赖关系。
+ */
+export class Dep<T = any>
 {
     /**
      * 父反应节点。
      *
      * 记录了哪些节点调用了当前节点。
      */
-    parents = new Set<Reactivity>();
+    parents = new Set<Dep>();
 
     /**
      * 是否脏，是否需要重新计算。
@@ -164,9 +221,9 @@ export class Reactivity<T = any>
 /**
  * 当前正在执行的反应式节点。
  */
-let activeReactivity: Reactivity;
+let activeReactivity: Dep;
 
 /**
  * 反应式节点链。
  */
-type ReactivityLink = { node: Reactivity, value: any, next: ReactivityLink };
+type ReactivityLink = { node: Dep, value: any, next: ReactivityLink };

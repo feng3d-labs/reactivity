@@ -1,5 +1,5 @@
 import { computed } from "./computed";
-import { Reactivity } from "./Reactivity";
+import { Dep } from "./dep";
 
 /**
  * 创建副作用。
@@ -11,17 +11,17 @@ import { Reactivity } from "./Reactivity";
  */
 export function effect<T = any>(fn: () => T): Effect
 {
-    const reactivity = computed(fn) as Reactivity;
+    const dep = computed(fn) as Dep;
 
     // 立即执行一次，以确保副作用函数被执行。
-    reactivity.value;
-    reactivity.onInvalidate = () => reactivity.value;
+    dep.track();
+    dep.onInvalidate = () => dep.track();
 
     return {
-        pause: () => { reactivity.onInvalidate = undefined },
+        pause: () => { dep.onInvalidate = undefined },
         resume: () =>
         {
-            reactivity.onInvalidate = () => reactivity.value;
+            dep.onInvalidate = () => dep.track();
         }
     };
 }

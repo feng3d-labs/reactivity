@@ -1,4 +1,4 @@
-import { Reactivity } from "./Reactivity";
+import { Dep } from "./dep";
 
 /**
  * 创建计算反应式对象。
@@ -10,17 +10,17 @@ import { Reactivity } from "./Reactivity";
  */
 export function computed<T>(func: (oldValue?: T) => T): { readonly value: T }
 {
-    return new ComputedReactivity(func);
+    return new ComputedDep(func);
 }
 
 /**
- * 计算反应式节点。
+ * 计算依赖。
  *
- * 当使用 computed 函数时，会创建一个 ReactiveFunctionNode 对象。
+ * 当使用 computed 函数时，会创建一个 ComputedDep 对象。
  * 
  * 首次获取值将会执行函数，后续获取值且在依赖发生变化的情况下将会重新计算。
  */
-class ComputedReactivity<T> extends Reactivity
+class ComputedDep<T> extends Dep
 {
     /**
      * 监听的函数。

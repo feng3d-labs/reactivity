@@ -1,8 +1,8 @@
+import { track, trigger } from "./dep";
 import { reactive } from "./reactive";
 import { isRef } from "./ref";
 import { TrackOpTypes, TriggerOpTypes } from "./shared/constants";
 import { hasChanged, hasOwn, isArray, isIntegerKey, isObject, Target, toRaw } from "./shared/general";
-import { track, trigger } from "./track";
 
 class BaseReactiveHandler implements ProxyHandler<Target>
 {
