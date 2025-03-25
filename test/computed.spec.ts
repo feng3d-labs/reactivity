@@ -123,9 +123,14 @@ describe('reactivity/computed', () =>
         a.value++
         e.value
 
-        // expect(e.deps!.dep).toBe(b.dep)
-        // expect(e.deps!.nextDep!.dep).toBe(d.dep)
-        // expect(e.deps!.nextDep!.nextDep!.dep).toBe(c.dep)
+        expect(((a as any).parents as Set<any>).size === 3).toBe(true)
+        expect(((a as any).parents as Set<any>).has(b)).toBe(true)
+        expect(((a as any).parents as Set<any>).has(c)).toBe(true)
+        expect(((a as any).parents as Set<any>).has(d)).toBe(true)
+        expect(((b as any).parents as Set<any>).has(e)).toBe(true)
+        expect(((c as any).parents as Set<any>).has(e)).toBe(true)
+        expect(((d as any).parents as Set<any>).has(e)).toBe(true)
+
         expect(cSpy).toHaveBeenCalledTimes(2)
 
         a.value++
