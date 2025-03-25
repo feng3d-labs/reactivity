@@ -43,7 +43,7 @@ async function init()
 
             if (file)
             {
-                validRedirects.set(file, `src/webgpu/${file}/index.html`);
+                validRedirects.set(file, `src/${file}/index.html`);
 
                 const link = createLink(file, tags[file]);
                 container.appendChild(link);
@@ -185,7 +185,7 @@ function selectFile(file)
 
     // Reveal "View source" button and set attributes to this example
     viewSrcButton.style.display = "";
-    viewSrcButton.href = `https://gitee.com/feng3d/webgpu/tree/master/examples/src/webgpu/${selected}/index.ts`;
+    viewSrcButton.href = `https://gitee.com/feng3d/reactivity/tree/master/examples/src/${selected}/index.ts`;
     viewSrcButton.title = `View source code for ${getName(selected)} on GitHub`;
 }
 

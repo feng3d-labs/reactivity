@@ -35,6 +35,10 @@
     "type": "git",
     "url": "https://gitee.com/feng3d/reactivity.git"
   },
+  "workspaces": [
+    ".",
+    "./examples"
+  ],
   "publishConfig": {
     "access": "public"
   },

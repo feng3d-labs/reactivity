@@ -1,18 +1,18 @@
-# @feng3d/watcher
+# @feng3d/reactivity
 
-用于监听对象属性的变化以及同步两个对象的属性值。
+feng3d的响应式库。
 
-源码：https://gitee.com/feng3d/watcher
+源码：https://gitee.com/feng3d/reactivity
 
-文档：https://feng3d.com/watcher
+文档：https://feng3d.com/reactivity
 
 ## 网站
 
-https://feng3d.com/watcher
+https://feng3d.com/reactivity
 
 ## 安装
 ```
-npm install @feng3d/watcher
+npm install @feng3d/reactivity
 ```
 
 ## 示例
