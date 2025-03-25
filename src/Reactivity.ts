@@ -53,10 +53,12 @@ export class Reactivity<T = any>
             invalidChild.node.parents.add(this);
             // 检查子节点值是否发生变化。
             // 注：node.node.value 将会触发 node.node.run()，从而更新 node.value。
-            if (invalidChild.value !== invalidChild.node.value)
+            const newValue = invalidChild.node.value;
+            const oldValue = invalidChild.value;
+            if (newValue !== oldValue)
             {
                 // 只需发现一个变化的子节点，标记当前节点为脏，需要执行计算。
-                this.markDirty();
+                this.markDirty(newValue, oldValue);
                 break;
             }
             //
@@ -89,7 +91,7 @@ export class Reactivity<T = any>
     /**
      * 标记为脏，触发更新。
      */
-    markDirty()
+    markDirty(newValue: T, oldValue: T)
     {
         if (this.dirty)
         {
@@ -97,15 +99,20 @@ export class Reactivity<T = any>
         }
         this.dirty = true;
 
-        this.invalidate();
+        this.invalidate(newValue, oldValue);
     }
+
+    /**
+     * 当节点失效时调用。
+     */
+    onInvalidate: () => void;
 
     /**
      * 当前节点失效。
      * 
      * 把当前节点添加到父节点的失效队列中。
      */
-    private invalidate()
+    private invalidate(newValue?: T, oldValue?: T)
     {
         // 冒泡到所有父节点，设置失效子节点。
         if (this.parents.size > 0)
@@ -113,7 +120,7 @@ export class Reactivity<T = any>
             this.parents.forEach((parent) =>
             {
                 // 添加到队尾
-                const node: ReactivityLink = { node: this, value: this._value, next: undefined };
+                const node: ReactivityLink = { node: this, value: oldValue ?? this._value, next: undefined };
                 if (parent.invalidChildrenTail)
                 {
                     parent.invalidChildrenTail.next = node;
@@ -128,6 +135,18 @@ export class Reactivity<T = any>
 
             //
             this.parents.clear();
+        }
+
+        if (this.onInvalidate)
+        {
+            // 独立执行回调
+            const pre = activeReactivity;
+            activeReactivity = null;
+
+            // 执行回调。
+            this.onInvalidate();
+
+            activeReactivity = pre;
         }
     }
 

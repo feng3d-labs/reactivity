@@ -27,8 +27,9 @@ class RefReactivity<V> extends Reactivity<V>
     set value(v: V)
     {
         if (this._value === v) return;
-        this.markDirty();
+        const oldValue = this._value;
         this._value = v;
+        this.markDirty(v, oldValue);
     }
 
     constructor(value: V)
