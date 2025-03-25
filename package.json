@@ -17,6 +17,7 @@
     }
   },
   "scripts": {
+    "dev": "cd examples && npm run dev",
     "clean": "rimraf \"{lib,dist,public}\"",
     "build": "vite build",
     "test": "vitest",
