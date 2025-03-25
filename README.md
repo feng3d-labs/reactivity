@@ -19,119 +19,43 @@ npm install @feng3d/reactivity
 
 ### 监听对象属性的变化
 ```
-const { watcher } = require('@feng3d/watcher');
+import { computed, ref } from "@feng3d/reactivity";
 
-const o = { a: 1 };
-let out = '';
-const f = (_h, _p, _o) => { out += 'f'; };
-const f1 = (_h, _p, _o) => { out += 'f1'; };
-watcher.watch(o, 'a', f);
-watcher.watch(o, 'a', f1);
-o.a = 2;
-watcher.unwatch(o, 'a', f);
-o.a = 3;
-console.assert(out === 'ff1f1', out);
-```
+const result = { time: undefined, values: [] };
 
-### 绑定两个对象的指定属性，保存两个属性值同步。
-```
-const { watcher } = require('@feng3d/watcher');
+const b = ref(2);
 
-const o1 = { a: 1 };
-const o2 = { a: 1 };
-
-watcher.bind(o1, 'a', o2, 'a');
-
-o1.a = 2;
-console.assert(o1.a == o2.a && o2.a === 2);
-
-o2.a = 5;
-console.assert(o1.a == o2.a && o1.a === 5);
-```
-
-### 监听对象属性链值变化
-```
-const { watcher } = require('@feng3d/watcher');
-
-const o = { a: { b: { c: 1 } } };
-let out = '';
-const f = (_h, _p, _o) => { out += 'f'; };
-const f1 = (_h, _p, _o) => { out += 'f1'; };
-watcher.watchchain(o, 'a.b.c', f);
-watcher.watchchain(o, 'a.b.c', f1);
-o.a.b.c = 2;
-watcher.unwatchchain(o, 'a.b.c', f);
-o.a.b.c = 3;
-console.assert(out === 'ff1f1', out);
-//
-out = '';
-watcher.unwatchchain(o, 'a.b.c', f1);
-o.a.b.c = 4;
-console.assert(out === '', out);
-//
-out = '';
-watcher.watchchain(o, 'a.b.c', f);
-o.a.b.c = 4;
-o.a.b.c = 5;
-console.assert(out === 'f', out);
-//
-out = '';
-o.a = { b: { c: 1 } };
-o.a.b.c = 3;
-console.assert(out === 'ff', `out:${out}`);
-//
-out = '';
-watcher.unwatchchain(o, 'a.b.c', f);
-o.a.b.c = 4;
-console.assert(out === '', `out:${out}`);
-//
-out = '';
-watcher.watchchain(o, 'a.b.c', f);
-o.a = null;
-o.a = { b: { c: 1 } };
-o.a.b.c = 5;
-console.assert(out === 'fff', out);
-```
-### 监听对象多个属性变化
-```
-// 变换
-const transform = {
-    position: { x: 0, y: 0, z: 0 },
-    angle: { x: 0, y: 0, z: 0 },
-    scale: { x: 1, y: 1, z: 1 },
-};
-
-let changeCount = 0;
-
-// 变化回调
-function onChanged(_newValue: any, _oldValue: any, _host: any, _property: string)
+function 递归(depth = 10)
 {
-    changeCount++;
+    if (depth <= 0) return computed(() =>
+    {
+        return b.value
+    }).value;
+
+    return computed(() =>
+    {
+        return 递归(depth - 1) + 递归(depth - 2);
+    }).value;
 }
 
-// 监听变化
-watcher.watchobject(transform, { position: { x: 0, y: 0, z: 0 }, angle: { x: 0, y: 0, z: 0 }, scale: { x: 0, y: 0, z: 0 } }, onChanged);
-//
-changeCount = 0;
-transform.position.x = Math.random();
-equal(changeCount, 1); // 触发改变一次
+const cb = computed(() =>
+{
+    return 递归(16);
+});
 
-changeCount = 0;
-transform.position.x = transform.position.x + 0;
-equal(changeCount, 0); // 赋予相同的值不会触发改变
+const count = 10000;
 
-changeCount = 0;
-transform.position = { x: Math.random(), y: Math.random(), z: Math.random() };
-equal(changeCount, 3); // x、y、z均改变
+b.value++;
+cb.value;
 
-changeCount = 0;
-transform.position = { x: transform.position.x, y: transform.position.y, z: transform.position.z };
-equal(changeCount, 0); // x、y、z均未改变
+const start = performance.now();
+for (let i = 0; i < count; i++)
+{
+    ref(1).value++; // 添加此行代码将会导致 @vue/reactivity 版本的性能下降，而 @feng3d/reactivity 版本的性能保持不变
 
-// 移除监听变化
-watcher.unwatchobject(transform, { position: { x: 0, y: 0, z: 0 }, angle: { x: 0, y: 0, z: 0 }, scale: { x: 0, y: 0, z: 0 } }, onChanged);
+    cb.value;
+}
+result.time = performance.now() - start;
 
-changeCount = 0;
-transform.position = { x: Math.random(), y: Math.random(), z: Math.random() };
-equal(changeCount, 0); // 无法监听到x、y、z改变
+result.values.push(cb.value);
 ```

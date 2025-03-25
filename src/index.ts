@@ -1,8 +1,8 @@
 /**
  * 创建响应式值的引用。
  *
- * @param value 
- * @returns 
+ * @param value
+ * @returns
  */
 export function ref<T>(value: T): { value: T }
 {
@@ -34,7 +34,7 @@ class ReactiveNode<T = any>
 {
     /**
      * 父反应节点。
-     * 
+     *
      * 记录了哪些节点调用了当前节点。
      */
     parents = new Set<ReactiveNode>();
@@ -55,6 +55,7 @@ class ReactiveNode<T = any>
     get value()
     {
         this.run();
+
         return this._value;
     }
     protected _value: T;
@@ -125,7 +126,7 @@ class ReactiveNode<T = any>
         //
         if (this.parents.size > 0)
         {
-            this.parents.forEach(parent =>
+            this.parents.forEach((parent) =>
             {
                 const node: ReactiveNodeLink = { node: this, value: this._value, next: parent.invalidChildren };
                 parent.invalidChildren = node;
@@ -145,9 +146,9 @@ class ReactiveNode<T = any>
 
 /**
  * 反应式函数节点。
- * 
+ *
  * 当使用 computed 函数时，会创建一个 ReactiveFunctionNode 对象。
- * 
+ *
  * 当获取value值时，会执行func函数，返回结果。
  */
 class FunctionReactiveNode<T> extends ReactiveNode
@@ -171,9 +172,9 @@ class FunctionReactiveNode<T> extends ReactiveNode
 
 /**
  * 属性值反应式节点。
- * 
+ *
  * 当使用 reactive 函数创建一个反应式对象后，访问该对象的属性时，会创建一个 ReactiveGetValueNode 对象。
- * 
+ *
  * 当设置反应式对象对应属性值时，会触发该节点。
  */
 class ValueReactiveNode<V> extends ReactiveNode<V>
@@ -181,6 +182,7 @@ class ValueReactiveNode<V> extends ReactiveNode<V>
     get value()
     {
         this.run();
+
         return this._value;
     }
     set value(v: V)
