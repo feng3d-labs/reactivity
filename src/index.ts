@@ -15,7 +15,7 @@ export function ref<T>(value: T): { value: T }
  * @param func 计算属性的 getter 函数
  * @returns 包含 value 属性的对象，用于获取计算属性的值
  */
-export function computed<T>(func: () => T)
+export function computed<T>(func: () => T): { value: T }
 {
     return new FunctionReactiveNode(func);
 }
