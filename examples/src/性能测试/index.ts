@@ -1,4 +1,4 @@
-import { computed, effect, reactive, ref } from "./src/reactivity";
+import { computed, effect, reactive, ref } from "@feng3d/reactivity";
 // import { computed, effect, reactive, ref } from "@vue/reactivity";
 
 const arr = new Array(100).fill(ref(1));
