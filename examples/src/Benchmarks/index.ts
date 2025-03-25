@@ -1,4 +1,4 @@
-import { computed, effect, reactive, ref } from "@feng3d/reactivity";
+import { computed, ref } from "@feng3d/reactivity";
 // import { computed, effect, reactive, ref } from "@vue/reactivity";
 
 const arr = new Array(100).fill(ref(1));
@@ -12,9 +12,37 @@ const ca = computed(() =>
     return arr.reduce((acc, cur) => acc + cur.value, 0);
 })
 
+function loop0(depth = 10)
+{
+    if (depth <= 0) return b.value;
+    return loop0(depth - 1) + loop0(depth - 2);
+}
+
+function loop(depth = 10)
+{
+    // console.log("function loop");
+    if (depth <= 0) return computed(() =>
+    {
+        // console.log("b.value");
+        return b.value
+    }).value;
+
+    return computed(() =>
+    {
+        // console.log("loop(depth - 1) + 1");
+        return loop(depth - 1) + loop(depth - 2);
+    }).value;
+}
+
 const cb = computed(() =>
 {
-    console.log("computed b");
+    // console.log("computed b");
+    return loop(10);
+});
+
+computed(() =>
+{
+    // console.log("computed b");
     return b.value;
 })
 
@@ -32,17 +60,17 @@ const func1 = () =>
 const result = computed(func);
 const result1 = computed(func1);
 
-console.log(result.value);
-console.log(result1.value);
+console.log(`result`, result.value);
+console.log(`result1`, result1.value);
 
 arr[0].value = 2;
 arr[0].value = 3;
 arr[0].value = 4;
 arr[0].value = 1;
-console.log(result.value);
-console.log(result1.value);
+console.log(`result`, result.value);
+console.log(`result1`, result1.value);
 
-const count = 10000000;
+const count = 10000;
 
 console.time("time");
 for (let i = 0; i < count; i++)
@@ -50,18 +78,40 @@ for (let i = 0; i < count; i++)
     result.value;
 }
 console.timeEnd("time");
-console.time("time");
-for (let i = 0; i < count; i++)
+
+const update = () =>
 {
-    // a.value = 
-    // result.value;
-    arr[0].value = 1;
-    arr[0].value = 4;
-    arr[0].value = 1;
-    arr[0].value = 4;
-    // result.value;
+
+    b.value++;
+    b.value++;
+    cb.value;
+    console.time("time");
+
+    for (let i = 0; i < count; i++)
+    {
+        arr[0].value++;
+        // b.value--;
+        b.value++;
+        // a.value = 
+        // result.value;
+        // arr[0].value = 1;
+        // arr[0].value = 4;
+        // arr[0].value = 1;
+        // arr[0].value = 4;
+        // result.value;
+
+        cb.value;
+        // loop0(15);
+    }
+    console.timeEnd("time");
+    console.log(cb.value);
+    console.log(loop0(18));
+
+    // setTimeout(update, 1000);
+    // requestAnimationFrame(update);
 }
-console.timeEnd("time");
+
+update();
 
 // computed
 // index.ts:9 computed a
