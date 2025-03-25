@@ -1,10 +1,10 @@
 import { Reactivity } from "./reactivity";
 
 /**
- * 创建响应式值的引用。
+ * 创建一个引用，该引用的值可以被响应式系统追踪和更新。
  *
- * @param value
- * @returns
+ * @param value 引用的值。
+ * @returns 包含 value 属性的对象，用于获取和设置引用的值。
  */
 export function ref<T>(value: T): { value: T }
 {
@@ -12,11 +12,9 @@ export function ref<T>(value: T): { value: T }
 }
 
 /**
- * 属性值反应式节点。
- *
- * 当使用 reactive 函数创建一个反应式对象后，访问该对象的属性时，会创建一个 ReactiveGetValueNode 对象。
- *
- * 当设置反应式对象对应属性值时，会触发该节点。
+ * 引用反应式节点。
+ * 
+ * 当使用 ref 函数时，会创建一个 RefReactivity 对象。
  */
 class RefReactivity<V> extends Reactivity<V>
 {
