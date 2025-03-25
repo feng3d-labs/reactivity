@@ -1,4 +1,5 @@
-export function 复杂情况取值(ref, computed)
+import { computed, Ref, ref } from "@feng3d/reactivity";
+export function 复杂情况取值(ref: <T>(value?: T) => Ref<T>, computed: <T>(func: (oldValue?: T) => T) => { value: T; })
 {
     const result = { time: undefined, values: [] };
 
