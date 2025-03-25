@@ -31,7 +31,7 @@ export class Reactivity<T = any>
      */
     get value()
     {
-        this.run();
+        this.track();
 
         return this._value;
     }
@@ -40,7 +40,7 @@ export class Reactivity<T = any>
     /**
      * 执行当前节点。
      */
-    run()
+    track()
     {
         // 保存当前节点作为父节点。
         const parentReactiveNode = activeReactivity;
@@ -60,7 +60,7 @@ export class Reactivity<T = any>
             if (newValue !== oldValue)
             {
                 // 只需发现一个变化的子节点，标记当前节点为脏，需要执行计算。
-                this.markDirty(newValue, oldValue);
+                this.trigger(newValue, oldValue);
                 break;
             }
             //
@@ -93,7 +93,7 @@ export class Reactivity<T = any>
     /**
      * 标记为脏，触发下次检查与执行。
      */
-    markDirty(newValue?: T, oldValue?: T)
+    trigger(newValue?: T, oldValue?: T)
     {
         if (this.dirty)
         {

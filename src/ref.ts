@@ -34,7 +34,7 @@ class RefReactivity<V> extends Reactivity<V>
 
     get value()
     {
-        this.run();
+        this.track();
 
         return this._value;
     }
@@ -43,7 +43,7 @@ class RefReactivity<V> extends Reactivity<V>
         if (this._value === v) return;
         const oldValue = this._value;
         this._value = v;
-        this.markDirty(v, oldValue);
+        this.trigger(v, oldValue);
     }
 
     constructor(value: V)

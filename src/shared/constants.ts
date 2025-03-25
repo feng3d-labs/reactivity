@@ -24,3 +24,14 @@ export enum TrackOpTypes
     GET = 'get', // 获取属性值
     HAS = 'has', // 检查属性是否存在
 }
+
+/**
+ * 触发操作类型枚举，用于标识在响应式系统中对对象属性进行的修改操作类型
+ */
+export enum TriggerOpTypes
+{
+    SET = 'set', // 设置属性值
+    ADD = 'add', // 添加新属性
+    DELETE = 'delete', // 删除属性
+    CLEAR = 'clear', // 清空对象属性
+}

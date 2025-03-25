@@ -6,11 +6,21 @@ export const isArray: typeof Array.isArray = Array.isArray
 export const isSymbol = (val: unknown): val is symbol => typeof val === 'symbol'
 export const isString = (val: unknown): val is string => typeof val === 'string'
 
+// 判断对象是否拥有指定属性
+export const hasOwn = (
+    val: object,
+    key: string | symbol,
+): key is keyof typeof val => Object.prototype.hasOwnProperty.call(val, key)
+
 export const isIntegerKey = (key: unknown): boolean =>
     isString(key) &&
     key !== 'NaN' &&
     key[0] !== '-' &&
     '' + parseInt(key as any, 10) === key
+
+// 比较两个值是否发生变化，考虑 NaN 的情况
+export const hasChanged = (value: any, oldValue: any): boolean =>
+    !Object.is(value, oldValue)
 
 function targetTypeMap(rawType: string)
 {
@@ -49,4 +59,10 @@ export interface Target
 {
     [ReactiveFlags.IS_REACTIVE]?: boolean
     [ReactiveFlags.RAW]?: any
+}
+
+export function toRaw<T>(observed: T): T
+{
+    const raw = observed && (observed as Target)[ReactiveFlags.RAW]
+    return raw ? toRaw(raw) : observed
 }

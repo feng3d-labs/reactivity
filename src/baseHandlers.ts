@@ -1,7 +1,8 @@
 import { reactive } from "./reactive";
 import { isRef } from "./ref";
-import { isArray, isIntegerKey, isObject, Target } from "./shared/general";
-import { property } from "./track";
+import { TrackOpTypes, TriggerOpTypes } from "./shared/constants";
+import { hasChanged, hasOwn, isArray, isIntegerKey, isObject, Target, toRaw } from "./shared/general";
+import { track, trigger } from "./track";
 
 class BaseReactiveHandler implements ProxyHandler<Target>
 {
@@ -19,7 +20,7 @@ class BaseReactiveHandler implements ProxyHandler<Target>
         )
 
         //
-        property(target, propertyKey as any)
+        track(target, TrackOpTypes.GET, propertyKey as any)
 
         if (isRef(res))
         {
@@ -36,6 +37,45 @@ class BaseReactiveHandler implements ProxyHandler<Target>
         }
 
         return res
+    }
+
+    set(
+        target: Record<string | symbol, unknown>,
+        key: string | symbol,
+        value: unknown,
+        receiver: object,
+    ): boolean
+    {
+        let oldValue = target[key]
+
+        if (!isArray(target) && isRef(oldValue) && !isRef(value))
+        {
+            oldValue.value = value
+            return true
+        }
+
+        const hadKey =
+            isArray(target) && isIntegerKey(key)
+                ? Number(key) < target.length
+                : hasOwn(target, key)
+        const result = Reflect.set(
+            target,
+            key,
+            value,
+            isRef(target) ? target : receiver,
+        )
+        // don't trigger if target is something up in the prototype chain of original
+        if (target === toRaw(receiver))
+        {
+            if (!hadKey)
+            {
+                trigger(target, TriggerOpTypes.ADD, key, value)
+            } else if (hasChanged(value, oldValue))
+            {
+                trigger(target, TriggerOpTypes.SET, key, value, oldValue)
+            }
+        }
+        return result
     }
 }
 
