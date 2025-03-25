@@ -25,7 +25,7 @@
     "watch": "tsc -w",
     "lint": "eslint --ext .js --ext .ts src test --ignore-path .gitignore --max-warnings 0",
     "lintfix": "npm run lint -- --fix",
-    "docs": "typedoc",
+    "docs": "typedoc && cd examples && vite build --outDir ../public",
     "upload_oss": "npm run docs && feng3d-cli oss_upload_dir",
     "release": "npm run clean && npm run lint && npm run build && npm run docs && npm run types && npm publish",
     "prepublishOnly": "node scripts/prepublish.js",
