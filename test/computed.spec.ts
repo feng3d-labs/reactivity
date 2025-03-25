@@ -82,4 +82,55 @@ describe('reactivity/computed', () =>
 
         expect(_msg).toBe('The items are not loaded')
     })
+
+
+    // https://github.com/vuejs/core/pull/5912#issuecomment-1739159832
+    it('deps order should be consistent with the last time get value', () =>
+    {
+        const cSpy = vi.fn()
+
+        const a = ref(0)
+        const b = computed(() =>
+        {
+            return a.value % 3 !== 0
+        })
+        const c = computed(() =>
+        {
+            cSpy()
+            if (a.value % 3 === 2)
+            {
+                return 'expensive'
+            }
+            return 'cheap'
+        })
+        const d = computed(() =>
+        {
+            return a.value % 3 === 2
+        })
+        const e = computed(() =>
+        {
+            if (b.value)
+            {
+                if (d.value)
+                {
+                    return 'Avoiding expensive calculation'
+                }
+            }
+            return c.value
+        })
+
+        e.value
+        a.value++
+        e.value
+
+        // expect(e.deps!.dep).toBe(b.dep)
+        // expect(e.deps!.nextDep!.dep).toBe(d.dep)
+        // expect(e.deps!.nextDep!.nextDep!.dep).toBe(c.dep)
+        expect(cSpy).toHaveBeenCalledTimes(2)
+
+        a.value++
+        e.value
+
+        expect(cSpy).toHaveBeenCalledTimes(2)
+    })
 })

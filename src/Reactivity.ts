@@ -16,9 +16,13 @@ export class Reactivity<T = any>
     dirty = true;
 
     /**
-     * 失效的子节点，需要在执行时检查子节点值是否发生变化。
+     * 失效的子节点的队头。需要在执行时检查子节点值是否发生变化。
      */
-    invalidChildren: ReactivityLink;
+    invalidChildrenHead: ReactivityLink;
+    /**
+     * 失效子节点的队尾。用于保持检查顺序。新增节点添加到队尾，从队头开始检查。
+     */
+    invalidChildrenTail: ReactivityLink;
 
     /**
      * 当前节点值。
@@ -42,7 +46,7 @@ export class Reactivity<T = any>
         activeReactivity = this;
 
         // 检查子节点是否是否存在值发生变化的。
-        let invalidChild = this.invalidChildren;
+        let invalidChild = this.invalidChildrenHead;
         while (invalidChild)
         {
             // 修复与子节点关系
@@ -58,7 +62,8 @@ export class Reactivity<T = any>
             //
             invalidChild = invalidChild.next;
         }
-        this.invalidChildren = undefined as any;
+        this.invalidChildrenHead = undefined as any;
+        this.invalidChildrenTail = undefined as any;
 
         //
         // 保存当前节点作为父节点。
@@ -67,13 +72,14 @@ export class Reactivity<T = any>
         {
             this._value = this._runSelf();
 
-            // 连接父节点和子节点。
-            if (parentReactiveNode)
-            {
-                this.parents.add(parentReactiveNode);
-            }
             //
             this.dirty = false;
+        }
+
+        // 连接父节点和子节点。
+        if (parentReactiveNode)
+        {
+            this.parents.add(parentReactiveNode);
         }
 
         // 执行完毕后恢复父节点。
@@ -106,8 +112,17 @@ export class Reactivity<T = any>
         {
             this.parents.forEach((parent) =>
             {
-                const node: ReactivityLink = { node: this, value: this._value, next: parent.invalidChildren };
-                parent.invalidChildren = node;
+                // 添加到队尾
+                const node: ReactivityLink = { node: this, value: this._value, next: undefined };
+                if (parent.invalidChildrenTail)
+                {
+                    parent.invalidChildrenTail.next = node;
+                }
+                else
+                {
+                    parent.invalidChildrenTail = node;
+                    parent.invalidChildrenHead = node;
+                }
                 parent.invalidate();
             });
 
