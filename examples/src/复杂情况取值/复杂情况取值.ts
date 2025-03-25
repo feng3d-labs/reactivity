@@ -1,4 +1,4 @@
-export function 复杂情况取值(ref: <T>(value: T) => { value: T; }, computed: <T>(func: () => T) => { value: T; })
+export function 复杂情况取值(ref, computed)
 {
     const result = { time: undefined, values: [] };
 

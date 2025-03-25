@@ -13,7 +13,7 @@ export default defineConfig({
             input: getHtmlNamesObject(),
         },
         sourcemap: false,
-        minify: true,
+        minify: false,
         outDir: "public"
     },
     base: "./",

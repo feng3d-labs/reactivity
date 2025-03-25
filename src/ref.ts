@@ -1,4 +1,4 @@
-import { Reactivity } from "./reactivity";
+import { Reactivity } from "./Reactivity";
 
 /**
  * 创建一个引用，该引用的值可以被响应式系统追踪和更新。

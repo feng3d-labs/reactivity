@@ -42,19 +42,21 @@ export class Reactivity<T = any>
         activeReactivity = this;
 
         // 检查子节点是否是否存在值发生变化的。
-        let node = this.invalidChildren;
-        while (node)
+        let invalidChild = this.invalidChildren;
+        while (invalidChild)
         {
+            // 修复与子节点关系
+            invalidChild.node.parents.add(this);
             // 检查子节点值是否发生变化。
             // 注：node.node.value 将会触发 node.node.run()，从而更新 node.value。
-            if (node.value !== node.node.value)
+            if (invalidChild.value !== invalidChild.node.value)
             {
                 // 只需发现一个变化的子节点，标记当前节点为脏，需要执行计算。
                 this.markDirty();
                 break;
             }
-
-            node = node.next;
+            //
+            invalidChild = invalidChild.next;
         }
         this.invalidChildren = undefined as any;
 
@@ -90,9 +92,6 @@ export class Reactivity<T = any>
         this.dirty = true;
 
         this.invalidate();
-
-        //
-        this.parents.clear();
     }
 
     /**
@@ -111,6 +110,9 @@ export class Reactivity<T = any>
                 parent.invalidChildren = node;
                 parent.invalidate();
             });
+
+            //
+            this.parents.clear();
         }
     }
 
