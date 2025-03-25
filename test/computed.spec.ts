@@ -138,4 +138,116 @@ describe('reactivity/computed', () =>
 
         expect(cSpy).toHaveBeenCalledTimes(2)
     })
+
+    it('should trigger by the second computed that maybe dirty', () =>
+    {
+        const cSpy = vi.fn()
+
+        const src1 = ref(0)
+        const src2 = ref(0)
+        const c1 = computed(() => src1.value)
+        const c2 = computed(() => (src1.value % 2) + src2.value)
+        const c3 = computed(() =>
+        {
+            cSpy()
+            c1.value
+            c2.value
+        })
+
+        c3.value
+        src1.value = 2
+        c3.value
+        expect(cSpy).toHaveBeenCalledTimes(2)
+        src2.value = 1
+        c3.value
+        expect(cSpy).toHaveBeenCalledTimes(3)
+    })
+
+    it('should chained computeds dirtyLevel update with first computed effect', () =>
+    {
+        const v = ref(0)
+        const c1 = computed(() =>
+        {
+            if (v.value === 0)
+            {
+                v.value = 1
+            }
+            return v.value
+        })
+        const c2 = computed(() => c1.value)
+        const c3 = computed(() => c2.value)
+
+        c3.value
+    })
+
+    it('should work when chained(ref+computed)', () =>
+    {
+        const v = ref(0)
+        const c1 = computed(() =>
+        {
+            if (v.value === 0)
+            {
+                v.value = 1
+            }
+            return 'foo'
+        })
+        const c2 = computed(() => v.value + c1.value)
+        expect(c2.value).toBe('0foo')
+        expect(c2.value).toBe('1foo')
+    })
+
+    it('should be recomputed without being affected by side effects', () =>
+    {
+        const v = ref(0)
+        const c1 = computed(() =>
+        {
+            v.value = 1
+            return 0
+        })
+        const c2 = computed(() =>
+        {
+            return v.value + ',' + c1.value
+        })
+
+        expect(c2.value).toBe('0,0')
+        v.value = 1
+        expect(c2.value).toBe('1,0')
+    })
+
+
+    test('performance when removing dependencies from deeply nested computeds', () =>
+    {
+        const base = ref(1)
+        const trigger = ref(true)
+        const computeds: { value: any; }[] = []
+
+        const LAYERS = 30
+
+        for (let i = 0; i < LAYERS; i++)
+        {
+            const earlier = [...computeds]
+
+            computeds.push(
+                computed(() =>
+                {
+                    return base.value + earlier.reduce((sum, c) => sum + c.value, 0)
+                }),
+            )
+        }
+
+        const tail = computed(() =>
+            trigger.value ? computeds[computeds.length - 1].value : 0,
+        )
+
+        const t0 = performance.now()
+        expect(tail.value).toBe(2 ** (LAYERS - 1))
+        const t1 = performance.now()
+        expect(t1 - t0).toBeLessThan(process.env.CI ? 100 : 30)
+
+        trigger.value = false
+        expect(tail.value).toBe(0)
+        const t2 = performance.now()
+        expect(t2 - t1).toBeLessThan(process.env.CI ? 100 : 30)
+    })
+
 })
