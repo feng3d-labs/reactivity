@@ -6,13 +6,13 @@ import { track } from "./track";
 
 class BaseReactiveHandler implements ProxyHandler<Target>
 {
-    get(target: Target, key: string | symbol, receiver: object): any
+    get(target: Target, property: string | symbol, receiver: object): any
     {
         const targetIsArray = isArray(target)
 
         const res = Reflect.get(
             target,
-            key,
+            property,
             // if this is a proxy wrapping a ref, return methods using the raw ref
             // as receiver so that we don't have to call `toRaw` on the ref in all
             // its class methods
@@ -20,12 +20,12 @@ class BaseReactiveHandler implements ProxyHandler<Target>
         )
 
         //
-        track(target, TrackOpTypes.GET, key)
+        track(target, TrackOpTypes.GET, property)
 
         if (isRef(res))
         {
             // ref unwrapping - skip unwrap for Array + integer key.
-            return targetIsArray && isIntegerKey(key) ? res : res.value
+            return targetIsArray && isIntegerKey(property) ? res : res.value
         }
 
         if (isObject(res))

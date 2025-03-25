@@ -26,6 +26,8 @@ export class Reactivity<T = any>
 
     /**
      * 当前节点值。
+     * 
+     * 取值时将会更新当前节点（建立或维护依赖关系，标记为脏时执行）。
      */
     get value()
     {
@@ -89,9 +91,9 @@ export class Reactivity<T = any>
     }
 
     /**
-     * 标记为脏，触发更新。
+     * 标记为脏，触发下次检查与执行。
      */
-    markDirty(newValue: T, oldValue: T)
+    markDirty(newValue?: T, oldValue?: T)
     {
         if (this.dirty)
         {
