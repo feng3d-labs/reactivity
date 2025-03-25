@@ -8,7 +8,7 @@ import { Reactivity } from "./reactivity";
  * @param func 检测的可能包含响应式的函数。
  * @returns 包含 value 属性的对象，用于获取计算结果。
  */
-export function computed<T>(func: () => T): { value: T }
+export function computed<T>(func: (oldValue?: T) => T): { value: T }
 {
     return new ComputedReactivity(func);
 }
@@ -25,9 +25,9 @@ class ComputedReactivity<T> extends Reactivity
     /**
      * 监听的函数。
      */
-    func: () => T;
+    func: (oldValue?: T) => T;
 
-    constructor(func: () => T)
+    constructor(func: (oldValue?: T) => T)
     {
         super();
         this.func = func;
@@ -35,6 +35,6 @@ class ComputedReactivity<T> extends Reactivity
 
     protected _runSelf()
     {
-        return this.func();
+        return this.func(this._value);
     }
 }

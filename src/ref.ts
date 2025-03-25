@@ -6,7 +6,7 @@ import { Reactivity } from "./reactivity";
  * @param value 引用的值。
  * @returns 包含 value 属性的对象，用于获取和设置引用的值。
  */
-export function ref<T>(value: T): { value: T }
+export function ref<T>(value?: T): { value: T }
 {
     return new RefReactivity<T>(value);
 }
