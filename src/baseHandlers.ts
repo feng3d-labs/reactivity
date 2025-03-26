@@ -1,3 +1,4 @@
+import { arrayInstrumentations } from "./arrayInstrumentations";
 import { track, trigger } from "./dep";
 import { reactive, reactiveMap } from "./reactive";
 import { isRef } from "./ref";
@@ -41,6 +42,16 @@ class BaseReactiveHandler implements ProxyHandler<Target>
         }
 
         const targetIsArray = isArray(target)
+
+        let fn: Function | undefined
+        if (targetIsArray && (fn = arrayInstrumentations[key]))
+        {
+            return fn
+        }
+        if (key === 'hasOwnProperty')
+        {
+            return hasOwnProperty
+        }
 
         const res = Reflect.get(
             target,
@@ -156,6 +167,16 @@ class MutableReactiveHandler extends BaseReactiveHandler
  * 可变响应式处理器。
  */
 export const mutableHandlers: ProxyHandler<object> = new MutableReactiveHandler()
+
+
+function hasOwnProperty(this: object, key: unknown)
+{
+    // #10455 hasOwnProperty may be called with non-string values
+    if (!isSymbol(key)) key = String(key)
+    const obj = toRaw(this)
+    track(obj, TrackOpTypes.HAS, key)
+    return obj.hasOwnProperty(key as string)
+}
 
 const builtInSymbols = new Set(
     /*@__PURE__*/

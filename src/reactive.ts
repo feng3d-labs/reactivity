@@ -47,3 +47,8 @@ export const toReactive = <T extends unknown>(value: T): T =>
     }
     return value;
 }
+
+export function isProxy(value: any): boolean
+{
+    return value ? !!value[ReactiveFlags.RAW] : false
+}
