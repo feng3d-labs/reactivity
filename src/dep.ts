@@ -122,7 +122,7 @@ export class Dep<T = any>
             if (newValue !== oldValue)
             {
                 // 只需发现一个变化的子节点，标记当前节点为脏，需要执行计算。
-                this.trigger(newValue, oldValue);
+                this.dirty = true;
                 break;
             }
             //
@@ -157,7 +157,8 @@ export class Dep<T = any>
      */
     trigger(newValue?: T, oldValue?: T)
     {
-        // this._value = newValue;
+        oldValue ??= this._value;
+        this._value = newValue;
         if (this.dirty)
         {
             return;
@@ -181,7 +182,7 @@ export class Dep<T = any>
             this.parents.forEach((parent) =>
             {
                 // 添加到队尾
-                const node: ReactivityLink = { node: this, value: oldValue ?? this._value, next: undefined };
+                const node: ReactivityLink = { node: this, value: oldValue, next: undefined };
                 if (parent.invalidChildrenTail)
                 {
                     parent.invalidChildrenTail.next = node;
@@ -199,9 +200,13 @@ export class Dep<T = any>
         }
         count--;
 
-        if (this.isEffect) needEffectDeps.push(this);
+        // 不是正在运行的效果节点
+        if (this.isEffect && activeReactivity !== this)
+        {
+            needEffectDeps.push(this);
+        }
 
-        if (count === 0)
+        if (count === 0 && needEffectDeps.length > 0)
         {
             needEffectDeps.forEach((dep) =>
             {
@@ -209,24 +214,11 @@ export class Dep<T = any>
                 const pre = activeReactivity;
                 activeReactivity = null;
 
-                dep.trigger()
+                dep.track()
 
                 activeReactivity = pre;
             });
             needEffectDeps.length = 0;
-        }
-        // 延迟到处理完所有失效标记后触发效果。
-
-        if (this.isEffect)
-        {
-            // 独立执行回调
-            const pre = activeReactivity;
-            activeReactivity = null;
-
-            // 执行回调。
-            this.track()
-
-            activeReactivity = pre;
         }
     }
 
