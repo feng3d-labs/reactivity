@@ -1,7 +1,7 @@
 import { Dep } from "./dep";
 import { toReactive } from "./reactive";
 import { ReactiveFlags } from "./shared/constants";
-import { toRaw } from "./shared/general";
+import { hasChanged, toRaw } from "./shared/general";
 
 /**
  * 创建一个引用，该引用的值可以被响应式系统追踪和更新。
@@ -48,7 +48,8 @@ class RefReactivity<T> extends Dep<T>
     {
         const oldValue = this._rawValue;
         const newValue = toRaw(v)
-        if (oldValue === newValue) return;
+
+        if (!hasChanged(oldValue, newValue)) return;
 
         this._value = toReactive(newValue)
         this._rawValue = toRaw(newValue);

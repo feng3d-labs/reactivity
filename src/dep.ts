@@ -200,24 +200,7 @@ export class Dep<T = any>
     {
         if (!shouldTrack) return;
 
-        //
-        // 保存当前节点作为父节点。
-        // 设置当前节点为父节点。
-        if (this.isDirty())
-        {
-            // 保存当前节点作为父节点。
-            const parentReactiveNode = activeReactivity;
-            // 设置当前节点为活跃节点。
-            activeReactivity = this;
-
-            this._value = this._runSelf();
-
-            // 执行完毕后恢复父节点。
-            activeReactivity = parentReactiveNode;
-
-            //
-            this.dirty = false;
-        }
+        this.run();
 
         // 连接父节点和子节点。
         if (activeReactivity)
@@ -231,21 +214,27 @@ export class Dep<T = any>
      */
     run()
     {
-        // 保存当前节点作为父节点。
-        const parentReactiveNode = activeReactivity;
-        // 设置当前节点为活跃节点。
-        activeReactivity = this;
-
-        this._value = this._runSelf();
-
-        // 连接父节点和子节点。
-        if (parentReactiveNode)
+        if (this.isDirty())
         {
-            this.parents.add(parentReactiveNode);
-        }
+            // 保存当前节点作为父节点。
+            const parentReactiveNode = activeReactivity;
+            // 设置当前节点为活跃节点。
+            activeReactivity = this;
 
-        // 执行完毕后恢复父节点。
-        activeReactivity = parentReactiveNode;
+            this._value = this._runSelf();
+
+            // 连接父节点和子节点。
+            if (parentReactiveNode)
+            {
+                this.parents.add(parentReactiveNode);
+            }
+
+            // 执行完毕后恢复父节点。
+            activeReactivity = parentReactiveNode;
+
+            //
+            this.dirty = false;
+        }
     }
 
     /**
@@ -253,7 +242,6 @@ export class Dep<T = any>
      */
     protected isDirty()
     {
-
         // 在没有标记脏的情况下，检查子节点是否存在值发生变化的。
         if (!this.dirty && this.invalidChildrenHead)
         {
