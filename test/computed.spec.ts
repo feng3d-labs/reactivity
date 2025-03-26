@@ -47,10 +47,14 @@ describe('reactivity/computed', () =>
         })
 
         d.value
-        a.value!.v = 2
-        a.value = null
-        d.value
-        expect(cSpy).toHaveBeenCalledTimes(1)
+        a.value!.v = 2 // 触发 c 作为 d 的失效依赖
+        a.value = null // 触发 b 作为 d 的失效依赖
+        d.value // 按顺序先检查 c 再检查 b，所以 c 会被重新计算
+        expect(cSpy).toHaveBeenCalledTimes(2) // d 中没有保留被依赖的原始顺序（为了性能少维护了chind deps），只会根据失效顺序来进行检查。
+
+        // 注：@vue/reactivity 存在差异
+        // @vue/reactivity 按照原有的依赖顺序进行检查
+        // @feng3d/reactivity 按照依赖的失效顺序进行检查
     })
 
     it('chained computed dirty reallocation after trigger computed getter', () =>
