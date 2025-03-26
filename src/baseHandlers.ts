@@ -1,5 +1,5 @@
 import { arrayInstrumentations } from "./arrayInstrumentations";
-import { track, trigger } from "./dep";
+import { ITERATE_KEY, track, trigger } from "./dep";
 import { reactive, reactiveMap } from "./reactive";
 import { isRef } from "./ref";
 import { ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./shared/constants";
@@ -77,6 +77,13 @@ class BaseReactiveHandler implements ProxyHandler<Target>
         return res
     }
 
+}
+
+/**
+ * 可变响应式处理器。
+ */
+class MutableReactiveHandler extends BaseReactiveHandler
+{
     /**
      * 设置对象的属性值。
      * @param target 被代理的对象。 
@@ -123,13 +130,7 @@ class BaseReactiveHandler implements ProxyHandler<Target>
 
         return result
     }
-}
 
-/**
- * 可变响应式处理器。
- */
-class MutableReactiveHandler extends BaseReactiveHandler
-{
     /**
      * 删除对象的属性。
      * 
@@ -160,6 +161,16 @@ class MutableReactiveHandler extends BaseReactiveHandler
             track(target, TrackOpTypes.HAS, key)
         }
         return result
+    }
+
+    ownKeys(target: Record<string | symbol, unknown>): (string | symbol)[]
+    {
+        track(
+            target,
+            TrackOpTypes.ITERATE,
+            isArray(target) ? 'length' : ITERATE_KEY,
+        )
+        return Reflect.ownKeys(target)
     }
 }
 
