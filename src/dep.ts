@@ -152,6 +152,7 @@ export class Dep<T = any>
      */
     trigger(newValue?: T, oldValue?: T)
     {
+        // this._value = newValue;
         if (this.dirty)
         {
             return;

@@ -35,7 +35,7 @@ export function reactive<T extends object>(target: T): T
 
     return proxy
 }
-const reactiveMap = new WeakMap<Target, any>();
+export const reactiveMap = new WeakMap<Target, any>();
 
 export function isReactive(value: unknown): boolean
 {

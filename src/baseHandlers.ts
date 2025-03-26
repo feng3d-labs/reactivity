@@ -1,5 +1,5 @@
 import { track, trigger } from "./dep";
-import { reactive } from "./reactive";
+import { reactive, reactiveMap } from "./reactive";
 import { isRef } from "./ref";
 import { ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./shared/constants";
 import { hasChanged, hasOwn, isArray, isIntegerKey, isObject, Target, toRaw } from "./shared/general";
@@ -11,6 +11,20 @@ class BaseReactiveHandler implements ProxyHandler<Target>
         if (key === ReactiveFlags.IS_REACTIVE)
         {
             return true;
+        } else if (key === ReactiveFlags.RAW)
+        {
+            if (
+                receiver ===
+                reactiveMap.get(target) ||
+                // receiver is not the reactive proxy, but has the same prototype
+                // this means the receiver is a user proxy of the reactive proxy
+                Object.getPrototypeOf(target) === Object.getPrototypeOf(receiver)
+            )
+            {
+                return target
+            }
+            // early return undefined
+            return
         }
 
         const targetIsArray = isArray(target)
