@@ -9,7 +9,7 @@ import { TrackOpTypes, TriggerOpTypes } from "./shared/constants";
  * @param key  属性名。
  * @returns 
  */
-export function track<T, K extends keyof T>(target: T, type: TrackOpTypes, key: K): void
+export function track(target: object, type: TrackOpTypes, key: unknown): void
 {
     let depsMap = targetMap.get(target);
     if (!depsMap)
@@ -41,7 +41,7 @@ const targetMap: WeakMap<any, Map<any, Dep>> = new WeakMap()
  * @param oldValue 旧值。
  * @returns 
  */
-export function trigger<T, K extends keyof T>(target: T, type: TriggerOpTypes, key: K, newValue?: T[K], oldValue?: T[K]): void
+export function trigger(target: object, type: TriggerOpTypes, key?: unknown, newValue?: unknown, oldValue?: unknown,): void
 {
     const depsMap = targetMap.get(target);
     if (!depsMap) return;
@@ -231,6 +231,9 @@ export class Dep<T = any>
         return this._value;
     }
 }
+
+export const ITERATE_KEY: unique symbol = Symbol(__DEV__ ? 'Object iterate' : '');
+export const MAP_KEY_ITERATE_KEY: unique symbol = Symbol(__DEV__ ? 'Map keys iterate' : '')
 
 /**
  * 当前正在执行的反应式节点。

@@ -15,6 +15,13 @@ export const isObject = (val: unknown): val is Record<any, any> => val !== null 
 export const isArray: typeof Array.isArray = Array.isArray
 export const isSymbol = (val: unknown): val is symbol => typeof val === 'symbol'
 export const isString = (val: unknown): val is string => typeof val === 'string'
+export const isIntegerKey = (key: unknown): boolean =>
+    isString(key) &&
+    key !== 'NaN' &&
+    key[0] !== '-' &&
+    '' + parseInt(key as any, 10) === key
+export const isMap = (val: unknown): val is Map<any, any> =>
+    toTypeString(val) === '[object Map]'
 
 // 判断对象是否拥有指定属性
 export const hasOwn = (
@@ -22,11 +29,7 @@ export const hasOwn = (
     key: string | symbol,
 ): key is keyof typeof val => Object.prototype.hasOwnProperty.call(val, key)
 
-export const isIntegerKey = (key: unknown): boolean =>
-    isString(key) &&
-    key !== 'NaN' &&
-    key[0] !== '-' &&
-    '' + parseInt(key as any, 10) === key
+
 
 // 比较两个值是否发生变化，考虑 NaN 的情况
 export const hasChanged = (value: any, oldValue: any): boolean =>
@@ -59,7 +62,7 @@ export function getTargetType(value: Target)
 const toTypeString = (value: unknown): string => Object.prototype.toString.call(value)
 
 // 获取值的原始类型
-const toRawType = (value: unknown): string =>
+export const toRawType = (value: unknown): string =>
 {
     // 从类似 "[object RawType]" 的字符串中提取 "RawType"
     return toTypeString(value).slice(8, -1)
@@ -80,4 +83,9 @@ export function toRaw<T>(observed: T): T
 {
     const raw = observed && (observed as Target)[ReactiveFlags.RAW]
     return raw ? toRaw(raw) : observed
+}
+
+export function warn(msg: string, ...args: any[]): void
+{
+    console.warn(`[Vue warn] ${msg}`, ...args)
 }

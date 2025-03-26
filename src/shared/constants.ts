@@ -23,6 +23,7 @@ export enum TrackOpTypes
 {
     GET = 'get', // 获取属性值
     HAS = 'has', // 检查属性是否存在
+    ITERATE = 'iterate', // 遍历对象属性
 }
 
 /**

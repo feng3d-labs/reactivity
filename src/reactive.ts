@@ -1,4 +1,5 @@
 import { mutableHandlers } from "./baseHandlers"
+import { mutableCollectionHandlers } from "./collectionHandlers"
 import { ReactiveFlags, TargetType } from "./shared/constants"
 import { getTargetType, isObject, Target } from "./shared/general"
 
@@ -23,13 +24,9 @@ export function reactive<T extends object>(target: T): T
         return existingProxy
     }
 
-    // const proxy = new Proxy<T>(
-    //     target,
-    //     targetType === TargetType.COLLECTION ? mutableCollectionHandlers : mutableHandlers,
-    // ) as T;
     const proxy = new Proxy<T>(
         target,
-        mutableHandlers,
+        targetType === TargetType.COLLECTION ? mutableCollectionHandlers : mutableHandlers as any,
     ) as T;
     reactiveMap.set(target, proxy)
 
