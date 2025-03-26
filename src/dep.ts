@@ -95,6 +95,11 @@ export class Dep<T = any>
     protected _value: T;
 
     /**
+     * 当节点失效时调用。
+     */
+    isEffect: boolean = false;
+
+    /**
      * 执行当前节点。
      */
     track()
@@ -163,11 +168,6 @@ export class Dep<T = any>
     }
 
     /**
-     * 当节点失效时调用。
-     */
-    onInvalidate: () => void;
-
-    /**
      * 当前节点失效。
      * 
      * 把当前节点添加到父节点的失效队列中。
@@ -199,7 +199,7 @@ export class Dep<T = any>
         }
         count--;
 
-        if (this.onInvalidate) needEffectDeps.push(this);
+        if (this.isEffect) needEffectDeps.push(this);
 
         if (count === 0)
         {
@@ -217,14 +217,14 @@ export class Dep<T = any>
         }
         // 延迟到处理完所有失效标记后触发效果。
 
-        if (this.onInvalidate)
+        if (this.isEffect)
         {
             // 独立执行回调
             const pre = activeReactivity;
             activeReactivity = null;
 
             // 执行回调。
-            this.onInvalidate();
+            this.track()
 
             activeReactivity = pre;
         }

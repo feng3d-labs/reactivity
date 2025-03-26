@@ -15,14 +15,11 @@ export function effect<T = any>(fn: () => T): Effect
 
     // 立即执行一次，以确保副作用函数被执行。
     dep.track();
-    dep.onInvalidate = () => dep.track();
+    dep.isEffect = true;
 
     return {
-        pause: () => { dep.onInvalidate = undefined },
-        resume: () =>
-        {
-            dep.onInvalidate = () => dep.track();
-        }
+        pause: () => dep.isEffect = false,
+        resume: () => dep.isEffect = true,
     };
 }
 
