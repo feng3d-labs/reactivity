@@ -174,6 +174,7 @@ export class Dep<T = any>
      */
     private invalidate(newValue?: T, oldValue?: T)
     {
+        count++;
         // 冒泡到所有父节点，设置失效子节点。
         if (this.parents.size > 0)
         {
@@ -196,6 +197,25 @@ export class Dep<T = any>
             //
             this.parents.clear();
         }
+        count--;
+
+        if (this.onInvalidate) needEffectDeps.push(this);
+
+        if (count === 0)
+        {
+            needEffectDeps.forEach((dep) =>
+            {
+                // 独立执行回调
+                const pre = activeReactivity;
+                activeReactivity = null;
+
+                dep.trigger()
+
+                activeReactivity = pre;
+            });
+            needEffectDeps.length = 0;
+        }
+        // 延迟到处理完所有失效标记后触发效果。
 
         if (this.onInvalidate)
         {
@@ -228,3 +248,6 @@ let activeReactivity: Dep;
  * 反应式节点链。
  */
 type ReactivityLink = { node: Dep, value: any, next: ReactivityLink };
+
+let count = 0;
+let needEffectDeps: Dep[] = [];
