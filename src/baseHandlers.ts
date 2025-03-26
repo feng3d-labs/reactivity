@@ -100,7 +100,20 @@ class BaseReactiveHandler implements ProxyHandler<Target>
 
 class MutableReactiveHandler extends BaseReactiveHandler
 {
-
+    deleteProperty(
+        target: Record<string | symbol, unknown>,
+        key: string | symbol,
+    ): boolean
+    {
+        const hadKey = hasOwn(target, key)
+        const oldValue = target[key]
+        const result = Reflect.deleteProperty(target, key)
+        if (result && hadKey)
+        {
+            trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue)
+        }
+        return result
+    }
 }
 
 export const mutableHandlers: ProxyHandler<object> = new MutableReactiveHandler()
