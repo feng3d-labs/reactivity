@@ -2,7 +2,7 @@ import { track, trigger } from "./dep";
 import { reactive, reactiveMap } from "./reactive";
 import { isRef } from "./ref";
 import { ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./shared/constants";
-import { hasChanged, hasOwn, isArray, isIntegerKey, isObject, Target, toRaw } from "./shared/general";
+import { hasChanged, hasOwn, isArray, isIntegerKey, isObject, isSymbol, Target, toRaw } from "./shared/general";
 
 /**
  * 基础响应式处理器。
@@ -140,9 +140,30 @@ class MutableReactiveHandler extends BaseReactiveHandler
         }
         return result
     }
+
+    has(target: Record<string | symbol, unknown>, key: string | symbol): boolean
+    {
+        const result = Reflect.has(target, key)
+        if (!isSymbol(key) || !builtInSymbols.has(key))
+        {
+            track(target, TrackOpTypes.HAS, key)
+        }
+        return result
+    }
 }
 
 /**
  * 可变响应式处理器。
  */
 export const mutableHandlers: ProxyHandler<object> = new MutableReactiveHandler()
+
+const builtInSymbols = new Set(
+    /*@__PURE__*/
+    Object.getOwnPropertyNames(Symbol)
+        // ios10.x Object.getOwnPropertyNames(Symbol) can enumerate 'arguments' and 'caller'
+        // but accessing them on Symbol leads to TypeError because Symbol is a strict mode
+        // function
+        .filter(key => key !== 'arguments' && key !== 'caller')
+        .map(key => Symbol[key as keyof SymbolConstructor])
+        .filter(isSymbol),
+)

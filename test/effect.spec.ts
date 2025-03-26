@@ -69,18 +69,18 @@ describe('reactivity/effect', () =>
         expect(dummy).toBe(undefined)
     })
 
-    // it('should observe has operations', () =>
-    // {
-    //     let dummy
-    //     const obj = reactive<{ prop?: string | number }>({ prop: 'value' })
-    //     effect(() => (dummy = 'prop' in obj))
+    it('should observe has operations', () =>
+    {
+        let dummy
+        const obj = reactive<{ prop?: string | number }>({ prop: 'value' })
+        effect(() => (dummy = 'prop' in obj))
 
-    //     expect(dummy).toBe(true)
-    //     delete obj.prop
-    //     expect(dummy).toBe(false)
-    //     obj.prop = 12
-    //     expect(dummy).toBe(true)
-    // })
+        expect(dummy).toBe(true)
+        delete obj.prop
+        expect(dummy).toBe(false)
+        obj.prop = 12
+        expect(dummy).toBe(true)
+    })
 
     it('should rerun the passed function when a trigger occurs', () =>
     {
