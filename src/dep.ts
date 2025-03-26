@@ -11,6 +11,8 @@ import { TrackOpTypes, TriggerOpTypes } from "./shared/constants";
  */
 export function track(target: object, type: TrackOpTypes, key: unknown): void
 {
+    if (!shouldTrack) return;
+
     let depsMap = targetMap.get(target);
     if (!depsMap)
     {
@@ -104,6 +106,8 @@ export class Dep<T = any>
      */
     track()
     {
+        if (!shouldTrack) return;
+
         // 保存当前节点作为父节点。
         const parentReactiveNode = activeReactivity;
         // 设置当前节点为活跃节点。
@@ -176,7 +180,8 @@ export class Dep<T = any>
      */
     private invalidate(newValue?: T, oldValue?: T)
     {
-        count++;
+        startBatch();
+
         // 冒泡到所有父节点，设置失效子节点。
         if (this.parents.size > 0)
         {
@@ -199,28 +204,14 @@ export class Dep<T = any>
             //
             this.parents.clear();
         }
-        count--;
 
         // 不是正在运行的效果节点
         if (this.isEffect && activeReactivity !== this)
         {
-            needEffectDeps.push(this);
+            batch(this)
         }
 
-        if (count === 0 && needEffectDeps.length > 0)
-        {
-            needEffectDeps.forEach((dep) =>
-            {
-                // 独立执行回调
-                const pre = activeReactivity;
-                activeReactivity = null;
-
-                dep.track()
-
-                activeReactivity = pre;
-            });
-            needEffectDeps.length = 0;
-        }
+        endBatch();
     }
 
     /**
@@ -239,12 +230,73 @@ export const ARRAY_ITERATE_KEY: unique symbol = Symbol(__DEV__ ? 'Array iterate'
 /**
  * 当前正在执行的反应式节点。
  */
-let activeReactivity: Dep;
+export let activeReactivity: Dep;
 
 /**
  * 反应式节点链。
  */
 type ReactivityLink = { node: Dep, value: any, next: ReactivityLink };
 
-let count = 0;
+/**
+ * 是否应该跟踪的标志
+ * 控制是否进行依赖跟踪
+ */
+export let shouldTrack = true
+const trackStack: boolean[] = []
+
+/**
+ * 暂停跟踪
+ * 暂时停止依赖跟踪
+ */
+export function pauseTracking(): void
+{
+    trackStack.push(shouldTrack)
+    shouldTrack = false
+}
+
+/**
+ * 重置跟踪状态
+ * 恢复之前的全局依赖跟踪状态
+ */
+export function resetTracking(): void
+{
+    const last = trackStack.pop()
+    shouldTrack = last === undefined ? true : last
+}
+
+export function startBatch(): void
+{
+    batchDepth++
+}
+
+export function endBatch(): void
+{
+    if (--batchDepth > 0)
+    {
+        return
+    }
+
+    // 批次处理
+    if (needEffectDeps.length > 0)
+    {
+        needEffectDeps.forEach((dep) =>
+        {
+            // 独立执行回调
+            const pre = activeReactivity;
+            activeReactivity = null;
+
+            dep.track()
+
+            activeReactivity = pre;
+        });
+        needEffectDeps.length = 0;
+    }
+}
+
+export function batch(dep: Dep): void
+{
+    needEffectDeps.push(dep);
+}
+
+let batchDepth = 0
 let needEffectDeps: Dep[] = [];
