@@ -180,18 +180,9 @@ export class Dep<T = any>
     protected _value: T;
 
     /**
-     * 当节点失效时调用。
+     * 是否为效果节点。
      */
     isEffect: boolean = false;
-
-    track1()
-    {
-        // 连接父节点和子节点。
-        if (activeReactivity)
-        {
-            this.parents.add(activeReactivity);
-        }
-    }
 
     /**
      * 执行当前节点。
@@ -214,7 +205,11 @@ export class Dep<T = any>
      */
     run()
     {
-        if (this.isDirty())
+        // 检查是否存在失效子节点。
+        this.handleInvalidChildren();
+
+        // 标记为脏的情况下，执行计算。
+        if (this.dirty)
         {
             // 保存当前节点作为父节点。
             const parentReactiveNode = activeReactivity;
@@ -238,9 +233,11 @@ export class Dep<T = any>
     }
 
     /**
-     * 判断是否脏。
+     * 处理失效节点。
+     * 
+     * 如果没有标记脏的情况下，则需要检查子节点是否存在值发生变化的，如果存在，则标记当前节点为脏，需要执行计算。
      */
-    protected isDirty()
+    protected handleInvalidChildren()
     {
         // 在没有标记脏的情况下，检查子节点是否存在值发生变化的。
         if (!this.dirty && this.invalidChildrenHead)
@@ -408,7 +405,7 @@ export function endBatch(): void
             const pre = activeReactivity;
             activeReactivity = null;
 
-            dep.track()
+            dep.run()
 
             activeReactivity = pre;
         });
