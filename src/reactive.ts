@@ -41,3 +41,12 @@ export function isReactive(value: unknown): boolean
 {
     return !!(value && (value as Target)[ReactiveFlags.IS_REACTIVE])
 }
+
+export const toReactive = <T extends unknown>(value: T): T =>
+{
+    if (isObject(value))
+    {
+        return reactive(value as any) as any;
+    }
+    return value;
+}

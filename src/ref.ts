@@ -1,5 +1,7 @@
 import { Dep } from "./dep";
+import { toReactive } from "./reactive";
 import { ReactiveFlags } from "./shared/constants";
+import { toRaw } from "./shared/general";
 
 /**
  * 创建一个引用，该引用的值可以被响应式系统追踪和更新。
@@ -17,6 +19,10 @@ export function ref<T>(value?: T): { value: T }
     return new RefReactivity<T>(value);
 }
 
+/**
+ * 判断一个对象是否为引用。
+ * @param r 引用。 
+ */
 export function isRef<T>(r: { value: T } | unknown): r is { value: T }
 export function isRef(r: any): r is { value: any }
 {
@@ -28,7 +34,7 @@ export function isRef(r: any): r is { value: any }
  * 
  * 当使用 ref 函数时，会创建一个 RefReactivity 对象。
  */
-class RefReactivity<V> extends Dep<V>
+class RefReactivity<T> extends Dep<T>
 {
     public readonly [ReactiveFlags.IS_REF] = true
 
@@ -38,18 +44,33 @@ class RefReactivity<V> extends Dep<V>
 
         return this._value;
     }
-    set value(v: V)
+    set value(v: T)
     {
-        if (this._value === v) return;
-        const oldValue = this._value;
-        this._value = v;
-        this.trigger(v, oldValue);
+        const oldValue = this._rawValue;
+        const newValue = toRaw(v)
+        if (oldValue === newValue) return;
+
+        this._value = toReactive(newValue)
+        this.trigger(newValue, oldValue);
     }
 
-    constructor(value: V)
+    /**
+     * 原始值。
+     * 
+     * 用于比较值是否发生变化。
+     */
+    private _rawValue: T;
+
+    /**
+     * 可能是响应式值。
+     */
+    protected _value: T
+
+    constructor(value: T)
     {
         super();
-        this._value = value;
+        this._rawValue = toRaw(value);
+        this._value = toReactive(value);
     }
 }
 

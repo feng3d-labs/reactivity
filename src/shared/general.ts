@@ -1,5 +1,15 @@
 import { ReactiveFlags, TargetType } from "./constants";
 
+export { };
+declare global
+{
+    /**
+     * 是否为开发模式。
+     */
+    var __DEV__: boolean;
+}
+globalThis.__DEV__ ??= true;
+
 export const isObject = (val: unknown): val is Record<any, any> => val !== null && typeof val === 'object';
 // 判断是否为数组
 export const isArray: typeof Array.isArray = Array.isArray
@@ -61,6 +71,11 @@ export interface Target
     [ReactiveFlags.RAW]?: any
 }
 
+/**
+ * 将一个响应式对象转换为原始对象。
+ * @param observed 响应式对象。 
+ * @returns 原始对象。
+ */
 export function toRaw<T>(observed: T): T
 {
     const raw = observed && (observed as Target)[ReactiveFlags.RAW]

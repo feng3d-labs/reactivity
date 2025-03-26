@@ -4,14 +4,27 @@ import { isRef } from "./ref";
 import { ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./shared/constants";
 import { hasChanged, hasOwn, isArray, isIntegerKey, isObject, Target, toRaw } from "./shared/general";
 
+/**
+ * 基础响应式处理器。
+ */
 class BaseReactiveHandler implements ProxyHandler<Target>
 {
+    /**
+     * 获取对象的属性值。
+     * 
+     * @param target 对象本身 
+     * @param key 属性名
+     * @param receiver 代理对象
+     * @returns 
+     */
     get(target: Target, key: string | symbol, receiver: object): any
     {
-        if (key === ReactiveFlags.IS_REACTIVE)
+        // 
+        if (key === ReactiveFlags.IS_REACTIVE) // 判断是否为响应式对象
         {
             return true;
-        } else if (key === ReactiveFlags.RAW)
+        }
+        else if (key === ReactiveFlags.RAW) // 获取原始对象
         {
             if (
                 receiver ===
@@ -32,32 +45,35 @@ class BaseReactiveHandler implements ProxyHandler<Target>
         const res = Reflect.get(
             target,
             key,
-            // if this is a proxy wrapping a ref, return methods using the raw ref
-            // as receiver so that we don't have to call `toRaw` on the ref in all
-            // its class methods
             isRef(target) ? target : receiver,
         )
 
         //
         track(target, TrackOpTypes.GET, key as any)
 
+        // 如果是 ref，则返回 ref.value
         if (isRef(res))
         {
-            // ref unwrapping - skip unwrap for Array + integer key.
             return targetIsArray && isIntegerKey(key) ? res : res.value
         }
 
+        // 如果是对象，则递归响应式化
         if (isObject(res))
         {
-            // Convert returned value into a proxy as well. we do the isObject check
-            // here to avoid invalid value warning. Also need to lazy access readonly
-            // and reactive here to avoid circular dependency.
             return reactive(res)
         }
 
         return res
     }
 
+    /**
+     * 设置对象的属性值。
+     * @param target 被代理的对象。 
+     * @param key 属性名。
+     * @param value 新值。 
+     * @param receiver 代理对象。
+     * @returns 设置是否成功。
+     */
     set(
         target: Record<string | symbol, unknown>,
         key: string | symbol,
@@ -83,23 +99,33 @@ class BaseReactiveHandler implements ProxyHandler<Target>
             value,
             isRef(target) ? target : receiver,
         )
-        // don't trigger if target is something up in the prototype chain of original
-        if (target === toRaw(receiver))
+        //
+        __DEV__ && console.assert(target === toRaw(receiver));
+
+        if (!hadKey)
         {
-            if (!hadKey)
-            {
-                trigger(target, TriggerOpTypes.ADD, key, value)
-            } else if (hasChanged(value, oldValue))
-            {
-                trigger(target, TriggerOpTypes.SET, key, value, oldValue)
-            }
+            trigger(target, TriggerOpTypes.ADD, key, value)
+        } else if (hasChanged(value, oldValue))
+        {
+            trigger(target, TriggerOpTypes.SET, key, value, oldValue)
         }
+
         return result
     }
 }
 
+/**
+ * 可变响应式处理器。
+ */
 class MutableReactiveHandler extends BaseReactiveHandler
 {
+    /**
+     * 删除对象的属性。
+     * 
+     * @param target 被代理的对象。
+     * @param key 属性名。
+     * @returns 删除是否成功。
+     */
     deleteProperty(
         target: Record<string | symbol, unknown>,
         key: string | symbol,
@@ -116,5 +142,7 @@ class MutableReactiveHandler extends BaseReactiveHandler
     }
 }
 
+/**
+ * 可变响应式处理器。
+ */
 export const mutableHandlers: ProxyHandler<object> = new MutableReactiveHandler()
-
