@@ -125,6 +125,7 @@ export class Dep<T = any>
                 this.dirty = true;
                 break;
             }
+
             //
             invalidChild = invalidChild.next;
         }
