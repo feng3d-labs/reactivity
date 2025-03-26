@@ -51,6 +51,7 @@ class RefReactivity<T> extends Dep<T>
         if (oldValue === newValue) return;
 
         this._value = toReactive(newValue)
+        this._rawValue = toRaw(newValue);
         this.trigger(newValue, oldValue);
     }
 
