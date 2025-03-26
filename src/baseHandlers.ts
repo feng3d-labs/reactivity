@@ -106,6 +106,9 @@ class MutableReactiveHandler extends BaseReactiveHandler
     {
         let oldValue = target[key]
 
+        oldValue = toRaw(oldValue)
+        value = toRaw(value)
+
         if (!isArray(target) && isRef(oldValue) && !isRef(value))
         {
             oldValue.value = value
@@ -125,12 +128,16 @@ class MutableReactiveHandler extends BaseReactiveHandler
         //
         __DEV__ && console.assert(target === toRaw(receiver));
 
-        if (!hadKey)
+        // 如果目标在原始原型链中，则不要触发
+        if (target === toRaw(receiver))
         {
-            trigger(target, TriggerOpTypes.ADD, key, value)
-        } else if (hasChanged(value, oldValue))
-        {
-            trigger(target, TriggerOpTypes.SET, key, value, oldValue)
+            if (!hadKey)
+            {
+                trigger(target, TriggerOpTypes.ADD, key, value)
+            } else if (hasChanged(value, oldValue))
+            {
+                trigger(target, TriggerOpTypes.SET, key, value, oldValue)
+            }
         }
 
         return result

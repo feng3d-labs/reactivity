@@ -1,5 +1,6 @@
 import { describe, expect, it, test, vi } from 'vitest'
 import { computed, effect, reactive, ref } from '../src'
+import { toRaw } from '../src/shared/general'
 describe('reactivity/effect', () =>
 {
     it('should run the passed function once (wrapped by a effect)', () =>
@@ -251,6 +252,158 @@ describe('reactivity/effect', () =>
         array[key] = true
         expect(array[key]).toBe(true)
         expect(dummy).toBe(undefined)
+    })
+
+    it('should not observe well-known symbol keyed properties in has operation', () =>
+    {
+        const key = Symbol.isConcatSpreadable
+        const obj = reactive({
+            [key]: true,
+        }) as any
+
+        const spy = vi.fn(() =>
+        {
+            key in obj
+        })
+        effect(spy)
+        expect(spy).toHaveBeenCalledTimes(1)
+
+        obj[key] = false
+        expect(spy).toHaveBeenCalledTimes(1)
+    })
+
+
+    it('should support manipulating an array while observing symbol keyed properties', () =>
+    {
+        const key = Symbol()
+        let dummy
+        const array: any = reactive([1, 2, 3])
+        effect(() => (dummy = array[key]))
+
+        expect(dummy).toBe(undefined)
+        array.pop()
+        array.shift()
+        array.splice(0, 1)
+        expect(dummy).toBe(undefined)
+        array[key] = 'value'
+        array.length = 0
+        expect(dummy).toBe('value')
+    })
+
+
+    it('should observe function valued properties', () =>
+    {
+        const oldFunc = () => { }
+        const newFunc = () => { }
+
+        let dummy
+        const obj = reactive({ func: oldFunc })
+        effect(() => (dummy = obj.func))
+
+        expect(dummy).toBe(oldFunc)
+        obj.func = newFunc
+        expect(dummy).toBe(newFunc)
+    })
+
+    it('should observe chained getters relying on this', () =>
+    {
+        const obj = reactive({
+            a: 1,
+            get b()
+            {
+                return this.a
+            },
+        })
+
+        let dummy
+        effect(() => (dummy = obj.b))
+        expect(dummy).toBe(1)
+        obj.a++
+        expect(dummy).toBe(2)
+    })
+
+
+    it('should observe methods relying on this', () =>
+    {
+        const obj = reactive({
+            a: 1,
+            b()
+            {
+                return this.a
+            },
+        })
+
+        let dummy
+        effect(() => (dummy = obj.b()))
+        expect(dummy).toBe(1)
+        obj.a++
+        expect(dummy).toBe(2)
+    })
+
+    it('should not observe set operations without a value change', () =>
+    {
+        let hasDummy, getDummy
+        const obj = reactive({ prop: 'value' })
+
+        const getSpy = vi.fn(() => (getDummy = obj.prop))
+        const hasSpy = vi.fn(() => (hasDummy = 'prop' in obj))
+        effect(getSpy)
+        effect(hasSpy)
+
+        expect(getDummy).toBe('value')
+        expect(hasDummy).toBe(true)
+        obj.prop = 'value'
+        expect(getSpy).toHaveBeenCalledTimes(1)
+        expect(hasSpy).toHaveBeenCalledTimes(1)
+        expect(getDummy).toBe('value')
+        expect(hasDummy).toBe(true)
+    })
+
+    it('should not observe raw mutations', () =>
+    {
+        let dummy
+        const obj = reactive<{ prop?: string }>({})
+        effect(() => (dummy = toRaw(obj).prop))
+
+        expect(dummy).toBe(undefined)
+        obj.prop = 'value'
+        expect(dummy).toBe(undefined)
+    })
+
+    it('should not be triggered by raw mutations', () =>
+    {
+        let dummy
+        const obj = reactive<{ prop?: string }>({})
+        effect(() => (dummy = obj.prop))
+
+        expect(dummy).toBe(undefined)
+        toRaw(obj).prop = 'value'
+        expect(dummy).toBe(undefined)
+    })
+
+    it('should not be triggered by inherited raw setters', () =>
+    {
+        let dummy, parentDummy, hiddenValue: any
+        const obj = reactive<{ prop?: number }>({})
+        const parent = reactive({
+            set prop(value)
+            {
+                hiddenValue = value
+            },
+            get prop()
+            {
+                return hiddenValue
+            },
+        })
+        Object.setPrototypeOf(obj, parent)
+        effect(() => (dummy = obj.prop))
+        effect(() => (parentDummy = parent.prop))
+
+        expect(dummy).toBe(undefined)
+        expect(parentDummy).toBe(undefined)
+        toRaw(obj).prop = 4
+        expect(dummy).toBe(undefined)
+        expect(parentDummy).toBe(undefined)
     })
 
     it('should rerun the passed function when a trigger occurs', () =>
