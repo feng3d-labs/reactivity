@@ -1,4 +1,5 @@
 import { TrackOpTypes, TriggerOpTypes } from "./shared/constants";
+import { isArray, isIntegerKey, isMap, isSymbol } from "./shared/general";
 
 /**
  * 追踪属性的变化。
@@ -48,11 +49,93 @@ export function trigger(target: object, type: TriggerOpTypes, key?: unknown, new
     const depsMap = targetMap.get(target);
     if (!depsMap) return;
 
-    const dep = depsMap.get(key);
-    if (!dep) return;
+    const run = (dep: Dep | undefined) =>
+    {
+        if (dep)
+        {
+            // 触发属性的变化。
+            dep.trigger(newValue, oldValue);
+        }
+    }
 
-    // 触发属性的变化。
-    dep.trigger(newValue, oldValue);
+    startBatch()
+
+    if (type === TriggerOpTypes.CLEAR)
+    {
+        // collection being cleared
+        // trigger all effects for target
+        depsMap.forEach(run)
+    } else
+    {
+        const targetIsArray = isArray(target)
+        const isArrayIndex = targetIsArray && isIntegerKey(key)
+
+        if (targetIsArray && key === 'length')
+        {
+            const newLength = Number(newValue)
+            depsMap.forEach((dep, key) =>
+            {
+                if (
+                    key === 'length' ||
+                    key === ARRAY_ITERATE_KEY ||
+                    (!isSymbol(key) && key >= newLength)
+                )
+                {
+                    run(dep)
+                }
+            })
+        } else
+        {
+            // schedule runs for SET | ADD | DELETE
+            if (key !== void 0 || depsMap.has(void 0))
+            {
+                run(depsMap.get(key))
+            }
+
+            // schedule ARRAY_ITERATE for any numeric key change (length is handled above)
+            if (isArrayIndex)
+            {
+                run(depsMap.get(ARRAY_ITERATE_KEY))
+            }
+
+            // also run for iteration key on ADD | DELETE | Map.SET
+            switch (type)
+            {
+                case TriggerOpTypes.ADD:
+                    if (!targetIsArray)
+                    {
+                        run(depsMap.get(ITERATE_KEY))
+                        if (isMap(target))
+                        {
+                            run(depsMap.get(MAP_KEY_ITERATE_KEY))
+                        }
+                    } else if (isArrayIndex)
+                    {
+                        // new index added to array -> length changes
+                        run(depsMap.get('length'))
+                    }
+                    break
+                case TriggerOpTypes.DELETE:
+                    if (!targetIsArray)
+                    {
+                        run(depsMap.get(ITERATE_KEY))
+                        if (isMap(target))
+                        {
+                            run(depsMap.get(MAP_KEY_ITERATE_KEY))
+                        }
+                    }
+                    break
+                case TriggerOpTypes.SET:
+                    if (isMap(target))
+                    {
+                        run(depsMap.get(ITERATE_KEY))
+                    }
+                    break
+            }
+        }
+    }
+
+    endBatch();
 }
 
 /**
@@ -230,7 +313,7 @@ export const ARRAY_ITERATE_KEY: unique symbol = Symbol(__DEV__ ? 'Array iterate'
 /**
  * 当前正在执行的反应式节点。
  */
-export let activeReactivity: Dep;
+let activeReactivity: Dep;
 
 /**
  * 反应式节点链。
@@ -241,7 +324,7 @@ type ReactivityLink = { node: Dep, value: any, next: ReactivityLink };
  * 是否应该跟踪的标志
  * 控制是否进行依赖跟踪
  */
-export let shouldTrack = true
+let shouldTrack = true
 const trackStack: boolean[] = []
 
 /**

@@ -433,10 +433,10 @@ function noTracking(
     args: unknown[] = [],
 )
 {
-    pauseTracking()
+    // pauseTracking()
     startBatch()
     const res = (toRaw(self) as any)[method].apply(self, args)
     endBatch()
-    resetTracking()
+    // resetTracking()
     return res
 }
