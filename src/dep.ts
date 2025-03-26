@@ -226,6 +226,9 @@ export class Dep<T = any>
         }
     }
 
+    /**
+     * 执行当前节点。
+     */
     run()
     {
         // 保存当前节点作为父节点。
@@ -248,15 +251,16 @@ export class Dep<T = any>
     /**
      * 判断是否脏。
      */
-    private isDirty()
+    protected isDirty()
     {
-        // 避免在检查过程建立依赖关系。
-        const preReactiveNode = activeReactivity;
-        activeReactivity = null;
 
         // 在没有标记脏的情况下，检查子节点是否存在值发生变化的。
         if (!this.dirty && this.invalidChildrenHead)
         {
+            // 避免在检查过程建立依赖关系。
+            const preReactiveNode = activeReactivity;
+            activeReactivity = null;
+
             // 检查子节点是否是否存在值发生变化的。
             let invalidChild = this.invalidChildrenHead;
             while (invalidChild)
@@ -277,13 +281,13 @@ export class Dep<T = any>
                 //
                 invalidChild = invalidChild.next;
             }
+
+            // 恢复父节点。
+            activeReactivity = preReactiveNode;
         }
         // 清空失效子节点队列。
         this.invalidChildrenHead = undefined as any;
         this.invalidChildrenTail = undefined as any;
-
-        // 恢复父节点。
-        activeReactivity = preReactiveNode;
 
         return this.dirty;
     }
