@@ -3,7 +3,7 @@ import { ITERATE_KEY, track, trigger } from "./dep";
 import { reactive, reactiveMap } from "./reactive";
 import { isRef } from "./ref";
 import { ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./shared/constants";
-import { hasChanged, hasOwn, isArray, isIntegerKey, isObject, isSymbol, Target, toRaw } from "./shared/general";
+import { hasChanged, hasOwn, isArray, isIntegerKey, isObject, isSymbol, makeMap, Target, toRaw } from "./shared/general";
 
 /**
  * 基础响应式处理器。
@@ -58,6 +58,11 @@ class BaseReactiveHandler implements ProxyHandler<Target>
             key,
             isRef(target) ? target : receiver,
         )
+
+        if (isSymbol(key) ? builtInSymbols.has(key) : isNonTrackableKeys(key))
+        {
+            return res
+        }
 
         //
         track(target, TrackOpTypes.GET, key as any)
@@ -199,3 +204,5 @@ const builtInSymbols = new Set(
         .map(key => Symbol[key as keyof SymbolConstructor])
         .filter(isSymbol),
 )
+
+const isNonTrackableKeys = /*@__PURE__*/ makeMap(`__proto__,__v_isRef,__isVue`)

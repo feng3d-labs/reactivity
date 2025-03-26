@@ -89,3 +89,22 @@ export function warn(msg: string, ...args: any[]): void
 {
     console.warn(`[Vue warn] ${msg}`, ...args)
 }
+
+/**
+ * 创建一个映射，并返回一个用于检查键是否存在于该映射中的函数。
+ * 重要提示：所有调用此函数的地方都必须以 \/\*#\_\_PURE\_\_\*\/ 作为前缀，
+ * 以便在必要时 Rollup 可以进行 tree-shaking。
+ */
+
+/*! #__NO_SIDE_EFFECTS__ */
+export function makeMap(str: string): (key: string) => boolean
+{
+    // 创建一个空对象作为映射，使用 Object.create(null) 避免原型链上的属性干扰
+    const map = Object.create(null)
+
+    // 将输入的字符串按逗号分隔，遍历每个键并将其添加到映射中，值为 1
+    for (const key of str.split(',')) map[key] = 1
+
+    // 返回一个函数，该函数接受一个键值，并检查该键是否存在于映射中
+    return val => val in map
+}
