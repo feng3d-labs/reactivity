@@ -14,7 +14,7 @@ export function effect<T = any>(fn: () => T): Effect
     const dep = computed(fn) as Dep;
 
     // 立即执行一次，以确保副作用函数被执行。
-    dep.track();
+    dep.run();
     dep.isEffect = true;
 
     return {

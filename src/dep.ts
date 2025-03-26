@@ -184,6 +184,15 @@ export class Dep<T = any>
      */
     isEffect: boolean = false;
 
+    track1()
+    {
+        // 连接父节点和子节点。
+        if (activeReactivity)
+        {
+            this.parents.add(activeReactivity);
+        }
+    }
+
     /**
      * 执行当前节点。
      */
@@ -191,44 +200,40 @@ export class Dep<T = any>
     {
         if (!shouldTrack) return;
 
+        //
+        // 保存当前节点作为父节点。
+        // 设置当前节点为父节点。
+        if (this.isDirty())
+        {
+            // 保存当前节点作为父节点。
+            const parentReactiveNode = activeReactivity;
+            // 设置当前节点为活跃节点。
+            activeReactivity = this;
+
+            this._value = this._runSelf();
+
+            // 执行完毕后恢复父节点。
+            activeReactivity = parentReactiveNode;
+
+            //
+            this.dirty = false;
+        }
+
+        // 连接父节点和子节点。
+        if (activeReactivity)
+        {
+            this.parents.add(activeReactivity);
+        }
+    }
+
+    run()
+    {
         // 保存当前节点作为父节点。
         const parentReactiveNode = activeReactivity;
         // 设置当前节点为活跃节点。
         activeReactivity = this;
 
-        // 检查子节点是否是否存在值发生变化的。
-        let invalidChild = this.invalidChildrenHead;
-        while (invalidChild)
-        {
-            // 修复与子节点关系
-            invalidChild.node.parents.add(this);
-            // 检查子节点值是否发生变化。
-            // 注：node.node.value 将会触发 node.node.run()，从而更新 node.value。
-            const newValue = invalidChild.node.value;
-            const oldValue = invalidChild.value;
-            if (newValue !== oldValue)
-            {
-                // 只需发现一个变化的子节点，标记当前节点为脏，需要执行计算。
-                this.dirty = true;
-                break;
-            }
-
-            //
-            invalidChild = invalidChild.next;
-        }
-        this.invalidChildrenHead = undefined as any;
-        this.invalidChildrenTail = undefined as any;
-
-        //
-        // 保存当前节点作为父节点。
-        // 设置当前节点为父节点。
-        if (this.dirty)
-        {
-            this._value = this._runSelf();
-
-            //
-            this.dirty = false;
-        }
+        this._value = this._runSelf();
 
         // 连接父节点和子节点。
         if (parentReactiveNode)
@@ -238,6 +243,49 @@ export class Dep<T = any>
 
         // 执行完毕后恢复父节点。
         activeReactivity = parentReactiveNode;
+    }
+
+    /**
+     * 判断是否脏。
+     */
+    private isDirty()
+    {
+        // 避免在检查过程建立依赖关系。
+        const preReactiveNode = activeReactivity;
+        activeReactivity = null;
+
+        // 在没有标记脏的情况下，检查子节点是否存在值发生变化的。
+        if (!this.dirty && this.invalidChildrenHead)
+        {
+            // 检查子节点是否是否存在值发生变化的。
+            let invalidChild = this.invalidChildrenHead;
+            while (invalidChild)
+            {
+                // 修复与子节点关系
+                invalidChild.node.parents.add(this);
+                // 检查子节点值是否发生变化。
+                // 注：node.node.value 将会触发 node.node.run()，从而更新 node.value。
+                const newValue = invalidChild.node.value;
+                const oldValue = invalidChild.value;
+                if (newValue !== oldValue)
+                {
+                    // 只需发现一个变化的子节点，标记当前节点为脏，需要执行计算。
+                    this.dirty = true;
+                    break;
+                }
+
+                //
+                invalidChild = invalidChild.next;
+            }
+        }
+        // 清空失效子节点队列。
+        this.invalidChildrenHead = undefined as any;
+        this.invalidChildrenTail = undefined as any;
+
+        // 恢复父节点。
+        activeReactivity = preReactiveNode;
+
+        return this.dirty;
     }
 
     /**
