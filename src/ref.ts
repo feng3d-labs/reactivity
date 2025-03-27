@@ -1,4 +1,5 @@
 import { Dep } from "./dep";
+import { EffectDep } from "./effect";
 import { toReactive } from "./reactive";
 import { ReactiveFlags } from "./shared/constants";
 import { hasChanged, toRaw } from "./shared/general";
@@ -52,10 +53,14 @@ export class RefReactivity<T = any> extends Dep<T>
 
         if (!hasChanged(oldValue, newValue)) return;
 
+        EffectDep.startBatch();
+
         this.trigger();
 
         this._value = toReactive(newValue)
         this._rawValue = toRaw(newValue);
+
+        EffectDep.endBatch();
     }
 
     /**
