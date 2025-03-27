@@ -180,9 +180,12 @@ export class Dep<T = any>
     protected _value: T;
 
     /**
-     * 是否为效果节点。
+     * 当前节点是否活跃。
      */
-    isEffect: boolean = false;
+    isActive()
+    {
+        return activeReactivity === this;
+    }
 
     /**
      * 执行当前节点。
@@ -298,10 +301,8 @@ export class Dep<T = any>
      * 
      * 把当前节点添加到父节点的失效队列中。
      */
-    private invalidate(newValue?: T, oldValue?: T)
+    protected invalidate(newValue?: T, oldValue?: T)
     {
-        startBatch();
-
         // 冒泡到所有父节点，设置失效子节点。
         if (this.parents.size > 0)
         {
@@ -324,15 +325,6 @@ export class Dep<T = any>
             //
             this.parents.clear();
         }
-
-        // 不是正在运行的效果节点
-        if (this.isEffect)
-        {
-            // 合批时需要判断是否已经运行的依赖。
-            batch(this, activeReactivity === this)
-        }
-
-        endBatch();
     }
 
     /**

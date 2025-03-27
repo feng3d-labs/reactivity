@@ -1,4 +1,5 @@
 import { ComputedDep } from "./computed";
+import { batch, endBatch, startBatch } from "./dep";
 
 /**
  * 创建副作用。
@@ -14,14 +15,16 @@ export function effect<T = any>(fn: () => T): Effect
 }
 
 /**
- * 副作用依赖。
+ * 副作用节点。
  */
 class EffectDep<T> extends ComputedDep<T> implements Effect
 {
     /**
-     * 是否为效果节点。
+     * 是否为启用, 默认为 true。
+     * 
+     * 启用时，会立即执行函数。
      */
-    isEffect: boolean = true;
+    isEnable: boolean = true;
 
     constructor(func: (oldValue?: T) => T)
     {
@@ -31,12 +34,27 @@ class EffectDep<T> extends ComputedDep<T> implements Effect
 
     pause()
     {
-        this.isEffect = false;
+        this.isEnable = false;
     }
 
     resume()
     {
-        this.isEffect = true;
+        this.isEnable = true;
+    }
+
+    invalidate()
+    {
+        startBatch();
+
+        super.invalidate();
+
+        if (this.isEnable)
+        {
+            // 合批时需要判断是否已经运行的依赖。
+            batch(this, this.isActive())
+        }
+
+        endBatch();
     }
 }
 
