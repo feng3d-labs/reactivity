@@ -20,7 +20,7 @@ export function computed<T>(func: (oldValue?: T) => T): { readonly value: T }
  * 
  * 首次获取值将会执行函数，后续获取值且在依赖发生变化的情况下将会重新计算。
  */
-export class ComputedDep<T> extends Dep
+export class ComputedDep<T = any> extends Dep<T>
 {
     /**
      * 监听的函数。

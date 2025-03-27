@@ -1,3 +1,5 @@
+import { type ComputedDep } from "./computed";
+
 /**
  * 反应节点。
  *
@@ -10,7 +12,7 @@ export class Dep<T = any>
      *
      * 记录了哪些节点调用了当前节点。
      */
-    parents = new Set<Dep>();
+    parents = new Set<ComputedDep>();
 
     /**
      * 当前节点值。
@@ -73,7 +75,7 @@ export class Dep<T = any>
             // 保存当前节点作为父节点。
             const parentReactiveNode = Dep.activeReactivity;
             // 设置当前节点为活跃节点。
-            Dep.activeReactivity = this;
+            Dep.activeReactivity = this as any;
 
             this._value = this._runSelf();
 
@@ -117,7 +119,7 @@ export class Dep<T = any>
             while (invalidChild)
             {
                 // 修复与子节点关系
-                invalidChild.node.parents.add(this);
+                invalidChild.node.parents.add(this as any);
                 // 检查子节点值是否发生变化。
                 // 注：node.node.value 将会触发 node.node.run()，从而更新 node.value。
                 const newValue = invalidChild.node.value;
@@ -187,7 +189,7 @@ export class Dep<T = any>
      * 
      * @internal
      */
-    static activeReactivity: Dep;
+    static activeReactivity: ComputedDep;
 
     /**
      * 是否应该跟踪的标志
