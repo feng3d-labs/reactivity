@@ -102,17 +102,35 @@ export class Dep<T = any> extends BaseDep<T>
     }
 
     /**
-     * 标记为脏，触发下次检查与执行。
+     * 当前节点失效。
+     * 
+     * 把当前节点添加到父节点的失效队列中。
      */
     trigger()
     {
-        if (this._dirty)
+        // 冒泡到所有父节点，设置失效子节点。
+        if (this.parents.size > 0)
         {
-            return;
-        }
-        this._dirty = true;
+            this.parents.forEach((parent) =>
+            {
+                // 添加到队尾
+                const node: ReactivityLink = { node: this, value: this._value, next: undefined };
+                if (parent._invalidChildrenTail)
+                {
+                    parent._invalidChildrenTail.next = node;
+                    parent._invalidChildrenTail = node;
+                }
+                else
+                {
+                    parent._invalidChildrenTail = node;
+                    parent._invalidChildrenHead = node;
+                }
+                parent.trigger();
+            });
 
-        this.invalidate();
+            //
+            this.parents.clear();
+        }
     }
 
     /**
@@ -157,38 +175,6 @@ export class Dep<T = any> extends BaseDep<T>
         this._invalidChildrenTail = undefined as any;
 
         return isChanged;
-    }
-
-    /**
-     * 当前节点失效。
-     * 
-     * 把当前节点添加到父节点的失效队列中。
-     */
-    protected invalidate()
-    {
-        // 冒泡到所有父节点，设置失效子节点。
-        if (this.parents.size > 0)
-        {
-            this.parents.forEach((parent) =>
-            {
-                // 添加到队尾
-                const node: ReactivityLink = { node: this, value: this._value, next: undefined };
-                if (parent._invalidChildrenTail)
-                {
-                    parent._invalidChildrenTail.next = node;
-                    parent._invalidChildrenTail = node;
-                }
-                else
-                {
-                    parent._invalidChildrenTail = node;
-                    parent._invalidChildrenHead = node;
-                }
-                parent.invalidate();
-            });
-
-            //
-            this.parents.clear();
-        }
     }
 
     /**

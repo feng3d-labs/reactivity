@@ -42,11 +42,11 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
         this.isEnable = true;
     }
 
-    invalidate()
+    trigger()
     {
         EffectDep.startBatch();
 
-        super.invalidate();
+        super.trigger();
 
         if (this.isEnable)
         {
