@@ -27,14 +27,14 @@ export function track(target: object, type: TrackOpTypes, key: unknown): void
     let dep = depsMap.get(key);
     if (!dep)
     {
-        dep = new Dep();
+        dep = new PropertyDep(target, key);
         depsMap.set(key, dep);
     }
 
     // 取值，建立依赖关系。
     dep.track();
 }
-const targetMap: WeakMap<any, Map<any, Dep>> = new WeakMap()
+const targetMap: WeakMap<any, Map<any, PropertyDep>> = new WeakMap()
 
 /**
  * 触发属性的变化。
@@ -51,14 +51,12 @@ export function trigger(target: object, type: TriggerOpTypes, key?: unknown, new
     const depsMap = targetMap.get(target);
     if (!depsMap) return;
 
-    const run = (dep: Dep | undefined) =>
+    const run = (dep: PropertyDep | undefined) =>
     {
         if (dep)
         {
             // 触发属性的变化。
-            dep._value = oldValue;
-            dep.trigger();
-            dep._value = newValue;
+            dep.value = newValue;
         }
     }
 
@@ -140,4 +138,39 @@ export function trigger(target: object, type: TriggerOpTypes, key?: unknown, new
     }
 
     EffectDep.endBatch();
+}
+
+/**
+ * 反应式属性。
+ */
+class PropertyDep<T = any> extends Dep<T>
+{
+    /**
+     * 获取当前节点值。
+     * 
+     * 取值时将会建立与父节点的依赖关系。
+     */
+    get value(): T
+    {
+        this.track();
+        return this._value;
+    }
+    set value(v)
+    {
+        if (v === this._value) return;
+        // 触发属性的变化。
+        this.trigger();
+        this._value = v;
+    }
+
+    /**
+     * @private
+     */
+    _value: T;
+
+    constructor(target: object, key: unknown)
+    {
+        super();
+        this._value = (target as any)[key as any];
+    }
 }
