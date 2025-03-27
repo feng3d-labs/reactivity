@@ -77,12 +77,6 @@ export class Dep<T = any>
 
             this._value = this._runSelf();
 
-            // 连接父节点和子节点。
-            if (parentReactiveNode)
-            {
-                this.parents.add(parentReactiveNode);
-            }
-
             // 执行完毕后恢复父节点。
             Dep.activeReactivity = parentReactiveNode;
         }
