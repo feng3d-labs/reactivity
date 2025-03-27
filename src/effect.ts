@@ -1,5 +1,5 @@
 import { ComputedDep } from "./computed";
-import { batch, endBatch, startBatch } from "./dep";
+import { batch, Dep, endBatch, startBatch } from "./dep";
 
 /**
  * 创建副作用。
@@ -51,7 +51,7 @@ class EffectDep<T> extends ComputedDep<T> implements Effect
         if (this.isEnable)
         {
             // 合批时需要判断是否已经运行的依赖。
-            batch(this, this.isActive())
+            batch(this, Dep.activeReactivity === this)
         }
 
         endBatch();

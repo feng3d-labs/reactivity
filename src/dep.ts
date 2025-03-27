@@ -185,14 +185,6 @@ export class Dep<T = any>
     protected _value: T;
 
     /**
-     * 当前节点是否活跃。
-     */
-    isActive()
-    {
-        return Dep.activeReactivity === this;
-    }
-
-    /**
      * 执行当前节点。
      */
     track()
