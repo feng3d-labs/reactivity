@@ -3,7 +3,7 @@ import { reactive, reactiveMap } from "./reactive";
 import { isRef } from "./ref";
 import { ITERATE_KEY, ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./shared/constants";
 import { hasChanged, hasOwn, isArray, isIntegerKey, isObject, isSymbol, makeMap, Target, toRaw } from "./shared/general";
-import { PropertyDep } from "./track";
+import { PropertyDep } from "./property";
 
 /**
  * 基础响应式处理器。

@@ -3,7 +3,7 @@ import { Dep } from "./dep"
 import { isProxy, toReactive } from "./reactive"
 import { ARRAY_ITERATE_KEY, TrackOpTypes } from "./shared/constants"
 import { isArray, toRaw } from "./shared/general"
-import { PropertyDep } from "./track"
+import { PropertyDep } from "./property"
 
 export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     __proto__: null,

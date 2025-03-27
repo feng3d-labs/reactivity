@@ -3,6 +3,13 @@ import { Dep } from "./dep";
 import { ARRAY_ITERATE_KEY, ITERATE_KEY, MAP_KEY_ITERATE_KEY, TrackOpTypes, TriggerOpTypes } from "./shared/constants";
 import { isArray, isIntegerKey, isMap, isSymbol } from "./shared/general";
 
+/**
+ * 反应式属性。
+ *
+ * @param target 对象。 
+ * @param key 属性
+ * @returns 反应式属性。
+ */
 export function property<T, K extends keyof T>(target: T, key: K)
 {
     let depsMap = PropertyDep._targetMap.get(target);
