@@ -17,7 +17,10 @@ export class BaseDep<T>
         this.track();
         return this._value;
     }
-    protected _value: T;
+    /**
+     * @private
+     */
+    _value: T;
 
     /**
      * 父反应节点。
@@ -174,6 +177,7 @@ export class Dep<T = any> extends BaseDep<T>
                 if (parent._invalidChildrenTail)
                 {
                     parent._invalidChildrenTail.next = node;
+                    parent._invalidChildrenTail = node;
                 }
                 else
                 {

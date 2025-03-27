@@ -64,11 +64,6 @@ class RefReactivity<T> extends Dep<T>
      */
     private _rawValue: T;
 
-    /**
-     * 可能是响应式值。
-     */
-    protected _value: T
-
     constructor(value: T)
     {
         super();
