@@ -89,7 +89,13 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
 
     resume()
     {
+        if (this._isEnable) return;
         this._isEnable = true;
+        if (EffectDep.pausedQueueEffects.has(this))
+        {
+            EffectDep.pausedQueueEffects.delete(this);
+            this.trigger();
+        }
     }
 
     trigger(dep?: Dep)
@@ -103,9 +109,14 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
             // 合批时需要判断是否已经运行的依赖。
             EffectDep.batch(this, Dep.activeReactivity === this)
         }
+        else
+        {
+            EffectDep.pausedQueueEffects.add(this);
+        }
 
         EffectDep.endBatch();
     }
+    private static pausedQueueEffects = new WeakSet<EffectDep>()
 
     /**
      * 执行当前节点。
