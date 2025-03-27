@@ -1,8 +1,8 @@
 import { describe, expect, it, test, vi } from 'vitest'
 import { effect, reactive } from '../src'
-import { Effect, EffectDep, endBatch, startBatch } from '../src/effect'
+import { endBatch, startBatch } from '../src/batch'
+import { Effect, EffectDep } from '../src/effect'
 import { toRaw } from '../src/shared/general'
-import { Dep } from '../src/dep'
 describe('reactivity/effect', () =>
 {
     it('should run the passed function once (wrapped by a effect)', () =>

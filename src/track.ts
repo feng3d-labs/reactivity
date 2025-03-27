@@ -1,4 +1,4 @@
-import { ComputedDep } from "./computed";
+import { endBatch, startBatch } from "./batch";
 import { Dep } from "./dep";
 import { ARRAY_ITERATE_KEY, ITERATE_KEY, MAP_KEY_ITERATE_KEY, TrackOpTypes, TriggerOpTypes } from "./shared/constants";
 import { isArray, isIntegerKey, isMap, isSymbol } from "./shared/general";
@@ -111,7 +111,7 @@ export class PropertyDep<T, K extends keyof T> extends Dep<T>
             }
         }
 
-        ComputedDep.startBatch()
+        startBatch()
 
         if (type === TriggerOpTypes.CLEAR)
         {
@@ -188,6 +188,6 @@ export class PropertyDep<T, K extends keyof T> extends Dep<T>
             }
         }
 
-        ComputedDep.endBatch();
+        endBatch();
     }
 }

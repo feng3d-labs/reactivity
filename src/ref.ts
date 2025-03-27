@@ -1,4 +1,4 @@
-import { ComputedDep } from "./computed";
+import { endBatch, startBatch } from "./batch";
 import { Dep } from "./dep";
 import { toReactive } from "./reactive";
 import { ReactiveFlags } from "./shared/constants";
@@ -53,14 +53,14 @@ export class RefReactivity<T = any> extends Dep<T>
 
         if (!hasChanged(oldValue, newValue)) return;
 
-        ComputedDep.startBatch();
+        startBatch();
 
         this.trigger();
 
         this._value = toReactive(newValue)
         this._rawValue = toRaw(newValue);
 
-        ComputedDep.endBatch();
+        endBatch();
     }
 
     /**
