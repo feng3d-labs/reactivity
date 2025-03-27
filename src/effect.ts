@@ -1,5 +1,4 @@
-import { computed } from "./computed";
-import { Dep, endBatch, startBatch } from "./dep";
+import { ComputedDep } from "./computed";
 
 /**
  * 创建副作用。
@@ -11,16 +10,34 @@ import { Dep, endBatch, startBatch } from "./dep";
  */
 export function effect<T = any>(fn: () => T): Effect
 {
-    const dep = computed(fn) as Dep;
+    return new EffectDep(fn);
+}
 
-    // 立即执行一次，以确保副作用函数被执行。
-    dep.isEffect = true;
-    dep.run();
+/**
+ * 副作用依赖。
+ */
+class EffectDep<T> extends ComputedDep<T> implements Effect
+{
+    /**
+     * 是否为效果节点。
+     */
+    isEffect: boolean = true;
 
-    return {
-        pause: () => dep.isEffect = false,
-        resume: () => dep.isEffect = true,
-    };
+    constructor(func: (oldValue?: T) => T)
+    {
+        super(func);
+        this.run();
+    }
+
+    pause()
+    {
+        this.isEffect = false;
+    }
+
+    resume()
+    {
+        this.isEffect = true;
+    }
 }
 
 /**
