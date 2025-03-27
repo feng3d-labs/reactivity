@@ -630,11 +630,182 @@ describe('reactivity/computed', () =>
         expect(spy2).toHaveBeenCalledTimes(2)
     })
 
+
+    // not recommended behavior, but needed for backwards compatibility
+    // used in VueUse asyncComputed
+    it('computed side effect should be able trigger', () =>
+    {
+        const a = ref(false)
+        const b = ref(false)
+        const c = computed(() =>
+        {
+            a.value = true
+            return b.value
+        })
+        effect(() =>
+        {
+            if (a.value)
+            {
+                b.value = true
+            }
+        })
+        expect(b.value).toBe(false)
+        // accessing c triggers change
+        c.value
+        expect(b.value).toBe(true)
+        expect(c.value).toBe(true)
+    })
+
+    it('chained computed should work when accessed before having subs', () =>
+    {
+        const n = ref(0)
+        const c = computed(() => n.value)
+        const d = computed(() => c.value + 1)
+        const spy = vi.fn()
+
+        // access
+        d.value
+
+        let dummy
+        effect(() =>
+        {
+            spy()
+            dummy = d.value
+        })
+        expect(spy).toHaveBeenCalledTimes(1)
+        expect(dummy).toBe(1)
+
+        n.value++
+        expect(spy).toHaveBeenCalledTimes(2)
+        expect(dummy).toBe(2)
+    })
+
+    it('should be recomputed without being affected by side effects', () =>
+    {
+        const v = ref(0)
+        const c1 = computed(() =>
+        {
+            v.value = 1
+            return 0
+        })
+        const c2 = computed(() =>
+        {
+            return v.value + ',' + c1.value
+        })
+
+        expect(c2.value).toBe('0,0')
+        v.value = 1
+        expect(c2.value).toBe('1,0')
+    })
+
+    test('computed should remain live after losing all subscribers', () =>
+    {
+        const state = reactive({ a: 1 })
+        const p = computed(() => state.a + 1)
+        const e = effect(() => p.value)
+        e.pause()
+
+        expect(p.value).toBe(2)
+        state.a++
+        expect(p.value).toBe(3)
+    })
+
+    // #11995
+    test('computed dep cleanup should not cause property dep to be deleted', () =>
+    {
+        const toggle = ref(true)
+        const state = reactive({ a: 1 })
+        const p = computed(() =>
+        {
+            return toggle.value ? state.a : 111
+        })
+        const pp = computed(() => state.a)
+        effect(() => p.value)
+
+        expect(pp.value).toBe(1)
+        toggle.value = false
+        state.a++
+        expect(pp.value).toBe(2)
+    })
+
+    // #12020
+    test('computed value updates correctly after dep cleanup', () =>
+    {
+        const obj = reactive({ foo: 1, flag: 1 })
+        const c1 = computed(() => obj.foo)
+
+        let foo
+        effect(() =>
+        {
+            foo = obj.flag ? (obj.foo, c1.value) : 0
+        })
+        expect(foo).toBe(1)
+
+        obj.flag = 0
+        expect(foo).toBe(0)
+
+        obj.foo = 2
+        obj.flag = 1
+        expect(foo).toBe(2)
+    })
+
+    // #11928
+    test('should not lead to exponential perf cost with deeply chained computed', () =>
+    {
+        const start = {
+            prop1: ref(1),
+            prop2: ref(2),
+            prop3: ref(3),
+            prop4: ref(4),
+        }
+
+        let layer = start
+
+        const LAYERS = 1000
+
+        for (let i = LAYERS; i > 0; i--)
+        {
+            const m = layer
+            const s = {
+                prop1: computed(() => m.prop2.value),
+                prop2: computed(() => m.prop1.value - m.prop3.value),
+                prop3: computed(() => m.prop2.value + m.prop4.value),
+                prop4: computed(() => m.prop3.value),
+            }
+            effect(() => s.prop1.value)
+            effect(() => s.prop2.value)
+            effect(() => s.prop3.value)
+            effect(() => s.prop4.value)
+
+            s.prop1.value
+            s.prop2.value
+            s.prop3.value
+            s.prop4.value
+
+            layer = s
+        }
+
+        const t = performance.now()
+        start.prop1.value = 4
+        start.prop2.value = 3
+        start.prop3.value = 2
+        start.prop4.value = 1
+        expect(performance.now() - t).toBeLessThan(process.env.CI ? 100 : 30)
+
+        const end = layer
+        expect([
+            end.prop1.value,
+            end.prop2.value,
+            end.prop3.value,
+            end.prop4.value,
+        ]).toMatchObject([-2, -4, 2, 3])
+    })
+
     test('performance when removing dependencies from deeply nested computeds', () =>
     {
         const base = ref(1)
         const trigger = ref(true)
-        const computeds: { value: any; }[] = []
+        const computeds: ComputedDep<number>[] = []
 
         const LAYERS = 30
 
@@ -646,7 +817,7 @@ describe('reactivity/computed', () =>
                 computed(() =>
                 {
                     return base.value + earlier.reduce((sum, c) => sum + c.value, 0)
-                }),
+                }) as ComputedDep,
             )
         }
 
