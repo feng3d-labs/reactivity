@@ -1,5 +1,3 @@
-import { type ComputedDep } from "./computed";
-
 /**
  * 基础反应式节点。
  * 
@@ -27,7 +25,7 @@ export class BaseDep<T>
      *
      * 记录了哪些节点调用了当前节点。
      */
-    parents = new Set<ComputedDep>();
+    parents = new Set<Dep>();
 
     /**
      * 建立与父节点的依赖关系。
@@ -36,18 +34,11 @@ export class BaseDep<T>
     {
         if (!Dep._shouldTrack) return;
 
-        this.run();
-
         // 连接父节点和子节点。
         if (Dep.activeReactivity)
         {
             this.parents.add(Dep.activeReactivity);
         }
-    }
-
-    run()
-    {
-
     }
 }
 
@@ -103,55 +94,11 @@ export class Dep<T = any> extends BaseDep<T>
     }
 
     /**
-     * 判断子节点是否发生变化。
-     */
-    protected isChildrenChanged()
-    {
-        let isChanged = false;
-        // 在没有标记脏的情况下，检查子节点是否存在值发生变化的。
-        if (this._invalidChildrenHead)
-        {
-            // 避免在检查过程建立依赖关系。
-            const preReactiveNode = Dep.activeReactivity;
-            Dep.activeReactivity = null;
-
-            // 检查子节点是否是否存在值发生变化的。
-            let invalidChild = this._invalidChildrenHead;
-            while (invalidChild)
-            {
-                // 修复与子节点关系
-                invalidChild.node.parents.add(this as any);
-                // 检查子节点值是否发生变化。
-                // 注：node.node.value 将会触发 node.node.run()，从而更新 node.value。
-                const newValue = invalidChild.node.value;
-                const oldValue = invalidChild.value;
-                if (newValue !== oldValue)
-                {
-                    // 只需发现一个变化的子节点，标记当前节点为脏，需要执行计算。
-                    isChanged = true;
-                    break;
-                }
-
-                //
-                invalidChild = invalidChild.next;
-            }
-
-            // 恢复父节点。
-            Dep.activeReactivity = preReactiveNode;
-        }
-        // 清空失效子节点队列。
-        this._invalidChildrenHead = undefined as any;
-        this._invalidChildrenTail = undefined as any;
-
-        return isChanged;
-    }
-
-    /**
      * 当前正在执行的反应式节点。
      * 
      * @internal
      */
-    static activeReactivity: ComputedDep;
+    static activeReactivity: Dep;
 
     /**
      * 是否应该跟踪的标志

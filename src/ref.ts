@@ -44,6 +44,7 @@ class RefReactivity<T> extends Dep<T>
 
         return this._value;
     }
+
     set value(v: T)
     {
         const oldValue = this._rawValue;
