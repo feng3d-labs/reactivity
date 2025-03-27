@@ -26,15 +26,13 @@ export function endBatch(): void
         {
             // 此时依赖以及子依赖都已经运行过了，只需修复与子节点关系。
             __DEV__ && console.assert(dep._isDirty === false, 'dep.dirty === false');
-            let invalidChildNode = dep._invalidChildrenHead;
-            while (invalidChildNode)
+
+            dep._children.forEach((v, child) =>
             {
-                // 修复子节点与父节点的关系。
-                invalidChildNode.node._parents.add(dep);
-                invalidChildNode = invalidChildNode.next;
-            }
-            dep._invalidChildrenHead = undefined as any;
-            dep._invalidChildrenTail = undefined as any;
+                if (child._parents.has(dep)) return;
+                // 修复与子节点关系
+                child._parents.add(dep);
+            });
         });
         _isRunedDeps.length = 0;
     }

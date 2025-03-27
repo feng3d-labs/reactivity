@@ -48,7 +48,7 @@ export class Dep<T = any>
         if (Dep.activeReactivity)
         {
             this._parents.add(Dep.activeReactivity);
-            Dep.activeReactivity._children.add(this);
+            Dep.activeReactivity._children.set(this, this._value);
         }
     }
 

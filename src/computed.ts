@@ -1,5 +1,6 @@
 import { batch } from "./batch";
 import { Dep } from "./dep";
+import { hasChanged } from "./shared/general";
 
 /**
  * 创建计算反应式对象。
@@ -33,21 +34,7 @@ export class ComputedDep<T = any> extends Dep<T>
      * 
      * @private
      */
-    _children: Set<Dep> = new Set();
-
-    /**
-     * 失效的子节点的队头。需要在执行时检查子节点值是否发生变化。
-     * 
-     * @private
-     */
-    _invalidChildrenHead: ReactivityLink;
-
-    /**
-     * 失效子节点的队尾。用于保持检查顺序。新增节点添加到队尾，从队头开始检查。
-     * 
-     * @private
-     */
-    _invalidChildrenTail: ReactivityLink;
+    _children: Map<Dep, any> = new Map();
 
     /**
      * 是否脏，是否需要重新计算。
@@ -69,16 +56,7 @@ export class ComputedDep<T = any> extends Dep<T>
     }
 
     /**
-     * 
-     * 
-     * 建立与父节点的依赖关系。
-     * 
-     * 当需要执行或者
-     */
-    /**
      * 捕捉。
-     * 
-     * 当
      * 
      * 建立与父节点的依赖关系。
      */
@@ -105,21 +83,6 @@ export class ComputedDep<T = any> extends Dep<T>
             batch(this, Dep.activeReactivity === this)
         }
 
-        if (dep)
-        {
-            // 添加到队尾
-            const node: ReactivityLink = { node: dep, value: dep._value, next: undefined };
-            if (this._invalidChildrenTail)
-            {
-                this._invalidChildrenTail.next = node;
-                this._invalidChildrenTail = node;
-            }
-            else
-            {
-                this._invalidChildrenTail = node;
-                this._invalidChildrenHead = node;
-            }
-        }
         super.trigger();
     }
 
@@ -165,48 +128,42 @@ export class ComputedDep<T = any> extends Dep<T>
      */
     protected isChildrenChanged()
     {
+        if (this._children.size === 0) return false;
+
         // 检查是否存在子节点发生变化。
         let isChanged = false;
-        // 在没有标记脏的情况下，检查子节点是否存在值发生变化的。
-        if (this._invalidChildrenHead)
+
+        // 避免在检查过程建立依赖关系。
+        const preReactiveNode = Dep.activeReactivity;
+        Dep.activeReactivity = null;
+
+        this._children.forEach((oldValue, child) =>
         {
-            // 避免在检查过程建立依赖关系。
-            const preReactiveNode = Dep.activeReactivity;
-            Dep.activeReactivity = null;
+            if (isChanged) return;
+            if (child._parents.has(this)) return;
 
-            // 检查子节点是否是否存在值发生变化的。
-            let invalidChild = this._invalidChildrenHead;
-            while (invalidChild)
+            const newValue = child.value;
+            if (hasChanged(oldValue, newValue))
             {
-                // 检查子节点值是否发生变化。
-                const newValue = invalidChild.node.value;
-                const oldValue = invalidChild.value;
-                if (newValue !== oldValue)
-                {
-                    isChanged = true;
-                    break;
-                }
-                // 修复与子节点关系
-                invalidChild.node._parents.add(this as any);
-                //
-                invalidChild = invalidChild.next;
-            }
-            // 如果子节点有值发生变化，需要清除所有与子节点的关系。
-            if (isChanged)
-            {
-                this._children.forEach((child) =>
-                {
-                    child._parents.delete(this as any);
-                });
-                this._children.clear();
+                isChanged = true;
             }
 
-            // 恢复父节点。
-            Dep.activeReactivity = preReactiveNode;
+            // 修复与子节点关系
+            child._parents.add(this);
+        });
+
+        // 恢复父节点。
+        Dep.activeReactivity = preReactiveNode;
+
+        // 如果子节点有值发生变化，需要清除所有与子节点的关系。
+        if (isChanged)
+        {
+            this._children.forEach((v, child) =>
+            {
+                child._parents.delete(this);
+            });
+            this._children.clear();
         }
-        // 清空失效子节点队列。
-        this._invalidChildrenHead = undefined as any;
-        this._invalidChildrenTail = undefined as any;
 
         return isChanged;
     }
