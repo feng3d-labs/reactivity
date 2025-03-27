@@ -1,5 +1,5 @@
+import { ComputedDep } from "./computed"
 import { Dep } from "./dep"
-import { EffectDep } from "./effect"
 import { isProxy, toReactive } from "./reactive"
 import { ARRAY_ITERATE_KEY, TrackOpTypes } from "./shared/constants"
 import { isArray, toRaw } from "./shared/general"
@@ -435,10 +435,10 @@ function noTracking(
     args: unknown[] = [],
 )
 {
-    EffectDep.startBatch()
+    ComputedDep.startBatch()
     Dep.pauseTracking()
     const res = (toRaw(self) as any)[method].apply(self, args)
     Dep.resetTracking()
-    EffectDep.endBatch()
+    ComputedDep.endBatch()
     return res
 }

@@ -195,6 +195,39 @@ describe('reactivity/computed', () =>
         // @feng3d/reactivity 按照依赖的失效顺序进行检查
     })
 
+    // https://github.com/vuejs/core/pull/5912#issuecomment-1738257692
+    it('chained computed dirty reallocation after querying dirty', () =>
+    {
+        let _msg: string | undefined
+
+        const items = ref<number[]>()
+        const isLoaded = computed(() =>
+        {
+            return !!items.value
+        })
+        const msg = computed(() =>
+        {
+            if (isLoaded.value)
+            {
+                return 'The items are loaded'
+            } else
+            {
+                return 'The items are not loaded'
+            }
+        })
+
+        effect(() =>
+        {
+            _msg = msg.value
+        })
+
+        items.value = [1, 2, 3]
+        items.value = [1, 2, 3]
+        items.value = undefined as any
+
+        expect(_msg).toBe('The items are not loaded')
+    })
+
     it('chained computed dirty reallocation after trigger computed getter', () =>
     {
         let _msg: string | undefined
@@ -305,6 +338,38 @@ describe('reactivity/computed', () =>
         expect(cSpy).toHaveBeenCalledTimes(3)
     })
 
+    it('should trigger the second effect', () =>
+    {
+        const fnSpy = vi.fn()
+        const v = ref(1)
+        const c = computed(() => v.value)
+
+        effect(() =>
+        {
+            c.value
+        })
+        effect(() =>
+        {
+            c.value
+            fnSpy()
+        })
+
+        expect(fnSpy).toBeCalledTimes(1)
+        v.value = 2
+        expect(fnSpy).toBeCalledTimes(2)
+    })
+
+    it('should chained recursive effects clear dirty after trigger', () =>
+    {
+        const v = ref(1)
+        const c1 = computed(() => v.value) as ComputedDep
+        const c2 = computed(() => c1.value) as ComputedDep
+
+        c2.value
+        expect(c1["_isDirty"]).toBeFalsy()
+        expect(c2["_isDirty"]).toBeFalsy()
+    })
+
     it('should chained computeds dirtyLevel update with first computed effect', () =>
     {
         const v = ref(0)
@@ -336,6 +401,33 @@ describe('reactivity/computed', () =>
         const c2 = computed(() => v.value + c1.value)
         expect(c2.value).toBe('0foo')
         expect(c2.value).toBe('1foo')
+    })
+
+    it('should trigger effect even computed already dirty', () =>
+    {
+        const fnSpy = vi.fn()
+        const v = ref(0)
+        const c1 = computed(() =>
+        {
+            if (v.value === 0)
+            {
+                v.value = 1
+            }
+            return 'foo'
+        })
+        const c2 = computed(() => v.value + c1.value)
+
+        effect(() =>
+        {
+            fnSpy(c2.value)
+        })
+        expect(fnSpy).toBeCalledTimes(1)
+        expect(fnSpy.mock.calls).toMatchObject([['0foo']])
+        expect(v.value).toBe(1)
+        v.value = 2
+        expect(fnSpy).toBeCalledTimes(2)
+        expect(fnSpy.mock.calls).toMatchObject([['0foo'], ['2foo']])
+        expect(v.value).toBe(2)
     })
 
     it('should be recomputed without being affected by side effects', () =>

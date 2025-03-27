@@ -25,7 +25,7 @@ export function effect<T = any>(fn: () => T): Effect
  */
 export function startBatch()
 {
-    EffectDep.startBatch();
+    ComputedDep.startBatch();
 }
 
 /**
@@ -33,7 +33,7 @@ export function startBatch()
  */
 export function endBatch()
 {
-    EffectDep.endBatch();
+    ComputedDep.endBatch();
 }
 
 /**
@@ -100,21 +100,21 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
 
     trigger(dep?: Dep)
     {
-        EffectDep.startBatch();
+        ComputedDep.startBatch();
 
         super.trigger(dep);
 
         if (this._isEnable)
         {
             // 合批时需要判断是否已经运行的依赖。
-            EffectDep.batch(this, Dep.activeReactivity === this)
+            ComputedDep.batch(this, Dep.activeReactivity === this)
         }
         else
         {
             EffectDep.pausedQueueEffects.add(this);
         }
 
-        EffectDep.endBatch();
+        ComputedDep.endBatch();
     }
     private static pausedQueueEffects = new WeakSet<EffectDep>()
 
@@ -134,89 +134,6 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
             this._func(this._value);
         }
     }
-
-    /**
-     * 开始批次处理。
-     */
-    static startBatch(): void
-    {
-        this._batchDepth++
-    }
-
-    /**
-     * 结束批次处理。
-     */
-    static endBatch(): void
-    {
-        if (--this._batchDepth > 0)
-        {
-            return
-        }
-
-        // 处理已经运行过的依赖，
-        if (this._isRunedDeps.length > 0)
-        {
-            this._isRunedDeps.forEach((dep) =>
-            {
-                // 此时依赖以及子依赖都已经运行过了，只需修复与子节点关系。
-                __DEV__ && console.assert(dep._isDirty === false, 'dep.dirty === false');
-                let invalidChildNode = dep._invalidChildrenHead;
-                while (invalidChildNode)
-                {
-                    // 修复子节点与父节点的关系。
-                    invalidChildNode.node._parents.add(dep);
-                    invalidChildNode = invalidChildNode.next;
-                }
-                dep._invalidChildrenHead = undefined as any;
-                dep._invalidChildrenTail = undefined as any;
-            });
-            this._isRunedDeps.length = 0;
-        }
-
-        // 批次处理
-        if (this._needEffectDeps.length > 0)
-        {
-            this._needEffectDeps.forEach((dep) =>
-            {
-                // 独立执行回调
-                const pre = Dep.activeReactivity;
-                Dep.activeReactivity = null;
-
-                dep.runIfDirty()
-
-                Dep.activeReactivity = pre;
-            });
-            this._needEffectDeps.length = 0;
-        }
-    }
-
-    /**
-     * 合批处理。
-     * 
-     * @param dep 
-     * @param isRunning 添加时是否是正在运行。 
-     */
-    static batch(dep: EffectDep, isRunning: boolean): void
-    {
-        if (isRunning)
-        {
-            this._isRunedDeps.push(dep);
-        }
-        else
-        {
-            this._needEffectDeps.push(dep);
-        }
-    }
-
-    private static _batchDepth = 0
-    /**
-     * 正在运行的依赖。
-     */
-    private static _needEffectDeps: EffectDep[] = [];
-    /**
-     * 已经运行过的依赖，只需要修复与子节点关系。
-     */
-    private static _isRunedDeps: EffectDep[] = [];
 }
 
 /**
