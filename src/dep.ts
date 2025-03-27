@@ -146,6 +146,11 @@ export function trigger(target: object, type: TriggerOpTypes, key?: unknown, new
 export class Dep<T = any>
 {
     /**
+     * 当前正在执行的反应式节点。
+     */
+    static activeReactivity: Dep;
+
+    /**
      * 父反应节点。
      *
      * 记录了哪些节点调用了当前节点。
@@ -184,7 +189,7 @@ export class Dep<T = any>
      */
     isActive()
     {
-        return activeReactivity === this;
+        return Dep.activeReactivity === this;
     }
 
     /**
@@ -197,9 +202,9 @@ export class Dep<T = any>
         this.run();
 
         // 连接父节点和子节点。
-        if (activeReactivity)
+        if (Dep.activeReactivity)
         {
-            this.parents.add(activeReactivity);
+            this.parents.add(Dep.activeReactivity);
         }
     }
 
@@ -218,9 +223,9 @@ export class Dep<T = any>
             this.dirty = false;
 
             // 保存当前节点作为父节点。
-            const parentReactiveNode = activeReactivity;
+            const parentReactiveNode = Dep.activeReactivity;
             // 设置当前节点为活跃节点。
-            activeReactivity = this;
+            Dep.activeReactivity = this;
 
             this._value = this._runSelf();
 
@@ -231,7 +236,7 @@ export class Dep<T = any>
             }
 
             // 执行完毕后恢复父节点。
-            activeReactivity = parentReactiveNode;
+            Dep.activeReactivity = parentReactiveNode;
         }
     }
 
@@ -246,8 +251,8 @@ export class Dep<T = any>
         if (!this.dirty && this.invalidChildrenHead)
         {
             // 避免在检查过程建立依赖关系。
-            const preReactiveNode = activeReactivity;
-            activeReactivity = null;
+            const preReactiveNode = Dep.activeReactivity;
+            Dep.activeReactivity = null;
 
             // 检查子节点是否是否存在值发生变化的。
             let invalidChild = this.invalidChildrenHead;
@@ -271,7 +276,7 @@ export class Dep<T = any>
             }
 
             // 恢复父节点。
-            activeReactivity = preReactiveNode;
+            Dep.activeReactivity = preReactiveNode;
         }
         // 清空失效子节点队列。
         this.invalidChildrenHead = undefined as any;
@@ -339,11 +344,6 @@ export class Dep<T = any>
 export const ITERATE_KEY: unique symbol = Symbol(__DEV__ ? 'Object iterate' : '');
 export const MAP_KEY_ITERATE_KEY: unique symbol = Symbol(__DEV__ ? 'Map keys iterate' : '')
 export const ARRAY_ITERATE_KEY: unique symbol = Symbol(__DEV__ ? 'Array iterate' : '')
-
-/**
- * 当前正在执行的反应式节点。
- */
-let activeReactivity: Dep;
 
 /**
  * 反应式节点链。
@@ -414,12 +414,12 @@ export function endBatch(): void
         needEffectDeps.forEach((dep) =>
         {
             // 独立执行回调
-            const pre = activeReactivity;
-            activeReactivity = null;
+            const pre = Dep.activeReactivity;
+            Dep.activeReactivity = null;
 
             dep.run()
 
-            activeReactivity = pre;
+            Dep.activeReactivity = pre;
         });
         needEffectDeps.length = 0;
     }
