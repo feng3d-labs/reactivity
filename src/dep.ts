@@ -13,7 +13,7 @@ import { isArray, isIntegerKey, isMap, isSymbol } from "./shared/general";
  */
 export function track(target: object, type: TrackOpTypes, key: unknown): void
 {
-    if (!shouldTrack) return;
+    if (!Dep._shouldTrack) return;
 
     let depsMap = targetMap.get(target);
     if (!depsMap)
@@ -148,8 +148,43 @@ export class Dep<T = any>
 {
     /**
      * 当前正在执行的反应式节点。
+     * 
+     * @internal
      */
     static activeReactivity: Dep;
+
+    /**
+     * 是否应该跟踪的标志
+     * 控制是否进行依赖跟踪
+     * 
+     * @private
+     */
+    static _shouldTrack = true
+
+    /**
+     * @private
+     */
+    private static _trackStack: boolean[] = []
+
+    /**
+     * 暂停跟踪
+     * 暂时停止依赖跟踪
+     */
+    static pauseTracking(): void
+    {
+        Dep._trackStack.push(Dep._shouldTrack)
+        Dep._shouldTrack = false
+    }
+
+    /**
+     * 重置跟踪状态
+     * 恢复之前的全局依赖跟踪状态
+     */
+    static resetTracking(): void
+    {
+        const last = Dep._trackStack.pop()
+        Dep._shouldTrack = last === undefined ? true : last
+    }
 
     /**
      * 父反应节点。
@@ -190,7 +225,7 @@ export class Dep<T = any>
      */
     track()
     {
-        if (!shouldTrack) return;
+        if (!Dep._shouldTrack) return;
 
         this.run();
 
@@ -342,33 +377,6 @@ export const ARRAY_ITERATE_KEY: unique symbol = Symbol(__DEV__ ? 'Array iterate'
  * 反应式节点链。
  */
 type ReactivityLink = { node: Dep, value: any, next: ReactivityLink };
-
-/**
- * 是否应该跟踪的标志
- * 控制是否进行依赖跟踪
- */
-let shouldTrack = true
-const trackStack: boolean[] = []
-
-/**
- * 暂停跟踪
- * 暂时停止依赖跟踪
- */
-export function pauseTracking(): void
-{
-    trackStack.push(shouldTrack)
-    shouldTrack = false
-}
-
-/**
- * 重置跟踪状态
- * 恢复之前的全局依赖跟踪状态
- */
-export function resetTracking(): void
-{
-    const last = trackStack.pop()
-    shouldTrack = last === undefined ? true : last
-}
 
 export function startBatch(): void
 {

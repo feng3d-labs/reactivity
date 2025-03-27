@@ -1,4 +1,4 @@
-import { ARRAY_ITERATE_KEY, endBatch, pauseTracking, resetTracking, startBatch, track } from "./dep"
+import { ARRAY_ITERATE_KEY, Dep, endBatch, startBatch, track } from "./dep"
 import { isProxy, toReactive } from "./reactive"
 import { TrackOpTypes } from "./shared/constants"
 import { isArray, toRaw } from "./shared/general"
@@ -434,9 +434,9 @@ function noTracking(
 )
 {
     startBatch()
-    pauseTracking()
+    Dep. pauseTracking()
     const res = (toRaw(self) as any)[method].apply(self, args)
-    resetTracking()
+    Dep.resetTracking()
     endBatch()
     return res
 }
