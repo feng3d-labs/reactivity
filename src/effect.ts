@@ -21,6 +21,50 @@ export function effect<T = any>(fn: () => T): Effect
 }
 
 /**
+ * 开始批次处理。
+ */
+export function startBatch()
+{
+    EffectDep.startBatch();
+}
+
+/**
+ * 结束批次处理。
+ */
+export function endBatch()
+{
+    EffectDep.endBatch();
+}
+
+/**
+ * 批次执行多次修改反应式对象，可以减少不必要的反应式触发。
+ * 
+ * ```ts
+ * batchRun(() => {
+ *     // 修改反应式对象
+ *     reactiveObj.a = 1;
+ *     reactiveObj.b = 2; 
+ * })
+ * ```
+ * 
+ * 等价于以下代码：
+ * ```ts
+ * startBatch();
+ * reactiveObj.a = 1;
+ * reactiveObj.b = 2;
+ * endBatch();
+ * ```
+ * 
+ * @param fn 要执行的函数，在此函数中多次修改反应式对象。
+ */
+export function batchRun(fn: () => void)
+{
+    startBatch();
+    fn();
+    endBatch();
+}
+
+/**
  * 副作用节点。
  */
 export class EffectDep<T = any> extends ComputedDep<T> implements Effect

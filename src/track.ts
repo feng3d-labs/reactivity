@@ -3,7 +3,7 @@ import { EffectDep } from "./effect";
 import { ARRAY_ITERATE_KEY, ITERATE_KEY, MAP_KEY_ITERATE_KEY, TrackOpTypes, TriggerOpTypes } from "./shared/constants";
 import { isArray, isIntegerKey, isMap, isSymbol } from "./shared/general";
 
-export function property(target: object, key: unknown)
+export function property<T, K extends keyof T>(target: T, key: K)
 {
     let depsMap = PropertyDep._targetMap.get(target);
     if (!depsMap)
@@ -26,7 +26,7 @@ export function property(target: object, key: unknown)
 /**
  * 反应式属性。
  */
-export class PropertyDep<T = any> extends Dep<T>
+export class PropertyDep<T, K extends keyof T> extends Dep<T>
 {
     /**
      * 获取当前节点值。
@@ -40,16 +40,30 @@ export class PropertyDep<T = any> extends Dep<T>
     }
     set value(v)
     {
+        if (this._key === "length")
+        {
+            v = this._target["length"];
+        }
         if (v === this._value) return;
         // 触发属性的变化。
         this.trigger();
         this._value = v;
     }
 
-    constructor(target: object, key: unknown)
+    private _target: T;
+    private _key: K;
+
+    constructor(target: T, key: K)
     {
         super();
+        this._target = target;
+        this._key = key;
         this._value = (target as any)[key as any];
+    }
+
+    triggerIfChanged()
+    {
+
     }
 
     /**
@@ -63,7 +77,7 @@ export class PropertyDep<T = any> extends Dep<T>
      */
     static track(target: object, type: TrackOpTypes, key: unknown): void
     {
-        const dep = property(target, key);
+        const dep = property(target as any, key as any);
 
         // 取值，建立依赖关系。
         dep.track();
@@ -71,7 +85,7 @@ export class PropertyDep<T = any> extends Dep<T>
     /**
      * @private
      */
-    static _targetMap: WeakMap<any, Map<any, PropertyDep>> = new WeakMap()
+    static _targetMap: WeakMap<any, Map<any, PropertyDep<any, any>>> = new WeakMap()
 
     /**
      * 触发属性的变化。
@@ -83,12 +97,12 @@ export class PropertyDep<T = any> extends Dep<T>
      * @param oldValue 旧值。
      * @returns 
      */
-    static trigger(target: object, type: TriggerOpTypes, key?: unknown, newValue?: unknown): void
+    static trigger(target: object, type: TriggerOpTypes, key?: unknown, newValue?: unknown, oldValue?: unknown): void
     {
         const depsMap = this._targetMap.get(target);
         if (!depsMap) return;
 
-        const run = (dep: PropertyDep | undefined) =>
+        const run = (dep: PropertyDep<any, any> | undefined) =>
         {
             if (dep)
             {

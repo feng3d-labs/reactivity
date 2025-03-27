@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, test, vi } from 'vitest'
 import { effect, reactive } from '../src'
-import { Effect, EffectDep } from '../src/effect'
+import { Effect, EffectDep, endBatch, startBatch } from '../src/effect'
 import { toRaw } from '../src/shared/general'
 describe('reactivity/effect', () =>
 {
@@ -785,6 +785,132 @@ describe('reactivity/effect', () =>
         // notify outer effect to run
         obj.prop = 3
         expect(dummy).toBe(3)
+    })
+
+    it('should not be triggered when the value and the old value both are NaN', () =>
+    {
+        const obj = reactive({
+            foo: NaN,
+        })
+        const fnSpy = vi.fn(() => obj.foo)
+        effect(fnSpy)
+        obj.foo = NaN
+        expect(fnSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it('should trigger all effects when array length is set to 0', () =>
+    {
+        const observed: any = reactive([1])
+        let dummy, record
+        effect(() =>
+        {
+            dummy = observed.length
+        })
+        effect(() =>
+        {
+            record = observed[0]
+        })
+        expect(dummy).toBe(1)
+        expect(record).toBe(1)
+
+        observed[1] = 2
+        expect(observed[1]).toBe(2)
+
+        observed.unshift(3)
+        expect(dummy).toBe(3)
+        expect(record).toBe(3)
+
+        observed.length = 0
+        expect(dummy).toBe(0)
+        expect(record).toBeUndefined()
+    })
+
+
+    it('should not be triggered when set with the same proxy', () =>
+    {
+        const obj = reactive({ foo: 1 })
+        const observed: any = reactive({ obj })
+        const fnSpy = vi.fn(() => observed.obj)
+
+        effect(fnSpy)
+
+        expect(fnSpy).toHaveBeenCalledTimes(1)
+        observed.obj = obj
+        expect(fnSpy).toHaveBeenCalledTimes(1)
+
+        const obj2 = reactive({ foo: 1 })
+        const observed2: any = reactive({ obj2 })
+        const fnSpy2 = vi.fn(() => observed2.obj2)
+
+        effect(fnSpy2)
+
+        expect(fnSpy2).toHaveBeenCalledTimes(1)
+        observed2.obj2 = obj2
+        expect(fnSpy2).toHaveBeenCalledTimes(1)
+    })
+
+    it('should be triggered when set length with string', () =>
+    {
+        let ret1 = 'idle'
+        let ret2 = 'idle'
+        const arr1 = reactive(new Array(11).fill(0))
+        const arr2 = reactive(new Array(11).fill(0))
+        effect(() =>
+        {
+            ret1 = arr1[10] === undefined ? 'arr[10] is set to empty' : 'idle'
+        })
+        effect(() =>
+        {
+            ret2 = arr2[10] === undefined ? 'arr[10] is set to empty' : 'idle'
+        })
+        arr1.length = 2
+        arr2.length = '2' as any
+        expect(ret1).toBe(ret2)
+    })
+
+    test('should track hasOwnProperty', () =>
+    {
+        const obj: any = reactive({})
+        let has = false
+        const fnSpy = vi.fn()
+
+        effect(() =>
+        {
+            fnSpy()
+            has = obj.hasOwnProperty('foo')
+        })
+        expect(fnSpy).toHaveBeenCalledTimes(1)
+        expect(has).toBe(false)
+
+        obj.foo = 1
+        expect(fnSpy).toHaveBeenCalledTimes(2)
+        expect(has).toBe(true)
+
+        delete obj.foo
+        expect(fnSpy).toHaveBeenCalledTimes(3)
+        expect(has).toBe(false)
+
+        // should not trigger on unrelated key
+        obj.bar = 2
+        expect(fnSpy).toHaveBeenCalledTimes(3)
+        expect(has).toBe(false)
+    })
+
+    it('should be triggered once with batching', () =>
+    {
+        const counter = reactive({ num: 0 })
+
+        const counterSpy = vi.fn(() => counter.num)
+        effect(counterSpy)
+
+        counterSpy.mockClear()
+
+        startBatch()
+        counter.num++
+        counter.num++
+        endBatch()
+
+        expect(counterSpy).toHaveBeenCalledTimes(1)
     })
 })
 
