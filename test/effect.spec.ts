@@ -1,5 +1,6 @@
-import { describe, expect, it, test, vi } from 'vitest'
-import { computed, effect, reactive, ref } from '../src'
+import { describe, expect, it, vi } from 'vitest'
+import { effect, reactive } from '../src'
+import { Effect, EffectDep } from '../src/effect'
 import { toRaw } from '../src/shared/general'
 describe('reactivity/effect', () =>
 {
@@ -546,5 +547,159 @@ describe('reactivity/effect', () =>
         expect(conditionalSpy).toHaveBeenCalledTimes(2)
     })
 
+    it('should handle deep effect recursion using cleanup fallback', () =>
+    {
+        const results = reactive([0])
+        const effects: { fx: Effect; index: number }[] = []
+        for (let i = 1; i < 40; i++)
+        {
+            ; (index =>
+            {
+                const fx = effect(() =>
+                {
+                    results[index] = results[index - 1] * 2
+                })
+                effects.push({ fx, index })
+            })(i)
+        }
+
+        expect(results[39]).toBe(0)
+        results[0] = 1
+        expect(results[39]).toBe(Math.pow(2, 39))
+    })
+
+
+    it('should register deps independently during effect recursion', () =>
+    {
+        const input = reactive({ a: 1, b: 2, c: 0 })
+        const output = reactive({ fx1: 0, fx2: 0 })
+
+        const fx1Spy = vi.fn(() =>
+        {
+            let result = 0
+            if (input.c < 2) result += input.a
+            if (input.c > 1) result += input.b
+            output.fx1 = result
+        })
+
+        const fx1 = effect(fx1Spy)
+
+        const fx2Spy = vi.fn(() =>
+        {
+            let result = 0
+            if (input.c > 1) result += input.a
+            if (input.c < 3) result += input.b
+            output.fx2 = result + output.fx1
+        })
+
+        const fx2 = effect(fx2Spy)
+
+        expect(fx1).not.toBeNull()
+        expect(fx2).not.toBeNull()
+
+        expect(output.fx1).toBe(1)
+        expect(output.fx2).toBe(2 + 1)
+        expect(fx1Spy).toHaveBeenCalledTimes(1)
+        expect(fx2Spy).toHaveBeenCalledTimes(1)
+
+        fx1Spy.mockClear()
+        fx2Spy.mockClear()
+        input.b = 3
+        expect(output.fx1).toBe(1)
+        expect(output.fx2).toBe(3 + 1)
+        expect(fx1Spy).toHaveBeenCalledTimes(0)
+        expect(fx2Spy).toHaveBeenCalledTimes(1)
+
+        fx1Spy.mockClear()
+        fx2Spy.mockClear()
+        input.c = 1
+        expect(output.fx1).toBe(1)
+        expect(output.fx2).toBe(3 + 1)
+        expect(fx1Spy).toHaveBeenCalledTimes(1)
+        expect(fx2Spy).toHaveBeenCalledTimes(1)
+
+        fx1Spy.mockClear()
+        fx2Spy.mockClear()
+        input.c = 2
+        expect(output.fx1).toBe(3)
+        expect(output.fx2).toBe(1 + 3 + 3)
+        expect(fx1Spy).toHaveBeenCalledTimes(1)
+
+        // Invoked due to change of fx1.
+        expect(fx2Spy).toHaveBeenCalledTimes(1)
+
+        fx1Spy.mockClear()
+        fx2Spy.mockClear()
+        input.c = 3
+        expect(output.fx1).toBe(3)
+        expect(output.fx2).toBe(1 + 3)
+        expect(fx1Spy).toHaveBeenCalledTimes(1)
+        expect(fx2Spy).toHaveBeenCalledTimes(1)
+
+        fx1Spy.mockClear()
+        fx2Spy.mockClear()
+        input.a = 10
+        expect(output.fx1).toBe(3)
+        expect(output.fx2).toBe(10 + 3)
+        expect(fx1Spy).toHaveBeenCalledTimes(0)
+        expect(fx2Spy).toHaveBeenCalledTimes(1)
+    })
+
+
+    it('should not run multiple times for a single mutation', () =>
+    {
+        let dummy
+        const obj = reactive<Record<string, number>>({})
+        const fnSpy = vi.fn(() =>
+        {
+            for (const key in obj)
+            {
+                dummy = obj[key]
+            }
+            dummy = obj.prop
+        })
+        effect(fnSpy)
+
+        expect(fnSpy).toHaveBeenCalledTimes(1)
+        obj.prop = 16
+        expect(dummy).toBe(16)
+        expect(fnSpy).toHaveBeenCalledTimes(2)
+    })
+
+    it('should allow nested effects', () =>
+    {
+        const nums = reactive({ num1: 0, num2: 1, num3: 2 })
+        const dummy: any = {}
+
+        const childSpy = vi.fn(() => (dummy.num1 = nums.num1))
+        const childeffect = effect(childSpy) as EffectDep
+        const parentSpy = vi.fn(() =>
+        {
+            dummy.num2 = nums.num2
+            //   childeffect()
+            childeffect.run(true); // 使用 effect(func).run(true) 来代替 @vue/reactivity 中的 effect(func)() 。
+            dummy.num3 = nums.num3
+        })
+        effect(parentSpy)
+
+        expect(dummy).toEqual({ num1: 0, num2: 1, num3: 2 })
+        expect(parentSpy).toHaveBeenCalledTimes(1)
+        expect(childSpy).toHaveBeenCalledTimes(2)
+        // this should only call the childeffect
+        nums.num1 = 4
+        expect(dummy).toEqual({ num1: 4, num2: 1, num3: 2 })
+        expect(parentSpy).toHaveBeenCalledTimes(1)
+        expect(childSpy).toHaveBeenCalledTimes(3)
+        // this calls the parenteffect, which calls the childeffect once
+        nums.num2 = 10
+        expect(dummy).toEqual({ num1: 4, num2: 10, num3: 2 })
+        expect(parentSpy).toHaveBeenCalledTimes(2)
+        expect(childSpy).toHaveBeenCalledTimes(4)
+        // this calls the parenteffect, which calls the childeffect once
+        nums.num3 = 7
+        expect(dummy).toEqual({ num1: 4, num2: 10, num3: 7 })
+        expect(parentSpy).toHaveBeenCalledTimes(3)
+        expect(childSpy).toHaveBeenCalledTimes(5)
+    })
 })
 

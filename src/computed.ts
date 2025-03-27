@@ -93,11 +93,13 @@ export class ComputedDep<T = any> extends Dep<T>
 
     /**
      * 执行当前节点。
+     * 
+     * @param force 是否强制执行。
      */
-    run()
+    run(force = false)
     {
         // 检查是否存在失效子节点。
-        this._needRun = this._needRun || this.isChildrenChanged();
+        this._needRun = force || this._needRun || this.isChildrenChanged();
 
         // 标记为脏的情况下，执行计算。
         if (this._needRun)

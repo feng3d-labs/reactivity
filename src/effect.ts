@@ -9,7 +9,11 @@ import { Dep } from "./dep";
  * @param fn 要执行的函数
  * @returns  暂停和恢复副作用的函数
  * 
- * 注：与 @vue/reactivity 中的 effect 不同，此函数返回的是一个 Effect 对象，而不是一个函数。不希望用户直接执行，而是通过反应式自动触发。
+ * 注：
+ * 1. 与 `@vue/reactivity` 中的 effect 不同，此函数返回的是一个 Effect 对象，而不是一个函数。
+ * 2. 不希望用户直接执行，而是通过反应式自动触发。
+ * 3. 真有需求，可以使用 effect(func).run(true) 来代替 @vue/reactivity 中的 effect(func)() 。
+ * 
  */
 export function effect<T = any>(fn: () => T): Effect
 {
