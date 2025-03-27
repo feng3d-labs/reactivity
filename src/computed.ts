@@ -91,6 +91,10 @@ export class ComputedDep<T = any> extends Dep<T>
      */
     run()
     {
+        // 不受嵌套的 effect 影响。
+        const preShouldTrack = Dep._shouldTrack;
+        Dep._shouldTrack = true;
+
         // 保存当前节点作为父节点。
         const parentReactiveNode = Dep.activeReactivity;
         // 设置当前节点为活跃节点。
@@ -100,6 +104,9 @@ export class ComputedDep<T = any> extends Dep<T>
 
         // 执行完毕后恢复父节点。
         Dep.activeReactivity = parentReactiveNode;
+
+        //
+        Dep._shouldTrack = preShouldTrack;
     }
 
     /**
