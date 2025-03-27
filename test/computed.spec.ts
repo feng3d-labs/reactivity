@@ -1,5 +1,7 @@
 import { describe, expect, it, test, vi } from 'vitest'
 import { computed, ref } from '../src'
+import { RefReactivity } from '../src/ref'
+import { ComputedDep } from '../src/computed'
 
 describe('reactivity/computed', () =>
 {
@@ -92,11 +94,11 @@ describe('reactivity/computed', () =>
     {
         const cSpy = vi.fn()
 
-        const a = ref(0)
+        const a = ref(0) as RefReactivity;
         const b = computed(() =>
         {
             return a.value % 3 !== 0
-        })
+        }) as ComputedDep;
         const c = computed(() =>
         {
             cSpy()
@@ -105,11 +107,11 @@ describe('reactivity/computed', () =>
                 return 'expensive'
             }
             return 'cheap'
-        })
+        }) as ComputedDep;
         const d = computed(() =>
         {
             return a.value % 3 === 2
-        })
+        }) as ComputedDep;
         const e = computed(() =>
         {
             if (b.value)
@@ -120,19 +122,19 @@ describe('reactivity/computed', () =>
                 }
             }
             return c.value
-        })
+        }) as ComputedDep;
 
         e.value
         a.value++
         e.value
 
-        expect(((a as any).parents as Set<any>).size === 3).toBe(true)
-        expect(((a as any).parents as Set<any>).has(b)).toBe(true)
-        expect(((a as any).parents as Set<any>).has(c)).toBe(true)
-        expect(((a as any).parents as Set<any>).has(d)).toBe(true)
-        expect(((b as any).parents as Set<any>).has(e)).toBe(true)
-        expect(((c as any).parents as Set<any>).has(e)).toBe(true)
-        expect(((d as any).parents as Set<any>).has(e)).toBe(true)
+        expect(a._parents.size === 3).toBe(true)
+        expect(a._parents.has(b)).toBe(true)
+        expect(a._parents.has(c)).toBe(true)
+        expect(a._parents.has(d)).toBe(true)
+        expect(b._parents.has(e)).toBe(true)
+        expect(c._parents.has(e)).toBe(true)
+        expect(d._parents.has(e)).toBe(true)
 
         expect(cSpy).toHaveBeenCalledTimes(2)
 

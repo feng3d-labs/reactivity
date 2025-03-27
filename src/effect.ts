@@ -79,7 +79,7 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
                 let invalidChildNode = dep._invalidChildrenHead;
                 while (invalidChildNode)
                 {
-                    invalidChildNode.node.parents.add(dep);
+                    invalidChildNode.node._parents.add(dep);
                     invalidChildNode = invalidChildNode.next;
                 }
                 dep._invalidChildrenHead = undefined as any;

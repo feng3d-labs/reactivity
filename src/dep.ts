@@ -28,8 +28,10 @@ export class Dep<T = any>
      * 父反应节点。
      *
      * 记录了哪些节点调用了当前节点。
+     * 
+     * @private
      */
-    parents = new Set<ComputedDep>();
+    _parents = new Set<ComputedDep>();
 
     /**
      * 建立与父节点的依赖关系。
@@ -41,7 +43,7 @@ export class Dep<T = any>
         // 连接父节点和子节点。
         if (Dep.activeReactivity)
         {
-            this.parents.add(Dep.activeReactivity);
+            this._parents.add(Dep.activeReactivity);
         }
     }
 
@@ -53,15 +55,15 @@ export class Dep<T = any>
     trigger()
     {
         // 冒泡到所有父节点，设置失效子节点。
-        if (this.parents.size > 0)
+        if (this._parents.size > 0)
         {
-            this.parents.forEach((parent) =>
+            this._parents.forEach((parent) =>
             {
                 parent.trigger(this);
             });
 
             //
-            this.parents.clear();
+            this._parents.clear();
         }
     }
 

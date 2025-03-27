@@ -34,7 +34,7 @@ export function isRef(r: any): r is { value: any }
  * 
  * 当使用 ref 函数时，会创建一个 RefReactivity 对象。
  */
-class RefReactivity<T> extends Dep<T>
+export class RefReactivity<T = any> extends Dep<T>
 {
     public readonly [ReactiveFlags.IS_REF] = true
 

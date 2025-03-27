@@ -130,7 +130,7 @@ export class ComputedDep<T = any> extends Dep<T>
             while (invalidChild)
             {
                 // 修复与子节点关系
-                invalidChild.node.parents.add(this as any);
+                invalidChild.node._parents.add(this as any);
                 // 检查子节点值是否发生变化。
                 // 注：node.node.value 将会触发 node.node.run()，从而更新 node.value。
                 const newValue = invalidChild.node.value;
