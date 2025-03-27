@@ -30,22 +30,22 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
      * 
      * 启用时，会立即执行函数。
      */
-    isEnable: boolean = true;
+    private _isEnable: boolean = true;
 
     constructor(func: (oldValue?: T) => T)
     {
         super(func);
-        this.run();
+        this.runIfDirty();
     }
 
     pause()
     {
-        this.isEnable = false;
+        this._isEnable = false;
     }
 
     resume()
     {
-        this.isEnable = true;
+        this._isEnable = true;
     }
 
     trigger(dep?: Dep)
@@ -54,7 +54,7 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
 
         super.trigger(dep);
 
-        if (this.isEnable)
+        if (this._isEnable)
         {
             // 合批时需要判断是否已经运行的依赖。
             EffectDep.batch(this, Dep.activeReactivity === this)
@@ -63,11 +63,34 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
         EffectDep.endBatch();
     }
 
+    /**
+     * 执行当前节点。
+     * 
+     * 当暂停时将会直接执行被包装的函数。
+     */
+    run(): void
+    {
+        if (this._isEnable)
+        {
+            super.run();
+        }
+        else
+        {
+            this._func(this._value);
+        }
+    }
+
+    /**
+     * 开始批次处理。
+     */
     static startBatch(): void
     {
         this._batchDepth++
     }
 
+    /**
+     * 结束批次处理。
+     */
     static endBatch(): void
     {
         if (--this._batchDepth > 0)
@@ -81,7 +104,7 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
             this._isRunedDeps.forEach((dep) =>
             {
                 // 此时依赖以及子依赖都已经运行过了，只需修复与子节点关系。
-                __DEV__ && console.assert(dep._needRun === false, 'dep.dirty === false');
+                __DEV__ && console.assert(dep._isDirty === false, 'dep.dirty === false');
                 let invalidChildNode = dep._invalidChildrenHead;
                 while (invalidChildNode)
                 {
@@ -104,7 +127,7 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
                 const pre = Dep.activeReactivity;
                 Dep.activeReactivity = null;
 
-                dep.run()
+                dep.runIfDirty()
 
                 Dep.activeReactivity = pre;
             });

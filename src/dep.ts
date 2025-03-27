@@ -36,6 +36,8 @@ export class Dep<T = any>
     _parents = new Set<ComputedDep>();
 
     /**
+     * 捕捉。
+     * 
      * 建立与父节点的依赖关系。
      */
     track()
@@ -46,14 +48,14 @@ export class Dep<T = any>
         if (Dep.activeReactivity)
         {
             this._parents.add(Dep.activeReactivity);
-            Dep.activeReactivity.children.add(this);
+            Dep.activeReactivity._children.add(this);
         }
     }
 
     /**
-     * 当前节点失效。
+     * 触发。
      * 
-     * 把当前节点添加到父节点的失效队列中。
+     * 冒泡到所有父节点，设置失效子节点。
      */
     trigger()
     {

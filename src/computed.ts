@@ -25,12 +25,14 @@ export class ComputedDep<T = any> extends Dep<T>
     /**
      * 监听的函数。
      */
-    private _func: (oldValue?: T) => T;
+    protected _func: (oldValue?: T) => T;
 
     /**
      * 引用的子节点。
+     * 
+     * @private
      */
-    children: Set<Dep> = new Set();
+    _children: Set<Dep> = new Set();
 
     /**
      * 失效的子节点的队头。需要在执行时检查子节点值是否发生变化。
@@ -47,7 +49,7 @@ export class ComputedDep<T = any> extends Dep<T>
      * 
      * 用于在没有值发生变化时，避免重复计算。
      */
-    protected _needRun = true;
+    protected _isDirty = true;
 
     /**
      * 创建计算依赖。
@@ -60,17 +62,35 @@ export class ComputedDep<T = any> extends Dep<T>
     }
 
     /**
+     * 
+     * 
      * 建立与父节点的依赖关系。
      * 
      * 当需要执行或者
      */
+    /**
+     * 捕捉。
+     * 
+     * 当
+     * 
+     * 建立与父节点的依赖关系。
+     */
     track()
     {
-        this.run();
+        this.runIfDirty();
 
         super.track();
     }
 
+    /**
+     * 触发。
+     * 
+     * 冒泡到所有父节点，设置失效子节点。
+     * 
+     * 把触发节点添加到失效子节点队列中。
+     * 
+     * @param dep 触发节点。
+     */
     trigger(dep?: Dep): void
     {
         if (dep)
@@ -93,29 +113,38 @@ export class ComputedDep<T = any> extends Dep<T>
 
     /**
      * 执行当前节点。
-     * 
-     * @param force 是否强制执行。
      */
-    run(force = false)
+    run()
+    {
+        // 保存当前节点作为父节点。
+        const parentReactiveNode = Dep.activeReactivity;
+        // 设置当前节点为活跃节点。
+        Dep.activeReactivity = this as any;
+
+        this._value = this._func(this._value);
+
+        // 执行完毕后恢复父节点。
+        Dep.activeReactivity = parentReactiveNode;
+    }
+
+    /**
+     * 检查当前节点是否脏。
+     * 
+     * 如果脏，则执行计算。
+     */
+    runIfDirty()
     {
         // 检查是否存在失效子节点。
-        this._needRun = force || this._needRun || this.isChildrenChanged();
+        this._isDirty = this._isDirty || this.isChildrenChanged();
 
         // 标记为脏的情况下，执行计算。
-        if (this._needRun)
+        if (this._isDirty)
         {
             // 立即去除脏标记，避免循环多重计算。
-            this._needRun = false;
+            this._isDirty = false;
 
-            // 保存当前节点作为父节点。
-            const parentReactiveNode = Dep.activeReactivity;
-            // 设置当前节点为活跃节点。
-            Dep.activeReactivity = this as any;
-
-            this._value = this._func(this._value);
-
-            // 执行完毕后恢复父节点。
-            Dep.activeReactivity = parentReactiveNode;
+            //
+            this.run();
         }
     }
 
@@ -153,11 +182,11 @@ export class ComputedDep<T = any> extends Dep<T>
             // 如果子节点有值发生变化，需要清除所有与子节点的关系。
             if (isChanged)
             {
-                this.children.forEach((child) =>
+                this._children.forEach((child) =>
                 {
                     child._parents.delete(this as any);
                 });
-                this.children.clear();
+                this._children.clear();
             }
 
             // 恢复父节点。

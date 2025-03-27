@@ -677,7 +677,7 @@ describe('reactivity/effect', () =>
         {
             dummy.num2 = nums.num2
             //   childeffect()
-            childeffect.run(true); // 使用 effect(func).run(true) 来代替 @vue/reactivity 中的 effect(func)() 。
+            childeffect.run(); // 使用 effect(func).run(true) 来代替 @vue/reactivity 中的 effect(func)() 。
             dummy.num3 = nums.num3
         })
         effect(parentSpy)
@@ -700,6 +700,91 @@ describe('reactivity/effect', () =>
         expect(dummy).toEqual({ num1: 4, num2: 10, num3: 7 })
         expect(parentSpy).toHaveBeenCalledTimes(3)
         expect(childSpy).toHaveBeenCalledTimes(5)
+    })
+
+    it('should observe json methods', () =>
+    {
+        let dummy = <Record<string, number>>{}
+        const obj = reactive<Record<string, number>>({})
+        effect(() =>
+        {
+            dummy = JSON.parse(JSON.stringify(obj))
+        })
+        obj.a = 1
+        expect(dummy.a).toBe(1)
+    })
+
+    it('should observe class method invocations', () =>
+    {
+        class Model
+        {
+            count: number
+            constructor()
+            {
+                this.count = 0
+            }
+            inc()
+            {
+                this.count++
+            }
+        }
+        const model = reactive(new Model())
+        let dummy
+        effect(() =>
+        {
+            dummy = model.count
+        })
+        expect(dummy).toBe(0)
+        model.inc()
+        expect(dummy).toBe(1)
+    })
+
+    it('stop', () =>
+    {
+        let dummy
+        const obj = reactive({ prop: 1 })
+        const runner = effect(() =>
+        {
+            dummy = obj.prop
+        }) as EffectDep
+        obj.prop = 2
+        expect(dummy).toBe(2)
+        // stop(runner)
+        runner.pause(); // 使用 effect(func).pause() 代替 @vue/reactivity 中的 stop(effect(func)) 。
+        obj.prop = 3
+        expect(dummy).toBe(2)
+
+        // stopped effect should still be manually callable
+        // runner()
+        runner.run(); // 使用 effect(func).run() 代替 @vue/reactivity 中的 effect(func)() 。
+        expect(dummy).toBe(3)
+    })
+
+    it('stop: a stopped effect is nested in a normal effect', () =>
+    {
+        let dummy
+        const obj = reactive({ prop: 1 })
+        const runner = effect(() =>
+        {
+            dummy = obj.prop
+        }) as EffectDep
+        // stop(runner)
+        runner.pause(); // 使用 effect(func).pause() 代替 @vue/reactivity 中的 stop(effect(func)) 。
+        obj.prop = 2
+        expect(dummy).toBe(1)
+
+        // observed value in inner stopped effect
+        // will track outer effect as an dependency
+        effect(() =>
+        {
+            // runner()
+            runner.run(); // 使用 effect(func).run() 代替 @vue/reactivity 中的 effect(func)() 。
+        })
+        expect(dummy).toBe(2)
+
+        // notify outer effect to run
+        obj.prop = 3
+        expect(dummy).toBe(3)
     })
 })
 
