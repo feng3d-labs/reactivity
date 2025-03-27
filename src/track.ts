@@ -56,7 +56,9 @@ export function trigger(target: object, type: TriggerOpTypes, key?: unknown, new
         if (dep)
         {
             // 触发属性的变化。
-            dep.trigger(newValue, oldValue);
+            dep._value = oldValue;
+            dep.trigger();
+            dep._value = newValue;
         }
     }
 

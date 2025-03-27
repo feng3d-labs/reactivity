@@ -101,17 +101,15 @@ export class Dep<T = any> extends BaseDep<T>
     /**
      * 标记为脏，触发下次检查与执行。
      */
-    trigger(newValue?: T, oldValue?: T)
+    trigger()
     {
-        oldValue ??= this._value;
-        this._value = newValue;
         if (this._dirty)
         {
             return;
         }
         this._dirty = true;
 
-        this.invalidate(newValue, oldValue);
+        this.invalidate();
     }
 
     /**
@@ -164,7 +162,7 @@ export class Dep<T = any> extends BaseDep<T>
      * 
      * 把当前节点添加到父节点的失效队列中。
      */
-    protected invalidate(newValue?: T, oldValue?: T)
+    protected invalidate()
     {
         // 冒泡到所有父节点，设置失效子节点。
         if (this.parents.size > 0)
@@ -172,7 +170,7 @@ export class Dep<T = any> extends BaseDep<T>
             this.parents.forEach((parent) =>
             {
                 // 添加到队尾
-                const node: ReactivityLink = { node: this, value: oldValue, next: undefined };
+                const node: ReactivityLink = { node: this, value: this._value, next: undefined };
                 if (parent._invalidChildrenTail)
                 {
                     parent._invalidChildrenTail.next = node;
