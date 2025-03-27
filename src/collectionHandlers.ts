@@ -1,7 +1,7 @@
 import { toReactive } from "./reactive"
 import { ITERATE_KEY, MAP_KEY_ITERATE_KEY, ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./shared/constants"
 import { hasChanged, hasOwn, isMap, Target, toRaw, toRawType, warn } from "./shared/general"
-import { track, trigger } from "./track"
+import { PropertyDep } from "./track"
 
 export const mutableCollectionHandlers: ProxyHandler<CollectionTypes> = {
     get: createInstrumentationGetter(),
@@ -50,9 +50,9 @@ function createInstrumentations(): Instrumentations
 
             if (hasChanged(key, rawKey))
             {
-                track(rawTarget, TrackOpTypes.GET, key)
+                PropertyDep.track(rawTarget, TrackOpTypes.GET, key)
             }
-            track(rawTarget, TrackOpTypes.GET, rawKey)
+            PropertyDep.track(rawTarget, TrackOpTypes.GET, rawKey)
 
             const { has } = getProto(rawTarget)
             const wrap = toReactive
@@ -72,7 +72,7 @@ function createInstrumentations(): Instrumentations
         get size()
         {
             const target = (this as unknown as IterableCollections)[ReactiveFlags.RAW]
-            track(toRaw(target), TrackOpTypes.ITERATE, ITERATE_KEY)
+            PropertyDep.track(toRaw(target), TrackOpTypes.ITERATE, ITERATE_KEY)
             return Reflect.get(target, 'size', target)
         },
         has(this: CollectionTypes, key: unknown): boolean
@@ -83,9 +83,9 @@ function createInstrumentations(): Instrumentations
 
             if (hasChanged(key, rawKey))
             {
-                track(rawTarget, TrackOpTypes.HAS, key)
+                PropertyDep.track(rawTarget, TrackOpTypes.HAS, key)
             }
-            track(rawTarget, TrackOpTypes.HAS, rawKey)
+            PropertyDep.track(rawTarget, TrackOpTypes.HAS, rawKey)
 
             return key === rawKey
                 ? target.has(key)
@@ -97,7 +97,7 @@ function createInstrumentations(): Instrumentations
             const target = observed[ReactiveFlags.RAW]
             const rawTarget = toRaw(target)
             const wrap = toReactive
-            track(rawTarget, TrackOpTypes.ITERATE, ITERATE_KEY)
+            PropertyDep.track(rawTarget, TrackOpTypes.ITERATE, ITERATE_KEY)
             return target.forEach((value: unknown, key: unknown) =>
             {
                 // important: make sure the callback is
@@ -116,7 +116,7 @@ function createInstrumentations(): Instrumentations
             if (!hadKey)
             {
                 target.add(value)
-                trigger(target, TriggerOpTypes.ADD, value, value)
+                PropertyDep.trigger(target, TriggerOpTypes.ADD, value, value)
             }
             return this
         },
@@ -140,10 +140,10 @@ function createInstrumentations(): Instrumentations
             target.set(key, value)
             if (!hadKey)
             {
-                trigger(target, TriggerOpTypes.ADD, key, value)
+                PropertyDep.trigger(target, TriggerOpTypes.ADD, key, value)
             } else if (hasChanged(value, oldValue))
             {
-                trigger(target, TriggerOpTypes.SET, key, value, oldValue)
+                PropertyDep.trigger(target, TriggerOpTypes.SET, key, value, oldValue)
             }
             return this
         },
@@ -166,7 +166,7 @@ function createInstrumentations(): Instrumentations
             const result = target.delete(key)
             if (hadKey)
             {
-                trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue)
+                PropertyDep.trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue)
             }
             return result
         },
@@ -183,7 +183,7 @@ function createInstrumentations(): Instrumentations
             const result = target.clear()
             if (hadItems)
             {
-                trigger(
+                PropertyDep.trigger(
                     target,
                     TriggerOpTypes.CLEAR,
                     undefined,
@@ -226,7 +226,7 @@ function createIterableMethod(method: string | symbol)
         const innerIterator = target[method](...args)
         const wrap = toReactive
 
-        track(
+        PropertyDep.track(
             rawTarget,
             TrackOpTypes.ITERATE,
             isKeyOnly ? MAP_KEY_ITERATE_KEY : ITERATE_KEY,

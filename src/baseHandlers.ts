@@ -3,7 +3,7 @@ import { reactive, reactiveMap } from "./reactive";
 import { isRef } from "./ref";
 import { ITERATE_KEY, ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./shared/constants";
 import { hasChanged, hasOwn, isArray, isIntegerKey, isObject, isSymbol, makeMap, Target, toRaw } from "./shared/general";
-import { track, trigger } from "./track";
+import { PropertyDep } from "./track";
 
 /**
  * 基础响应式处理器。
@@ -65,7 +65,7 @@ class BaseReactiveHandler implements ProxyHandler<Target>
         }
 
         //
-        track(target, TrackOpTypes.GET, key as any)
+        PropertyDep.track(target, TrackOpTypes.GET, key as any)
 
         // 如果是 ref，则返回 ref.value
         if (isRef(res))
@@ -133,10 +133,11 @@ class MutableReactiveHandler extends BaseReactiveHandler
         {
             if (!hadKey)
             {
-                trigger(target, TriggerOpTypes.ADD, key, value)
-            } else if (hasChanged(value, oldValue))
+                PropertyDep.trigger(target, TriggerOpTypes.ADD, key, value)
+            }
+            else if (hasChanged(value, oldValue))
             {
-                trigger(target, TriggerOpTypes.SET, key, value, oldValue)
+                PropertyDep.trigger(target, TriggerOpTypes.SET, key, value, oldValue)
             }
         }
 
@@ -160,7 +161,7 @@ class MutableReactiveHandler extends BaseReactiveHandler
         const result = Reflect.deleteProperty(target, key)
         if (result && hadKey)
         {
-            trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue)
+            PropertyDep.trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue)
         }
         return result
     }
@@ -170,14 +171,14 @@ class MutableReactiveHandler extends BaseReactiveHandler
         const result = Reflect.has(target, key)
         if (!isSymbol(key) || !builtInSymbols.has(key))
         {
-            track(target, TrackOpTypes.HAS, key)
+            PropertyDep.track(target, TrackOpTypes.HAS, key)
         }
         return result
     }
 
     ownKeys(target: Record<string | symbol, unknown>): (string | symbol)[]
     {
-        track(
+        PropertyDep.track(
             target,
             TrackOpTypes.ITERATE,
             isArray(target) ? 'length' : ITERATE_KEY,
@@ -197,7 +198,7 @@ function hasOwnProperty(this: object, key: unknown)
     // #10455 hasOwnProperty may be called with non-string values
     if (!isSymbol(key)) key = String(key)
     const obj = toRaw(this)
-    track(obj, TrackOpTypes.HAS, key)
+    PropertyDep.track(obj, TrackOpTypes.HAS, key)
     return obj.hasOwnProperty(key as string)
 }
 

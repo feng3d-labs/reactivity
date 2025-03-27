@@ -3,7 +3,7 @@ import { EffectDep } from "./effect"
 import { isProxy, toReactive } from "./reactive"
 import { ARRAY_ITERATE_KEY, TrackOpTypes } from "./shared/constants"
 import { isArray, toRaw } from "./shared/general"
-import { track } from "./track"
+import { PropertyDep } from "./track"
 
 export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     __proto__: null,
@@ -323,7 +323,7 @@ function iterator(
  */
 function shallowReadArray<T>(arr: T[]): T[]
 {
-    track((arr = toRaw(arr)), TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY)
+    PropertyDep.track((arr = toRaw(arr)), TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY)
     return arr
 }
 
@@ -331,7 +331,7 @@ function reactiveReadArray<T>(array: T[]): T[]
 {
     const raw = toRaw(array)
     if (raw === array) return raw
-    track(raw, TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY)
+    PropertyDep.track(raw, TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY)
     return raw.map(toReactive)
 }
 
@@ -413,7 +413,7 @@ function searchProxy(
 )
 {
     const arr = toRaw(self) as any
-    track(arr, TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY)
+    PropertyDep.track(arr, TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY)
     // we run the method using the original args first (which may be reactive)
     const res = arr[method](...args)
 
@@ -435,8 +435,8 @@ function noTracking(
     args: unknown[] = [],
 )
 {
-    EffectDep. startBatch()
-    Dep. pauseTracking()
+    EffectDep.startBatch()
+    Dep.pauseTracking()
     const res = (toRaw(self) as any)[method].apply(self, args)
     Dep.resetTracking()
     EffectDep.endBatch()
