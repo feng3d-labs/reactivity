@@ -1,7 +1,7 @@
-import { ARRAY_ITERATE_KEY, Dep, } from "./dep"
+import { Dep } from "./dep"
 import { EffectDep } from "./effect"
 import { isProxy, toReactive } from "./reactive"
-import { TrackOpTypes } from "./shared/constants"
+import { ARRAY_ITERATE_KEY, TrackOpTypes } from "./shared/constants"
 import { isArray, toRaw } from "./shared/general"
 import { track } from "./track"
 

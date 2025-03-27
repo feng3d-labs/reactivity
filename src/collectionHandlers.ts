@@ -1,6 +1,5 @@
-import { ITERATE_KEY, MAP_KEY_ITERATE_KEY } from "./dep"
 import { toReactive } from "./reactive"
-import { ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./shared/constants"
+import { ITERATE_KEY, MAP_KEY_ITERATE_KEY, ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./shared/constants"
 import { hasChanged, hasOwn, isMap, Target, toRaw, toRawType, warn } from "./shared/general"
 import { track, trigger } from "./track"
 

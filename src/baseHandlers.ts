@@ -1,8 +1,7 @@
 import { arrayInstrumentations } from "./arrayInstrumentations";
-import { ITERATE_KEY } from "./dep";
 import { reactive, reactiveMap } from "./reactive";
 import { isRef } from "./ref";
-import { ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./shared/constants";
+import { ITERATE_KEY, ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./shared/constants";
 import { hasChanged, hasOwn, isArray, isIntegerKey, isObject, isSymbol, makeMap, Target, toRaw } from "./shared/general";
 import { track, trigger } from "./track";
 

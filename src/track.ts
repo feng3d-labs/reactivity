@@ -1,6 +1,6 @@
-import { ARRAY_ITERATE_KEY, Dep, ITERATE_KEY, MAP_KEY_ITERATE_KEY } from "./dep";
+import { Dep } from "./dep";
 import { EffectDep } from "./effect";
-import { TrackOpTypes, TriggerOpTypes } from "./shared/constants";
+import { ARRAY_ITERATE_KEY, ITERATE_KEY, MAP_KEY_ITERATE_KEY, TrackOpTypes, TriggerOpTypes } from "./shared/constants";
 import { isArray, isIntegerKey, isMap, isSymbol } from "./shared/general";
 
 /**

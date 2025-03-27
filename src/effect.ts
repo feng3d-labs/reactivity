@@ -51,61 +51,60 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
         if (this.isEnable)
         {
             // 合批时需要判断是否已经运行的依赖。
-            EffectDep. batch(this, Dep.activeReactivity === this)
+            EffectDep.batch(this, Dep.activeReactivity === this)
         }
 
         EffectDep.endBatch();
     }
 
-
     static startBatch(): void
     {
-        this.batchDepth++
+        this._batchDepth++
     }
-    
+
     static endBatch(): void
     {
-        if (--this.batchDepth > 0)
+        if (--this._batchDepth > 0)
         {
             return
         }
-    
+
         // 处理已经运行过的依赖，
-        if (this.isRunningDeps.length > 0)
+        if (this._isRunedDeps.length > 0)
         {
-            this.isRunningDeps.forEach((dep) =>
+            this._isRunedDeps.forEach((dep) =>
             {
                 // 此时依赖以及子依赖都已经运行过了，只需修复与子节点关系。
-                __DEV__ && console.assert(dep.dirty === false, 'dep.dirty === false');
-                let invalidChildNode = dep.invalidChildrenHead;
+                __DEV__ && console.assert(dep._dirty === false, 'dep.dirty === false');
+                let invalidChildNode = dep._invalidChildrenHead;
                 while (invalidChildNode)
                 {
                     invalidChildNode.node.parents.add(dep);
                     invalidChildNode = invalidChildNode.next;
                 }
-                dep.invalidChildrenHead = undefined as any;
-                dep.invalidChildrenTail = undefined as any;
+                dep._invalidChildrenHead = undefined as any;
+                dep._invalidChildrenTail = undefined as any;
             });
-            this.isRunningDeps.length = 0;
+            this._isRunedDeps.length = 0;
         }
-    
+
         // 批次处理
-        if (this.needEffectDeps.length > 0)
+        if (this._needEffectDeps.length > 0)
         {
-            this. needEffectDeps.forEach((dep) =>
+            this._needEffectDeps.forEach((dep) =>
             {
                 // 独立执行回调
                 const pre = Dep.activeReactivity;
                 Dep.activeReactivity = null;
-    
+
                 dep.run()
-    
+
                 Dep.activeReactivity = pre;
             });
-            this. needEffectDeps.length = 0;
+            this._needEffectDeps.length = 0;
         }
     }
-    
+
     /**
      * 合批处理。
      * 
@@ -116,23 +115,23 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
     {
         if (isRunning)
         {
-           this. isRunningDeps.push(dep);
+            this._isRunedDeps.push(dep);
         }
         else
         {
-            this. needEffectDeps.push(dep);
+            this._needEffectDeps.push(dep);
         }
     }
-    
-    static batchDepth = 0
+
+    private static _batchDepth = 0
     /**
      * 正在运行的依赖。
      */
-    static needEffectDeps: EffectDep[] = [];
+    private static _needEffectDeps: EffectDep[] = [];
     /**
      * 已经运行过的依赖，只需要修复与子节点关系。
      */
-    static isRunningDeps: EffectDep[] = [];
+    private static _isRunedDeps: EffectDep[] = [];
 }
 
 /**
