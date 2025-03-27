@@ -1,3 +1,4 @@
+import { EffectDep } from "./effect";
 import { TrackOpTypes, TriggerOpTypes } from "./shared/constants";
 import { isArray, isIntegerKey, isMap, isSymbol } from "./shared/general";
 
@@ -423,7 +424,7 @@ export function endBatch(): void
  * @param dep 
  * @param isRunning 添加时是否是正在运行。 
  */
-export function batch(dep: Dep, isRunning: boolean): void
+export function batch(dep: EffectDep, isRunning: boolean): void
 {
     if (isRunning)
     {
@@ -439,8 +440,8 @@ let batchDepth = 0
 /**
  * 正在运行的依赖。
  */
-let needEffectDeps: Dep[] = [];
+let needEffectDeps: EffectDep[] = [];
 /**
  * 已经运行过的依赖，只需要修复与子节点关系。
  */
-let isRunningDeps: Dep[] = [];
+let isRunningDeps: EffectDep[] = [];

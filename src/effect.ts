@@ -17,7 +17,7 @@ export function effect<T = any>(fn: () => T): Effect
 /**
  * 副作用节点。
  */
-class EffectDep<T> extends ComputedDep<T> implements Effect
+export class EffectDep<T = any> extends ComputedDep<T> implements Effect
 {
     /**
      * 是否为启用, 默认为 true。
