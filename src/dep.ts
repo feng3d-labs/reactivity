@@ -1,12 +1,24 @@
 import { type ComputedDep } from "./computed";
 
 /**
- * 反应节点。
- *
- * 用于记录依赖关系。
+ * 基础反应式节点。
+ * 
+ * 用于被 ref reactive 等构建的节点所继承。
  */
-export class Dep<T = any>
+export class BaseDep<T>
 {
+    /**
+     * 获取当前节点值。
+     * 
+     * 取值时将会建立与父节点的依赖关系。
+     */
+    get value(): T
+    {
+        this.track();
+        return this._value;
+    }
+    protected _value: T;
+
     /**
      * 父反应节点。
      *
@@ -15,18 +27,36 @@ export class Dep<T = any>
     parents = new Set<ComputedDep>();
 
     /**
-     * 当前节点值。
-     * 
-     * 取值时将会更新当前节点（建立或维护依赖关系，标记为脏时执行）。
+     * 建立与父节点的依赖关系。
      */
-    get value()
+    track()
     {
-        this.track();
+        if (!Dep._shouldTrack) return;
 
-        return this._value;
+        this.run();
+
+        // 连接父节点和子节点。
+        if (Dep.activeReactivity)
+        {
+            this.parents.add(Dep.activeReactivity);
+        }
     }
-    protected _value: T;
 
+    run()
+    {
+
+    }
+}
+
+/**
+ * 反应节点。
+ *
+ * 用于记录依赖关系。
+ * 
+ * 用于被 computed effect 等构建的节点所继承。
+ */
+export class Dep<T = any> extends BaseDep<T>
+{
     /**
      * 是否脏，是否需要重新计算。
      */
@@ -41,22 +71,6 @@ export class Dep<T = any>
      * 失效子节点的队尾。用于保持检查顺序。新增节点添加到队尾，从队头开始检查。
      */
     protected _invalidChildrenTail: ReactivityLink;
-
-    /**
-     * 执行当前节点。
-     */
-    track()
-    {
-        if (!Dep._shouldTrack) return;
-
-        this.run();
-
-        // 连接父节点和子节点。
-        if (Dep.activeReactivity)
-        {
-            this.parents.add(Dep.activeReactivity);
-        }
-    }
 
     /**
      * 执行当前节点。
