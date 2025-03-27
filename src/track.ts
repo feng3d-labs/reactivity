@@ -3,6 +3,26 @@ import { EffectDep } from "./effect";
 import { ARRAY_ITERATE_KEY, ITERATE_KEY, MAP_KEY_ITERATE_KEY, TrackOpTypes, TriggerOpTypes } from "./shared/constants";
 import { isArray, isIntegerKey, isMap, isSymbol } from "./shared/general";
 
+export function property(target: object, key: unknown)
+{
+    let depsMap = PropertyDep._targetMap.get(target);
+    if (!depsMap)
+    {
+        depsMap = new Map();
+        PropertyDep._targetMap.set(target, depsMap);
+    }
+
+    //
+    let dep = depsMap.get(key);
+    if (!dep)
+    {
+        dep = new PropertyDep(target, key);
+        depsMap.set(key, dep);
+    }
+
+    return dep;
+}
+
 /**
  * 反应式属性。
  */
@@ -43,27 +63,15 @@ export class PropertyDep<T = any> extends Dep<T>
      */
     static track(target: object, type: TrackOpTypes, key: unknown): void
     {
-        if (!Dep._shouldTrack) return;
-
-        let depsMap = this.targetMap.get(target);
-        if (!depsMap)
-        {
-            depsMap = new Map();
-            this.targetMap.set(target, depsMap);
-        }
-
-        //
-        let dep = depsMap.get(key);
-        if (!dep)
-        {
-            dep = new PropertyDep(target, key);
-            depsMap.set(key, dep);
-        }
+        const dep = property(target, key);
 
         // 取值，建立依赖关系。
         dep.track();
     }
-    private static targetMap: WeakMap<any, Map<any, PropertyDep>> = new WeakMap()
+    /**
+     * @private
+     */
+    static _targetMap: WeakMap<any, Map<any, PropertyDep>> = new WeakMap()
 
     /**
      * 触发属性的变化。
@@ -75,9 +83,9 @@ export class PropertyDep<T = any> extends Dep<T>
      * @param oldValue 旧值。
      * @returns 
      */
-    static trigger(target: object, type: TriggerOpTypes, key?: unknown, newValue?: unknown, oldValue?: unknown,): void
+    static trigger(target: object, type: TriggerOpTypes, key?: unknown, newValue?: unknown): void
     {
-        const depsMap = this.targetMap.get(target);
+        const depsMap = this._targetMap.get(target);
         if (!depsMap) return;
 
         const run = (dep: PropertyDep | undefined) =>
