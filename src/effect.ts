@@ -1,5 +1,5 @@
 import { ComputedDep } from "./computed";
-import { batch, Dep, endBatch, startBatch } from "./dep";
+import { Dep } from "./dep";
 
 /**
  * 创建副作用。
@@ -44,18 +44,95 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
 
     invalidate()
     {
-        startBatch();
+        EffectDep.startBatch();
 
         super.invalidate();
 
         if (this.isEnable)
         {
             // 合批时需要判断是否已经运行的依赖。
-            batch(this, Dep.activeReactivity === this)
+            EffectDep. batch(this, Dep.activeReactivity === this)
         }
 
-        endBatch();
+        EffectDep.endBatch();
     }
+
+
+    static startBatch(): void
+    {
+        this.batchDepth++
+    }
+    
+    static endBatch(): void
+    {
+        if (--this.batchDepth > 0)
+        {
+            return
+        }
+    
+        // 处理已经运行过的依赖，
+        if (this.isRunningDeps.length > 0)
+        {
+            this.isRunningDeps.forEach((dep) =>
+            {
+                // 此时依赖以及子依赖都已经运行过了，只需修复与子节点关系。
+                __DEV__ && console.assert(dep.dirty === false, 'dep.dirty === false');
+                let invalidChildNode = dep.invalidChildrenHead;
+                while (invalidChildNode)
+                {
+                    invalidChildNode.node.parents.add(dep);
+                    invalidChildNode = invalidChildNode.next;
+                }
+                dep.invalidChildrenHead = undefined as any;
+                dep.invalidChildrenTail = undefined as any;
+            });
+            this.isRunningDeps.length = 0;
+        }
+    
+        // 批次处理
+        if (this.needEffectDeps.length > 0)
+        {
+            this. needEffectDeps.forEach((dep) =>
+            {
+                // 独立执行回调
+                const pre = Dep.activeReactivity;
+                Dep.activeReactivity = null;
+    
+                dep.run()
+    
+                Dep.activeReactivity = pre;
+            });
+            this. needEffectDeps.length = 0;
+        }
+    }
+    
+    /**
+     * 合批处理。
+     * 
+     * @param dep 
+     * @param isRunning 添加时是否是正在运行。 
+     */
+    static batch(dep: EffectDep, isRunning: boolean): void
+    {
+        if (isRunning)
+        {
+           this. isRunningDeps.push(dep);
+        }
+        else
+        {
+            this. needEffectDeps.push(dep);
+        }
+    }
+    
+    static batchDepth = 0
+    /**
+     * 正在运行的依赖。
+     */
+    static needEffectDeps: EffectDep[] = [];
+    /**
+     * 已经运行过的依赖，只需要修复与子节点关系。
+     */
+    static isRunningDeps: EffectDep[] = [];
 }
 
 /**

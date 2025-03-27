@@ -1,7 +1,8 @@
-import { ITERATE_KEY, MAP_KEY_ITERATE_KEY, track, trigger } from "./dep"
+import { ITERATE_KEY, MAP_KEY_ITERATE_KEY } from "./dep"
 import { toReactive } from "./reactive"
 import { ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./shared/constants"
 import { hasChanged, hasOwn, isMap, Target, toRaw, toRawType, warn } from "./shared/general"
+import { track, trigger } from "./track"
 
 export const mutableCollectionHandlers: ProxyHandler<CollectionTypes> = {
     get: createInstrumentationGetter(),

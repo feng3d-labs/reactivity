@@ -1,7 +1,9 @@
-import { ARRAY_ITERATE_KEY, Dep, endBatch, startBatch, track } from "./dep"
+import { ARRAY_ITERATE_KEY, Dep, } from "./dep"
+import { EffectDep } from "./effect"
 import { isProxy, toReactive } from "./reactive"
 import { TrackOpTypes } from "./shared/constants"
 import { isArray, toRaw } from "./shared/general"
+import { track } from "./track"
 
 export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     __proto__: null,
@@ -433,10 +435,10 @@ function noTracking(
     args: unknown[] = [],
 )
 {
-    startBatch()
+    EffectDep. startBatch()
     Dep. pauseTracking()
     const res = (toRaw(self) as any)[method].apply(self, args)
     Dep.resetTracking()
-    endBatch()
+    EffectDep.endBatch()
     return res
 }

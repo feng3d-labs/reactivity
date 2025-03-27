@@ -1,0 +1,141 @@
+import { ARRAY_ITERATE_KEY, Dep, ITERATE_KEY, MAP_KEY_ITERATE_KEY } from "./dep";
+import { EffectDep } from "./effect";
+import { TrackOpTypes, TriggerOpTypes } from "./shared/constants";
+import { isArray, isIntegerKey, isMap, isSymbol } from "./shared/general";
+
+/**
+ * 追踪属性的变化。
+ * 
+ * 当属性被访问时，将会追踪属性的变化。
+ *
+ * @param target 目标对象。
+ * @param key  属性名。
+ * @returns 
+ */
+export function track(target: object, type: TrackOpTypes, key: unknown): void
+{
+    if (!Dep._shouldTrack) return;
+
+    let depsMap = targetMap.get(target);
+    if (!depsMap)
+    {
+        depsMap = new Map();
+        targetMap.set(target, depsMap);
+    }
+
+    //
+    let dep = depsMap.get(key);
+    if (!dep)
+    {
+        dep = new Dep();
+        depsMap.set(key, dep);
+    }
+
+    // 取值，建立依赖关系。
+    dep.track();
+}
+const targetMap: WeakMap<any, Map<any, Dep>> = new WeakMap()
+
+/**
+ * 触发属性的变化。
+ * 
+ * @param target 目标对象。
+ * @param type    操作类型。
+ * @param key 属性名。
+ * @param newValue 新值。
+ * @param oldValue 旧值。
+ * @returns 
+ */
+export function trigger(target: object, type: TriggerOpTypes, key?: unknown, newValue?: unknown, oldValue?: unknown,): void
+{
+    const depsMap = targetMap.get(target);
+    if (!depsMap) return;
+
+    const run = (dep: Dep | undefined) =>
+    {
+        if (dep)
+        {
+            // 触发属性的变化。
+            dep.trigger(newValue, oldValue);
+        }
+    }
+
+    EffectDep.startBatch()
+
+    if (type === TriggerOpTypes.CLEAR)
+    {
+        // collection being cleared
+        // trigger all effects for target
+        depsMap.forEach(run)
+    } else
+    {
+        const targetIsArray = isArray(target)
+        const isArrayIndex = targetIsArray && isIntegerKey(key)
+
+        if (targetIsArray && key === 'length')
+        {
+            const newLength = Number(newValue)
+            depsMap.forEach((dep, key) =>
+            {
+                if (
+                    key === 'length' ||
+                    key === ARRAY_ITERATE_KEY ||
+                    (!isSymbol(key) && key >= newLength)
+                )
+                {
+                    run(dep)
+                }
+            })
+        } else
+        {
+            // schedule runs for SET | ADD | DELETE
+            if (key !== void 0 || depsMap.has(void 0))
+            {
+                run(depsMap.get(key))
+            }
+
+            // schedule ARRAY_ITERATE for any numeric key change (length is handled above)
+            if (isArrayIndex)
+            {
+                run(depsMap.get(ARRAY_ITERATE_KEY))
+            }
+
+            // also run for iteration key on ADD | DELETE | Map.SET
+            switch (type)
+            {
+                case TriggerOpTypes.ADD:
+                    if (!targetIsArray)
+                    {
+                        run(depsMap.get(ITERATE_KEY))
+                        if (isMap(target))
+                        {
+                            run(depsMap.get(MAP_KEY_ITERATE_KEY))
+                        }
+                    } else if (isArrayIndex)
+                    {
+                        // new index added to array -> length changes
+                        run(depsMap.get('length'))
+                    }
+                    break
+                case TriggerOpTypes.DELETE:
+                    if (!targetIsArray)
+                    {
+                        run(depsMap.get(ITERATE_KEY))
+                        if (isMap(target))
+                        {
+                            run(depsMap.get(MAP_KEY_ITERATE_KEY))
+                        }
+                    }
+                    break
+                case TriggerOpTypes.SET:
+                    if (isMap(target))
+                    {
+                        run(depsMap.get(ITERATE_KEY))
+                    }
+                    break
+            }
+        }
+    }
+
+    EffectDep.endBatch();
+}

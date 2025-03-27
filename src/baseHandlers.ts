@@ -1,9 +1,10 @@
 import { arrayInstrumentations } from "./arrayInstrumentations";
-import { ITERATE_KEY, track, trigger } from "./dep";
+import { ITERATE_KEY } from "./dep";
 import { reactive, reactiveMap } from "./reactive";
 import { isRef } from "./ref";
 import { ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./shared/constants";
 import { hasChanged, hasOwn, isArray, isIntegerKey, isObject, isSymbol, makeMap, Target, toRaw } from "./shared/general";
+import { track, trigger } from "./track";
 
 /**
  * 基础响应式处理器。
