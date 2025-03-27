@@ -29,6 +29,8 @@ export class Dep<T = any>
      *
      * 记录了哪些节点调用了当前节点。
      * 
+     * 当前节点失效时，会通知并移除所有父节点。
+     * 
      * @private
      */
     _parents = new Set<ComputedDep>();
@@ -44,6 +46,7 @@ export class Dep<T = any>
         if (Dep.activeReactivity)
         {
             this._parents.add(Dep.activeReactivity);
+            Dep.activeReactivity.children.add(this);
         }
     }
 

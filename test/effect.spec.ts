@@ -487,18 +487,64 @@ describe('reactivity/effect', () =>
         expect(spy2).toHaveBeenCalledTimes(3)
     })
 
-    // it('should return a new reactive version of the function', () =>
-    // {
-    //     function greet()
-    //     {
-    //         return 'Hello World'
-    //     }
-    //     const effect1 = effect(greet)
-    //     const effect2 = effect(greet)
-    //     expect(typeof effect1).toBe('function')
-    //     expect(typeof effect2).toBe('function')
-    //     expect(effect1).not.toBe(greet)
-    //     expect(effect1).not.toBe(effect2)
-    // })
+    it('should return a new reactive version of the function', () =>
+    {
+        function greet()
+        {
+            return 'Hello World'
+        }
+        const effect1 = effect(greet)
+        const effect2 = effect(greet) // 与 @vue/reactivity 不同，这里不会返回一个函数，而是返回一个 effect 实例。
+        // expect(typeof effect1).toBe('function')
+        // expect(typeof effect2).toBe('function')
+        expect(effect1).not.toBe(greet)
+        expect(effect1).not.toBe(effect2)
+    })
+
+    it('should discover new branches while running automatically', () =>
+    {
+        let dummy
+        const obj = reactive({ prop: 'value', run: false })
+
+        const conditionalSpy = vi.fn(() =>
+        {
+            dummy = obj.run ? obj.prop : 'other'
+        })
+        effect(conditionalSpy)
+
+        expect(dummy).toBe('other')
+        expect(conditionalSpy).toHaveBeenCalledTimes(1)
+        obj.prop = 'Hi'
+        expect(dummy).toBe('other')
+        expect(conditionalSpy).toHaveBeenCalledTimes(1)
+        obj.run = true
+        expect(dummy).toBe('Hi')
+        expect(conditionalSpy).toHaveBeenCalledTimes(2)
+        obj.prop = 'World'
+        expect(dummy).toBe('World')
+        expect(conditionalSpy).toHaveBeenCalledTimes(3)
+    })
+
+    it('should not be triggered by mutating a property, which is used in an inactive branch', () =>
+    {
+        let dummy
+        const obj = reactive({ prop: 'value', run: true })
+
+        const conditionalSpy = vi.fn(() =>
+        {
+            dummy = obj.run ? obj.prop : 'other'
+        })
+        const e = effect(conditionalSpy)
+
+        expect(dummy).toBe('value')
+        expect(conditionalSpy).toHaveBeenCalledTimes(1)
+        obj.run = false
+        expect(dummy).toBe('other')
+        expect(conditionalSpy).toHaveBeenCalledTimes(2)
+        obj.prop = 'value2'
+        expect(dummy).toBe('other')
+        expect(conditionalSpy).toHaveBeenCalledTimes(2)
+    })
+
 })
 

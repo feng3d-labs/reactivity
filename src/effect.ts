@@ -81,6 +81,7 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
                 let invalidChildNode = dep._invalidChildrenHead;
                 while (invalidChildNode)
                 {
+                    // 修复子节点与父节点的关系。
                     invalidChildNode.node._parents.add(dep);
                     invalidChildNode = invalidChildNode.next;
                 }

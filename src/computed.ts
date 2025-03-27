@@ -28,6 +28,11 @@ export class ComputedDep<T = any> extends Dep<T>
     private _func: (oldValue?: T) => T;
 
     /**
+     * 引用的子节点。
+     */
+    children: Set<Dep> = new Set();
+
+    /**
      * 失效的子节点的队头。需要在执行时检查子节点值是否发生变化。
      */
     protected _invalidChildrenHead: ReactivityLink;
@@ -117,6 +122,7 @@ export class ComputedDep<T = any> extends Dep<T>
      */
     protected isChildrenChanged()
     {
+        // 检查是否存在子节点发生变化。
         let isChanged = false;
         // 在没有标记脏的情况下，检查子节点是否存在值发生变化的。
         if (this._invalidChildrenHead)
@@ -129,21 +135,27 @@ export class ComputedDep<T = any> extends Dep<T>
             let invalidChild = this._invalidChildrenHead;
             while (invalidChild)
             {
-                // 修复与子节点关系
-                invalidChild.node._parents.add(this as any);
                 // 检查子节点值是否发生变化。
-                // 注：node.node.value 将会触发 node.node.run()，从而更新 node.value。
                 const newValue = invalidChild.node.value;
                 const oldValue = invalidChild.value;
                 if (newValue !== oldValue)
                 {
-                    // 只需发现一个变化的子节点，标记当前节点为脏，需要执行计算。
                     isChanged = true;
                     break;
                 }
-
+                // 修复与子节点关系
+                invalidChild.node._parents.add(this as any);
                 //
                 invalidChild = invalidChild.next;
+            }
+            // 如果子节点有值发生变化，需要清除所有与子节点的关系。
+            if (isChanged)
+            {
+                this.children.forEach((child) =>
+                {
+                    child._parents.delete(this as any);
+                });
+                this.children.clear();
             }
 
             // 恢复父节点。

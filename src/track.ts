@@ -26,11 +26,6 @@ export class PropertyDep<T = any> extends Dep<T>
         this._value = v;
     }
 
-    /**
-     * @private
-     */
-    _value: T;
-
     constructor(target: object, key: unknown)
     {
         super();
