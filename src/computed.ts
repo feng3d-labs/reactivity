@@ -28,12 +28,26 @@ export class ComputedDep<T = any> extends Dep<T>
     private _func: (oldValue?: T) => T;
 
     /**
+     * 失效的子节点的队头。需要在执行时检查子节点值是否发生变化。
+     */
+    protected _invalidChildrenHead: ReactivityLink;
+
+    /**
+     * 失效子节点的队尾。用于保持检查顺序。新增节点添加到队尾，从队头开始检查。
+     */
+    protected _invalidChildrenTail: ReactivityLink;
+
+    /**
      * 是否脏，是否需要重新计算。
      * 
      * 用于在没有值发生变化时，避免重复计算。
      */
     protected _needRun = true;
 
+    /**
+     * 创建计算依赖。
+     * @param func 检测的可能包含响应式的函数。
+     */
     constructor(func: (oldValue?: T) => T)
     {
         super();
@@ -50,6 +64,26 @@ export class ComputedDep<T = any> extends Dep<T>
         this.run();
 
         super.track();
+    }
+
+    trigger(dep?: Dep): void
+    {
+        if (dep)
+        {
+            // 添加到队尾
+            const node: ReactivityLink = { node: dep, value: dep._value, next: undefined };
+            if (this._invalidChildrenTail)
+            {
+                this._invalidChildrenTail.next = node;
+                this._invalidChildrenTail = node;
+            }
+            else
+            {
+                this._invalidChildrenTail = node;
+                this._invalidChildrenHead = node;
+            }
+        }
+        super.trigger();
     }
 
     /**
@@ -122,3 +156,8 @@ export class ComputedDep<T = any> extends Dep<T>
         return isChanged;
     }
 }
+
+/**
+ * 反应式节点链。
+ */
+type ReactivityLink = { node: Dep, value: any, next: ReactivityLink };

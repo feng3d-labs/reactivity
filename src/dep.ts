@@ -1,9 +1,13 @@
+import { type ComputedDep } from "./computed";
+
 /**
- * 基础反应式节点。
+ * 反应节点。
+ *
+ * 用于记录依赖关系。
  * 
- * 用于被 ref reactive 等构建的节点所继承。
+ * 用于被 computed effect 等构建的节点所继承。
  */
-export class BaseDep<T>
+export class Dep<T = any>
 {
     /**
      * 获取当前节点值。
@@ -25,7 +29,7 @@ export class BaseDep<T>
      *
      * 记录了哪些节点调用了当前节点。
      */
-    parents = new Set<Dep>();
+    parents = new Set<ComputedDep>();
 
     /**
      * 建立与父节点的依赖关系。
@@ -40,26 +44,6 @@ export class BaseDep<T>
             this.parents.add(Dep.activeReactivity);
         }
     }
-}
-
-/**
- * 反应节点。
- *
- * 用于记录依赖关系。
- * 
- * 用于被 computed effect 等构建的节点所继承。
- */
-export class Dep<T = any> extends BaseDep<T>
-{
-    /**
-     * 失效的子节点的队头。需要在执行时检查子节点值是否发生变化。
-     */
-    protected _invalidChildrenHead: ReactivityLink;
-
-    /**
-     * 失效子节点的队尾。用于保持检查顺序。新增节点添加到队尾，从队头开始检查。
-     */
-    protected _invalidChildrenTail: ReactivityLink;
 
     /**
      * 当前节点失效。
@@ -73,19 +57,7 @@ export class Dep<T = any> extends BaseDep<T>
         {
             this.parents.forEach((parent) =>
             {
-                // 添加到队尾
-                const node: ReactivityLink = { node: this, value: this._value, next: undefined };
-                if (parent._invalidChildrenTail)
-                {
-                    parent._invalidChildrenTail.next = node;
-                    parent._invalidChildrenTail = node;
-                }
-                else
-                {
-                    parent._invalidChildrenTail = node;
-                    parent._invalidChildrenHead = node;
-                }
-                parent.trigger();
+                parent.trigger(this);
             });
 
             //
@@ -98,7 +70,7 @@ export class Dep<T = any> extends BaseDep<T>
      * 
      * @internal
      */
-    static activeReactivity: Dep;
+    static activeReactivity: ComputedDep;
 
     /**
      * 是否应该跟踪的标志
@@ -134,7 +106,3 @@ export class Dep<T = any> extends BaseDep<T>
     }
 }
 
-/**
- * 反应式节点链。
- */
-type ReactivityLink = { node: Dep, value: any, next: ReactivityLink };
