@@ -61,11 +61,6 @@ export class BaseDep<T>
 export class Dep<T = any> extends BaseDep<T>
 {
     /**
-     * 是否脏，是否需要重新计算。
-     */
-    protected _dirty = true;
-
-    /**
      * 失效的子节点的队头。需要在执行时检查子节点值是否发生变化。
      */
     protected _invalidChildrenHead: ReactivityLink;
@@ -74,32 +69,6 @@ export class Dep<T = any> extends BaseDep<T>
      * 失效子节点的队尾。用于保持检查顺序。新增节点添加到队尾，从队头开始检查。
      */
     protected _invalidChildrenTail: ReactivityLink;
-
-    /**
-     * 执行当前节点。
-     */
-    run()
-    {
-        // 检查是否存在失效子节点。
-        this._dirty = this._dirty || this.isChildrenChanged();
-
-        // 标记为脏的情况下，执行计算。
-        if (this._dirty)
-        {
-            // 立即去除脏标记，避免循环多重计算。
-            this._dirty = false;
-
-            // 保存当前节点作为父节点。
-            const parentReactiveNode = Dep.activeReactivity;
-            // 设置当前节点为活跃节点。
-            Dep.activeReactivity = this as any;
-
-            this._value = this._runSelf();
-
-            // 执行完毕后恢复父节点。
-            Dep.activeReactivity = parentReactiveNode;
-        }
-    }
 
     /**
      * 当前节点失效。
@@ -175,14 +144,6 @@ export class Dep<T = any> extends BaseDep<T>
         this._invalidChildrenTail = undefined as any;
 
         return isChanged;
-    }
-
-    /**
-     * 执行当前节点自身。
-     */
-    protected _runSelf(): T
-    {
-        return this._value;
     }
 
     /**
