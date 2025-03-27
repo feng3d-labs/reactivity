@@ -81,7 +81,7 @@ export class Dep<T = any> extends BaseDep<T>
     run()
     {
         // 检查是否存在失效子节点。
-        this.handleInvalidChildren();
+        this._dirty = this._dirty || this.isChildrenChanged();
 
         // 标记为脏的情况下，执行计算。
         if (this._dirty)
@@ -116,14 +116,13 @@ export class Dep<T = any> extends BaseDep<T>
     }
 
     /**
-     * 处理失效节点。
-     * 
-     * 如果没有标记脏的情况下，则需要检查子节点是否存在值发生变化的，如果存在，则标记当前节点为脏，需要执行计算。
+     * 判断子节点是否发生变化。
      */
-    protected handleInvalidChildren()
+    protected isChildrenChanged()
     {
+        let isChanged = false;
         // 在没有标记脏的情况下，检查子节点是否存在值发生变化的。
-        if (!this._dirty && this._invalidChildrenHead)
+        if (this._invalidChildrenHead)
         {
             // 避免在检查过程建立依赖关系。
             const preReactiveNode = Dep.activeReactivity;
@@ -142,7 +141,7 @@ export class Dep<T = any> extends BaseDep<T>
                 if (newValue !== oldValue)
                 {
                     // 只需发现一个变化的子节点，标记当前节点为脏，需要执行计算。
-                    this._dirty = true;
+                    isChanged = true;
                     break;
                 }
 
@@ -157,7 +156,7 @@ export class Dep<T = any> extends BaseDep<T>
         this._invalidChildrenHead = undefined as any;
         this._invalidChildrenTail = undefined as any;
 
-        return this._dirty;
+        return isChanged;
     }
 
     /**
