@@ -406,6 +406,21 @@ describe('reactivity/effect', () =>
         expect(parentDummy).toBe(undefined)
     })
 
+
+    it('should avoid implicit infinite recursive loops with itself', () =>
+    {
+        const counter = reactive({ num: 0 })
+
+        const counterSpy = vi.fn(() =>
+            counter.num++)
+        effect(counterSpy)
+        expect(counter.num).toBe(1)
+        expect(counterSpy).toHaveBeenCalledTimes(1)
+        counter.num = 4
+        expect(counter.num).toBe(5)
+        expect(counterSpy).toHaveBeenCalledTimes(2)
+    })
+
     it('should rerun the passed function when a trigger occurs', () =>
     {
         const a = ref(0)

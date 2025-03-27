@@ -1,5 +1,5 @@
 import { computed } from "./computed";
-import { Dep } from "./dep";
+import { Dep, endBatch, startBatch } from "./dep";
 
 /**
  * 创建副作用。
@@ -14,8 +14,8 @@ export function effect<T = any>(fn: () => T): Effect
     const dep = computed(fn) as Dep;
 
     // 立即执行一次，以确保副作用函数被执行。
-    dep.run();
     dep.isEffect = true;
+    dep.run();
 
     return {
         pause: () => dep.isEffect = false,

@@ -211,6 +211,9 @@ export class Dep<T = any>
         // 标记为脏的情况下，执行计算。
         if (this.dirty)
         {
+            // 立即去除脏标记，避免循环多重计算。
+            this.dirty = false;
+
             // 保存当前节点作为父节点。
             const parentReactiveNode = activeReactivity;
             // 设置当前节点为活跃节点。
@@ -226,9 +229,6 @@ export class Dep<T = any>
 
             // 执行完毕后恢复父节点。
             activeReactivity = parentReactiveNode;
-
-            //
-            this.dirty = false;
         }
     }
 
@@ -326,9 +326,10 @@ export class Dep<T = any>
         }
 
         // 不是正在运行的效果节点
-        if (this.isEffect && activeReactivity !== this)
+        if (this.isEffect)
         {
-            batch(this)
+            // 合批时需要判断是否已经运行的依赖。
+            batch(this, activeReactivity === this)
         }
 
         endBatch();
@@ -396,6 +397,25 @@ export function endBatch(): void
         return
     }
 
+    // 处理已经运行过的依赖，
+    if (isRunningDeps.length > 0)
+    {
+        isRunningDeps.forEach((dep) =>
+        {
+            // 此时依赖以及子依赖都已经运行过了，只需修复与子节点关系。
+            __DEV__ && console.assert(dep.dirty === false, 'dep.dirty === false');
+            let invalidChildNode = dep.invalidChildrenHead;
+            while (invalidChildNode)
+            {
+                invalidChildNode.node.parents.add(dep);
+                invalidChildNode = invalidChildNode.next;
+            }
+            dep.invalidChildrenHead = undefined as any;
+            dep.invalidChildrenTail = undefined as any;
+        });
+        isRunningDeps.length = 0;
+    }
+
     // 批次处理
     if (needEffectDeps.length > 0)
     {
@@ -413,10 +433,30 @@ export function endBatch(): void
     }
 }
 
-export function batch(dep: Dep): void
+/**
+ * 合批处理。
+ * 
+ * @param dep 
+ * @param isRunning 添加时是否是正在运行。 
+ */
+export function batch(dep: Dep, isRunning: boolean): void
 {
-    needEffectDeps.push(dep);
+    if (isRunning)
+    {
+        isRunningDeps.push(dep);
+    }
+    else
+    {
+        needEffectDeps.push(dep);
+    }
 }
 
 let batchDepth = 0
+/**
+ * 正在运行的依赖。
+ */
 let needEffectDeps: Dep[] = [];
+/**
+ * 已经运行过的依赖，只需要修复与子节点关系。
+ */
+let isRunningDeps: Dep[] = [];
