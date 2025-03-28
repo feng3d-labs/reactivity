@@ -27,12 +27,15 @@ export function endBatch(): void
             // 此时依赖以及子依赖都已经运行过了，只需修复与子节点关系。
             __DEV__ && console.assert(dep._isDirty === false, 'dep.dirty === false');
 
-            dep._children.forEach((v, child) =>
+            let node = dep._childrenHead;
+            while (node)
             {
-                if (child._parents.has(dep)) return;
+                if (node.node._parents.has(dep)) continue;
                 // 修复与子节点关系
-                child._parents.add(dep);
-            });
+                node.node._parents.add(dep);
+                //
+                node = node.next;
+            }
         });
         _isRunedDeps.length = 0;
     }

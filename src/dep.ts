@@ -45,10 +45,22 @@ export class Dep<T = any>
         if (!Dep._shouldTrack) return;
 
         // 连接父节点和子节点。
-        if (Dep.activeReactivity)
+        const parent = Dep.activeReactivity;
+        if (parent)
         {
-            this._parents.add(Dep.activeReactivity);
-            Dep.activeReactivity._children.set(this, this._value);
+            this._parents.add(parent);
+
+            // 添加子节点到父节点的子节点表尾。
+            const node = { node: this, value: this._value, next: parent._childrenTail };
+            if (parent._childrenTail)
+            {
+                parent._childrenTail.next = { node: this, value: this._value, next: undefined };
+                parent._childrenTail = parent._childrenTail.next;
+            }
+            else
+            {
+                parent._childrenHead = parent._childrenTail = node;
+            }
         }
     }
 

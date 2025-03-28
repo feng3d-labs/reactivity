@@ -30,11 +30,20 @@ export class ComputedDep<T = any> extends Dep<T>
     protected _func: (oldValue?: T) => T;
 
     /**
-     * 引用的子节点。
+     * 子节点表头。
      * 
      * @private
      */
-    _children: Map<Dep, any> = new Map();
+    _childrenHead: ReactivityLink;
+
+    /**
+     * 子节点表尾。
+     * 
+     * 新增子节点添加到表尾，保持顺序。
+     * 
+     * @private
+     */
+    _childrenTail: ReactivityLink;
 
     /**
      * 是否脏，是否需要重新计算。
@@ -135,7 +144,7 @@ export class ComputedDep<T = any> extends Dep<T>
      */
     protected isChildrenChanged()
     {
-        if (this._children.size === 0) return false;
+        if (!this._childrenHead) return false;
 
         // 检查是否存在子节点发生变化。
         let isChanged = false;
@@ -144,20 +153,23 @@ export class ComputedDep<T = any> extends Dep<T>
         const preReactiveNode = Dep.activeReactivity;
         Dep.activeReactivity = null;
 
-        this._children.forEach((oldValue, child) =>
+        let node = this._childrenHead;
+        do
         {
-            if (isChanged) return;
-            if (child._parents.has(this)) return;
+            if (node.node._parents.has(this)) continue;
 
-            const newValue = child.value;
+            // 检查子节点是否发生变化。
+            const oldValue = node.value;
+            const newValue = node.node.value;
             if (hasChanged(oldValue, newValue))
             {
                 isChanged = true;
+                break;
             }
 
             // 修复与子节点关系
-            child._parents.add(this);
-        });
+            node.node._parents.add(this);
+        } while (node = node.next);
 
         // 恢复父节点。
         Dep.activeReactivity = preReactiveNode;
@@ -165,11 +177,16 @@ export class ComputedDep<T = any> extends Dep<T>
         // 如果子节点有值发生变化，需要清除所有与子节点的关系。
         if (isChanged)
         {
-            this._children.forEach((v, child) =>
+            let node = this._childrenHead;
+            while (node)
             {
-                child._parents.delete(this);
-            });
-            this._children.clear();
+                node.node._parents.delete(this);
+                node = node.next;
+            }
+
+            // 清空子节点。
+            this._childrenHead = undefined;
+            this._childrenTail = undefined;
         }
 
         return isChanged;
