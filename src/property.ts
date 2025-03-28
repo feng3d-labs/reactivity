@@ -47,9 +47,14 @@ export class PropertyDep<T, K extends keyof T> extends Dep<T>
     }
     set value(v)
     {
+        // 处理特殊字段，这些字段
         if (this._key === "length")
         {
             v = this._target["length"];
+        }
+        else if (isSymbol(this._key))
+        {
+            v = ~~this._value + 1 as any;
         }
         if (v === this._value) return;
         // 触发属性的变化。
