@@ -22,6 +22,8 @@ export interface Computed<T = any>
 }
 declare const ComputedSymbol: unique symbol
 
+export interface ComputedDep<T = any> extends Computed<T> { }
+
 /**
  * 计算依赖。
  *

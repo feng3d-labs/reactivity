@@ -782,7 +782,7 @@ describe('reactivity/computed', () =>
             s.prop3.value
             s.prop4.value
 
-            layer = s
+            layer = s as any;
         }
 
         const t = performance.now()

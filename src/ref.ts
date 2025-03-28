@@ -30,12 +30,14 @@ export function isRef(r: any): r is Ref
     return r ? r[ReactiveFlags.IS_REF] === true : false
 }
 
+export interface RefReactivity<T = any> extends Ref<T> { }
+
 /**
  * 引用反应式节点。
  * 
  * 当使用 ref 函数时，会创建一个 RefReactivity 对象。
  */
-export class RefReactivity<T = any> extends Dep<T>
+export class RefReactivity<T = any> extends Dep<T> implements Ref<T>
 {
     public readonly [ReactiveFlags.IS_REF] = true
 

@@ -5,6 +5,11 @@ import { Ref } from "./ref"
 import { ReactiveFlags, TargetType } from "./shared/constants"
 import { getTargetType, isObject, Target } from "./shared/general"
 
+/**
+ * 
+ * @param target 
+ * @returns 
+ */
 export function reactive<T extends object>(target: T): Reactive<T>
 {
     if (!isObject(target))
@@ -62,13 +67,17 @@ export function isProxy(value: any): boolean
 
 export type Reactive<T> = UnwrapRefSimple<T>
 
+/**
+ * 原始类型
+ */
 type Primitive = string | number | boolean | bigint | symbol | undefined | null
+/**
+ * 内置类型
+ */
 export type Builtin = Primitive | Function | Date | Error | RegExp
 
 /**
- * This is a special exported interface for other packages to declare
- * additional types that should bail out for ref unwrapping. For example
- * \@vue/runtime-dom can declare it like so in its d.ts:
+ * 用于扩展不被 unwrap 的类型。
  *
  * ``` ts
  * declare module '@vue/reactivity' {
@@ -80,14 +89,17 @@ export type Builtin = Primitive | Function | Date | Error | RegExp
  */
 export interface RefUnwrapBailTypes { }
 
+/**
+ * 解包类型。
+ */
 export type UnwrapRefSimple<T> =
     T extends
     | Builtin
     | Ref
     | RefUnwrapBailTypes[keyof RefUnwrapBailTypes]
     ? T :
-    T extends Computed<infer TT> ? TT :
     T extends Ref<infer TT> ? TT :
+    T extends Computed<infer TT> ? TT :
     T extends object ? {
         [K in keyof T]: UnwrapRefSimple<T[K]>
     } :
