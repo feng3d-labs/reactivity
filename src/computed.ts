@@ -50,7 +50,7 @@ export class ComputedDep<T = any> extends Dep<T>
      *
      * ### 注意
      * （综合性能远大于全量链表与字典）为了性能，选择使用失效子节点链表形式放弃使用全量子节点链表与字典形式维护子节点。
-     * 
+     *
      * ### 存在隐患
      * 1. 存在过期子节点还会引用父节点情况，会导致过期的触发（可能影响性能）。
      * 2. 只能按照触发时顺序遍历失效子节点，无法按照捕获时顺序遍历失效子节点（可能影响性能）。
@@ -59,9 +59,9 @@ export class ComputedDep<T = any> extends Dep<T>
 
     /**
      * 失效子节点表尾。
-     * 
+     *
      * 用于新增失效子节点到表尾。
-     * 
+     *
      * @private
      */
     _childrenTail: ReactivityLink;
@@ -190,7 +190,7 @@ export class ComputedDep<T = any> extends Dep<T>
                 node.node._parents.add(this);
             }
             node = node.next;
-        };
+        }
 
         // 恢复父节点。
         Dep.activeReactivity = preReactiveNode;
