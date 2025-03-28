@@ -1,5 +1,5 @@
 import { batch } from './batch';
-import { Reactivity, forceTrack } from './Reactivity';
+import { Reactivity, ReactivityLink, forceTrack } from './Reactivity';
 import { hasChanged } from './shared/general';
 
 /**
@@ -214,7 +214,3 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
     }
 }
 
-/**
- * 反应式节点链。
- */
-type ReactivityLink = { node: Reactivity, value: any, next: ReactivityLink };

@@ -66,10 +66,10 @@ export class Reactivity<T = any>
             this._parents.forEach((parent) =>
             {
                 // 失效时添加子节点到父节点的子节点表尾。
-                const node = { node: this, value: this._value, next: parent._childrenTail };
+                const node: ReactivityLink = { node: this, value: this._value, next: undefined };
                 if (parent._childrenTail)
                 {
-                    parent._childrenTail.next = { node: this, value: this._value, next: undefined };
+                    parent._childrenTail.next = node;
                     parent._childrenTail = parent._childrenTail.next;
                 }
                 else
@@ -92,6 +92,11 @@ export class Reactivity<T = any>
      */
     static activeReactivity: ComputedReactivity;
 }
+
+/**
+ * 反应式节点链。
+ */
+export type ReactivityLink = { node: Reactivity, value: any, next: ReactivityLink };
 
 /**
  * 强制跟踪。
