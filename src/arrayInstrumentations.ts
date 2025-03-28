@@ -1,6 +1,6 @@
 /* eslint-disable prefer-rest-params */
 
-import { endBatch, startBatch } from './batch';
+import { batchRun } from './batch';
 import { noTrack } from './dep';
 import { PropertyDep } from './property';
 import { isProxy, toReactive } from './reactive';
@@ -438,12 +438,14 @@ function noTracking(
     args: unknown[] = [],
 )
 {
-    startBatch();
-    let res = noTrack(() =>
+    const res = batchRun(() =>
     {
-        return (toRaw(self) as any)[method].apply(self, args);
+        return noTrack(() =>
+        {
+            return (toRaw(self) as any)[method].apply(self, args);
+        })
     });
-    endBatch();
+
 
     return res;
 }

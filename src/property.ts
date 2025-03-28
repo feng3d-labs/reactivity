@@ -1,4 +1,4 @@
-import { endBatch, startBatch } from './batch';
+import { batchRun } from './batch';
 import { Dep } from './dep';
 import { ARRAY_ITERATE_KEY, ITERATE_KEY, MAP_KEY_ITERATE_KEY, TrackOpTypes, TriggerOpTypes } from './shared/constants';
 import { isArray, isIntegerKey, isMap, isSymbol } from './shared/general';
@@ -139,86 +139,87 @@ export class PropertyDep<T, K extends keyof T> extends Dep<T>
             }
         };
 
-        startBatch();
-
-        if (type === TriggerOpTypes.CLEAR)
+        batchRun(() =>
         {
-            // collection being cleared
-            // trigger all effects for target
-            depsMap.forEach(run);
-        }
-        else
-        {
-            const targetIsArray = isArray(target);
-            const isArrayIndex = targetIsArray && isIntegerKey(key);
 
-            if (targetIsArray && key === 'length')
+            if (type === TriggerOpTypes.CLEAR)
             {
-                const newLength = Number(newValue);
-                depsMap.forEach((dep, key) =>
-                {
-                    if (
-                        key === 'length'
-                        || key === ARRAY_ITERATE_KEY
-                        || (!isSymbol(key) && key >= newLength)
-                    )
-                    {
-                        run(dep);
-                    }
-                });
+                // collection being cleared
+                // trigger all effects for target
+                depsMap.forEach(run);
             }
             else
             {
-                // schedule runs for SET | ADD | DELETE
-                if (key !== undefined || depsMap.has(undefined))
-                {
-                    run(depsMap.get(key));
-                }
+                const targetIsArray = isArray(target);
+                const isArrayIndex = targetIsArray && isIntegerKey(key);
 
-                // schedule ARRAY_ITERATE for any numeric key change (length is handled above)
-                if (isArrayIndex)
+                if (targetIsArray && key === 'length')
                 {
-                    run(depsMap.get(ARRAY_ITERATE_KEY));
-                }
-
-                // also run for iteration key on ADD | DELETE | Map.SET
-                switch (type)
-                {
-                    case TriggerOpTypes.ADD:
-                        if (!targetIsArray)
+                    const newLength = Number(newValue);
+                    depsMap.forEach((dep, key) =>
+                    {
+                        if (
+                            key === 'length'
+                            || key === ARRAY_ITERATE_KEY
+                            || (!isSymbol(key) && key >= newLength)
+                        )
                         {
-                            run(depsMap.get(ITERATE_KEY));
+                            run(dep);
+                        }
+                    });
+                }
+                else
+                {
+                    // schedule runs for SET | ADD | DELETE
+                    if (key !== undefined || depsMap.has(undefined))
+                    {
+                        run(depsMap.get(key));
+                    }
+
+                    // schedule ARRAY_ITERATE for any numeric key change (length is handled above)
+                    if (isArrayIndex)
+                    {
+                        run(depsMap.get(ARRAY_ITERATE_KEY));
+                    }
+
+                    // also run for iteration key on ADD | DELETE | Map.SET
+                    switch (type)
+                    {
+                        case TriggerOpTypes.ADD:
+                            if (!targetIsArray)
+                            {
+                                run(depsMap.get(ITERATE_KEY));
+                                if (isMap(target))
+                                {
+                                    run(depsMap.get(MAP_KEY_ITERATE_KEY));
+                                }
+                            }
+                            else if (isArrayIndex)
+                            {
+                                // new index added to array -> length changes
+                                run(depsMap.get('length'));
+                            }
+                            break;
+                        case TriggerOpTypes.DELETE:
+                            if (!targetIsArray)
+                            {
+                                run(depsMap.get(ITERATE_KEY));
+                                if (isMap(target))
+                                {
+                                    run(depsMap.get(MAP_KEY_ITERATE_KEY));
+                                }
+                            }
+                            break;
+                        case TriggerOpTypes.SET:
                             if (isMap(target))
                             {
-                                run(depsMap.get(MAP_KEY_ITERATE_KEY));
+                                run(depsMap.get(ITERATE_KEY));
                             }
-                        }
-                        else if (isArrayIndex)
-                        {
-                            // new index added to array -> length changes
-                            run(depsMap.get('length'));
-                        }
-                        break;
-                    case TriggerOpTypes.DELETE:
-                        if (!targetIsArray)
-                        {
-                            run(depsMap.get(ITERATE_KEY));
-                            if (isMap(target))
-                            {
-                                run(depsMap.get(MAP_KEY_ITERATE_KEY));
-                            }
-                        }
-                        break;
-                    case TriggerOpTypes.SET:
-                        if (isMap(target))
-                        {
-                            run(depsMap.get(ITERATE_KEY));
-                        }
-                        break;
+                            break;
+                    }
                 }
             }
-        }
 
-        endBatch();
+        });
     }
 }

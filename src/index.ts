@@ -1,4 +1,4 @@
-export { batchRun, endBatch, startBatch } from './batch';
+export { batchRun } from './batch';
 export { ComputedDep, computed, type Computed } from './computed';
 export { Dep, forceTrack, noTrack } from './dep';
 export { EffectDep, effect, type Effect } from './effect';

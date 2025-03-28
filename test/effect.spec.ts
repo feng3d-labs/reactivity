@@ -1,5 +1,5 @@
 import { describe, expect, it, test, vi } from 'vitest';
-import { Effect, effect, EffectDep, endBatch, reactive, startBatch, toRaw } from '../src';
+import { batchRun, Effect, effect, EffectDep, reactive, toRaw } from '../src';
 describe('reactivity/effect', () =>
 {
     it('should run the passed function once (wrapped by a effect)', () =>
@@ -899,10 +899,11 @@ record;
 
         counterSpy.mockClear();
 
-        startBatch();
-        counter.num++;
-        counter.num++;
-        endBatch();
+        batchRun(() =>
+        {
+            counter.num++;
+            counter.num++;
+        });
 
         expect(counterSpy).toHaveBeenCalledTimes(1);
     });

@@ -1,4 +1,4 @@
-import { endBatch, startBatch } from './batch';
+import { batchRun } from './batch';
 import { Dep } from './dep';
 import { toReactive } from './reactive';
 import { ReactiveFlags } from './shared/constants';
@@ -55,14 +55,13 @@ export class RefReactivity<T = any> extends Dep<T> implements Ref<T>
 
         if (!hasChanged(oldValue, newValue)) return;
 
-        startBatch();
+        batchRun(() =>
+        {
+            this.trigger();
 
-        this.trigger();
-
-        this._value = toReactive(newValue);
-        this._rawValue = toRaw(newValue);
-
-        endBatch();
+            this._rawValue = newValue;
+            this._value = toReactive(newValue);
+        });
     }
 
     /**

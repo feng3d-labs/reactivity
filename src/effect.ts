@@ -1,4 +1,4 @@
-import { batch, endBatch, startBatch } from './batch';
+import { batch, batchRun } from './batch';
 import { ComputedDep } from './computed';
 import { Dep } from './dep';
 
@@ -57,21 +57,20 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
 
     trigger()
     {
-        startBatch();
-
-        super.trigger();
-
-        if (this._isEnable)
+        batchRun(() =>
         {
-            // 合批时需要判断是否已经运行的依赖。
-            batch(this, Dep.activeReactivity === this);
-        }
-        else
-        {
-            EffectDep.pausedQueueEffects.add(this);
-        }
+            super.trigger();
 
-        endBatch();
+            if (this._isEnable)
+            {
+                // 合批时需要判断是否已经运行的依赖。
+                batch(this, Dep.activeReactivity === this);
+            }
+            else
+            {
+                EffectDep.pausedQueueEffects.add(this);
+            }
+        });
     }
     private static pausedQueueEffects = new WeakSet<EffectDep>();
 
