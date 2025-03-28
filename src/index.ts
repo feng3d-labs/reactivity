@@ -1,6 +1,6 @@
 export { batchRun, endBatch, startBatch } from './batch';
 export { ComputedDep, computed, type Computed } from './computed';
-export { Dep, pauseTracking, resetTracking } from './dep';
+export { Dep, forceTrack, noTrack } from './dep';
 export { EffectDep, effect, type Effect } from './effect';
 export { isProxy, isReactive, reactive, type Reactive } from './reactive';
 export { RefReactivity, isRef, ref, type Ref } from './ref';

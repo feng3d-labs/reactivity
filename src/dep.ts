@@ -93,39 +93,34 @@ export class Dep<T = any>
     static activeReactivity: ComputedDep;
 }
 
-export function forceTrack(fn: () => void)
+/**
+ * 强制跟踪。
+ *
+ * @param fn 强制跟踪的函数。
+ */
+export function forceTrack<T>(fn: () => T): T
 {
     const preShouldTrack = _shouldTrack;
     _shouldTrack = true;
-    fn();
+    const result = fn();
     _shouldTrack = preShouldTrack;
-}
 
-export function pauseTrack(fn: () => void)
-{
-    pauseTracking();
-    fn();
-    resetTracking();
+    return result;
 }
 
 /**
- * 暂停跟踪
- * 暂时停止依赖跟踪
+ * 不跟踪。
+ *
+ * @param fn 不跟踪的函数。
  */
-export function pauseTracking(): void
+export function noTrack<T>(fn: () => T): T
 {
-    _trackStack.push(_shouldTrack);
+    const preShouldTrack = _shouldTrack;
     _shouldTrack = false;
-}
+    const result = fn();
+    _shouldTrack = preShouldTrack;
 
-/**
- * 重置跟踪状态
- * 恢复之前的全局依赖跟踪状态
- */
-export function resetTracking(): void
-{
-    const last = _trackStack.pop();
-    _shouldTrack = last === undefined ? true : last;
+    return result;
 }
 
 /**
@@ -135,9 +130,3 @@ export function resetTracking(): void
  * @private
  */
 let _shouldTrack = true;
-
-/**
- * @private
- */
-let _trackStack: boolean[] = [];
-

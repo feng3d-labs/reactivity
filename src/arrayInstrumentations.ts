@@ -1,7 +1,7 @@
 /* eslint-disable prefer-rest-params */
 
 import { endBatch, startBatch } from './batch';
-import { pauseTracking, resetTracking } from './dep';
+import { noTrack } from './dep';
 import { PropertyDep } from './property';
 import { isProxy, toReactive } from './reactive';
 import { ARRAY_ITERATE_KEY, TrackOpTypes } from './shared/constants';
@@ -438,10 +438,11 @@ function noTracking(
     args: unknown[] = [],
 )
 {
+    let res: any;
     startBatch();
-    pauseTracking();
-    const res = (toRaw(self) as any)[method].apply(self, args);
-    resetTracking();
+    noTrack(()=>{
+        res = (toRaw(self) as any)[method].apply(self, args);
+    })
     endBatch();
 
     return res;

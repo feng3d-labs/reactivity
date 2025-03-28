@@ -1,5 +1,6 @@
 import { describe, expect, it, test, vi } from 'vitest';
-import { Computed, computed, ComputedDep, effect, pauseTracking, reactive, ref, RefReactivity, resetTracking } from '../src';
+import { Computed, computed, ComputedDep, effect, reactive, ref, RefReactivity } from '../src';
+import { noTrack } from '../src/dep';
 
 describe('reactivity/computed', () =>
 {
@@ -603,14 +604,14 @@ describe('reactivity/computed', () =>
         effect(() =>
         {
             spy1();
-            pauseTracking();
-            n.value;
-            c = computed(() => n.value + 1) as Computed;
-            // access computed now to force refresh
-            c.value;
-            effect(() => spy2(c.value));
-            n.value;
-            resetTracking();
+            noTrack(()=>{
+                n.value;
+                c = computed(() => n.value + 1) as Computed;
+                // access computed now to force refresh
+                c.value;
+                effect(() => spy2(c.value));
+                n.value;
+            })
         });
 
         expect(spy1).toHaveBeenCalledTimes(1);
