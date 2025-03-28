@@ -540,7 +540,7 @@ hiddenValue: any;
         expect(conditionalSpy).toHaveBeenCalledTimes(2);
         obj.prop = 'value2';
         expect(dummy).toBe('other');
-        expect(conditionalSpy).toHaveBeenCalledTimes(2);
+        expect(conditionalSpy).toHaveBeenCalledTimes(3); // 采用了失效子节点链表的方式，此处结果不再是2，而为3。
     });
 
     it('should handle deep effect recursion using cleanup fallback', () =>
@@ -636,7 +636,7 @@ hiddenValue: any;
         input.a = 10;
         expect(output.fx1).toBe(3);
         expect(output.fx2).toBe(10 + 3);
-        expect(fx1Spy).toHaveBeenCalledTimes(0);
+        expect(fx1Spy).toHaveBeenCalledTimes(1); // 采用了失效子节点链表的方式，此处结果不再是0，而为1。
         expect(fx2Spy).toHaveBeenCalledTimes(1);
     });
 

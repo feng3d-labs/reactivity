@@ -54,14 +54,13 @@ export function batchRun<T>(fn: () => T): T
             let node = dep._childrenHead;
             while (node)
             {
-                if (!node.node._parents.has(dep))
-                {
-                    // 修复与子节点关系
-                    node.node._parents.add(dep);
-                }
+                // 修复与子节点关系
+                node.node._parents.add(dep);
                 //
                 node = node.next;
             }
+            dep._childrenHead = undefined;
+            dep._childrenTail = undefined;
         });
         _isRunedDeps.length = 0;
     }

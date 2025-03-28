@@ -172,43 +172,33 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
         const preReactiveNode = Reactivity.activeReactivity;
         Reactivity.activeReactivity = null;
 
-        let node = this._childrenHead;
-        while (node)
+        // 检查子节点是否发生变化。
+        for (let node = this._childrenHead; node; node = node.next)
         {
-            if (!node.node._parents.has(this))
+            const oldValue = node.value;
+            const newValue = node.node.value;
+            if (hasChanged(oldValue, newValue))
             {
-                // 检查子节点是否发生变化。
-                const oldValue = node.value;
-                const newValue = node.node.value;
-                if (hasChanged(oldValue, newValue))
-                {
-                    isChanged = true;
-                    break;
-                }
-
-                // 修复与子节点关系
-                node.node._parents.add(this);
+                isChanged = true;
+                break;
             }
-            node = node.next;
         }
 
         // 恢复父节点。
         Reactivity.activeReactivity = preReactiveNode;
 
-        // 如果子节点有值发生变化，需要清除所有与子节点的关系。
-        if (isChanged)
+        if (!isChanged)
         {
-            let node = this._childrenHead;
-            while (node)
+            // 修复与子节点关系
+            for (let node = this._childrenHead; node; node = node.next)
             {
-                node.node._parents.delete(this);
-                node = node.next;
+                node.node._parents.add(this);
             }
-
-            // 清空子节点。
-            this._childrenHead = undefined;
-            this._childrenTail = undefined;
         }
+
+        // 清空子节点。
+        this._childrenHead = undefined;
+        this._childrenTail = undefined;
 
         return isChanged;
     }
