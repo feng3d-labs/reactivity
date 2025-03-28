@@ -1,4 +1,4 @@
-export function 复杂情况取值(ref: <T>(value?: T) => { value: T }, computed: <T>(func: (oldValue?: T) => T) => { readonly value: T })
+export function 复杂情况取值(ref: <T>(value?: T) => { value: T }, computed: <T>(func: (oldValue?: T) => T) => { readonly value: T }, count: number)
 {
     const result = { time: undefined, values: [] };
 
@@ -21,8 +21,6 @@ export function 复杂情况取值(ref: <T>(value?: T) => { value: T }, computed
     {
         return 递归(16);
     });
-
-    const count = 10000;
 
     b.value++;
     cb.value;
