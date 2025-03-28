@@ -59,3 +59,12 @@ result.time = performance.now() - start;
 
 result.values.push(cb.value);
 ```
+
+## 为了库的简单易用性不支持以下内容
+- markRaw
+- shallowRef
+- shallowReactive
+- shallowReadonly
+- readonly
+- computed 中 setter
+- __v_skip

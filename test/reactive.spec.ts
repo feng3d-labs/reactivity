@@ -1,8 +1,8 @@
 import { assert, describe, expect, test } from 'vitest';
 import { computed, effect, reactive } from '../src';
-import { isReactive } from '../src/reactive';
-import { toRaw } from '../src/shared/general';
+import { isProxy, isReactive } from '../src/reactive';
 import { isRef, ref } from '../src/ref';
+import { toRaw } from '../src/shared/general';
 const { ok, equal, deepEqual } = assert;
 
 describe('reactivity/reactive', () =>
@@ -257,6 +257,85 @@ describe('reactivity/reactive', () =>
 
     bar.value++
     expect(dummy.value).toBe(2)
+  })
+
+  test('should not observe non-extensible objects', () =>
+  {
+    const obj = reactive({
+      foo: Object.preventExtensions({ a: 1 }),
+      // sealed or frozen objects are considered non-extensible as well
+      bar: Object.freeze({ a: 1 }),
+      baz: Object.seal({ a: 1 }),
+    })
+    expect(isReactive(obj.foo)).toBe(false)
+    expect(isReactive(obj.bar)).toBe(false)
+    expect(isReactive(obj.baz)).toBe(false)
+  })
+
+  test('hasOwnProperty edge case: Symbol values', () =>
+  {
+    const key = Symbol()
+    const obj = reactive({ [key]: 1 }) as { [key]?: 1 }
+    let dummy
+    effect(() =>
+    {
+      dummy = obj.hasOwnProperty(key)
+    })
+    expect(dummy).toBe(true)
+
+    delete obj[key]
+    expect(dummy).toBe(false)
+  })
+
+  test('hasOwnProperty edge case: non-string values', () =>
+  {
+    const key = {}
+    const obj = reactive({ '[object Object]': 1 }) as { '[object Object]'?: 1 }
+    let dummy
+    effect(() =>
+    {
+      // @ts-expect-error
+      dummy = obj.hasOwnProperty(key)
+    })
+    expect(dummy).toBe(true)
+
+    // @ts-expect-error
+    delete obj[key]
+    expect(dummy).toBe(false)
+  })
+
+  test('isProxy', () =>
+  {
+    const foo = {}
+    expect(isProxy(foo)).toBe(false)
+
+    const fooRe = reactive(foo)
+    expect(isProxy(fooRe)).toBe(true)
+
+    const c = computed(() => { })
+    expect(isProxy(c)).toBe(false)
+  })
+
+  // #11696
+  test('should use correct receiver on set handler for refs', () =>
+  {
+    const a = reactive(ref(1))
+    effect(() => a.value)
+    expect(() =>
+    {
+      a.value++
+    }).not.toThrow()
+  })
+
+  test('should trigger reactivity when Map key is undefined', () =>
+  {
+    const map = reactive(new Map())
+    const c = computed(() => map.get(void 0))
+
+    expect(c.value).toBe(void 0)
+
+    map.set(void 0, 1)
+    expect(c.value).toBe(1)
   })
 
 })
