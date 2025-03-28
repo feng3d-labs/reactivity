@@ -175,8 +175,3 @@ export class ComputedDep<T = any> extends Dep<T>
         return isChanged;
     }
 }
-
-/**
- * 反应式节点链。
- */
-type ReactivityLink = { node: Dep, value: any, next: ReactivityLink };
