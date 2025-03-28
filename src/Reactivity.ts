@@ -50,6 +50,17 @@ export class Reactivity<T = any>
         if (parent)
         {
             this._parents.add(parent);
+            // 失效时添加子节点到父节点的子节点表尾。
+            const node: ReactivityLink = { node: this, value: this._value, next: undefined };
+            if (parent._childrenTail)
+            {
+                parent._childrenTail.next = node;
+                parent._childrenTail = parent._childrenTail.next;
+            }
+            else
+            {
+                parent._childrenHead = parent._childrenTail = node;
+            }
         }
     }
 
@@ -65,18 +76,6 @@ export class Reactivity<T = any>
         {
             this._parents.forEach((parent) =>
             {
-                // 失效时添加子节点到父节点的子节点表尾。
-                const node: ReactivityLink = { node: this, value: this._value, next: undefined };
-                if (parent._childrenTail)
-                {
-                    parent._childrenTail.next = node;
-                    parent._childrenTail = parent._childrenTail.next;
-                }
-                else
-                {
-                    parent._childrenHead = parent._childrenTail = node;
-                }
-
                 parent.trigger();
             });
 
