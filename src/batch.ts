@@ -30,9 +30,11 @@ export function endBatch(): void
             let node = dep._childrenHead;
             while (node)
             {
-                if (node.node._parents.has(dep)) continue;
-                // 修复与子节点关系
-                node.node._parents.add(dep);
+                if (!node.node._parents.has(dep))
+                {
+                    // 修复与子节点关系
+                    node.node._parents.add(dep);
+                }
                 //
                 node = node.next;
             }

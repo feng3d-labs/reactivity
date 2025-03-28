@@ -154,22 +154,24 @@ export class ComputedDep<T = any> extends Dep<T>
         Dep.activeReactivity = null;
 
         let node = this._childrenHead;
-        do
+        while (node)
         {
-            if (node.node._parents.has(this)) continue;
-
-            // 检查子节点是否发生变化。
-            const oldValue = node.value;
-            const newValue = node.node.value;
-            if (hasChanged(oldValue, newValue))
+            if (!node.node._parents.has(this))
             {
-                isChanged = true;
-                break;
-            }
+                // 检查子节点是否发生变化。
+                const oldValue = node.value;
+                const newValue = node.node.value;
+                if (hasChanged(oldValue, newValue))
+                {
+                    isChanged = true;
+                    break;
+                }
 
-            // 修复与子节点关系
-            node.node._parents.add(this);
-        } while (node = node.next);
+                // 修复与子节点关系
+                node.node._parents.add(this);
+            }
+            node = node.next;
+        };
 
         // 恢复父节点。
         Dep.activeReactivity = preReactiveNode;
