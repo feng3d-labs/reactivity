@@ -2,8 +2,6 @@
 
 feng3d的响应式库，使用方式以及API与@vue/reactivity基本保持一致。
 
-@feng3d/reactivity或许可以获得比@vue/reactivity更高性能。
-
 源码：https://gitee.com/feng3d/reactivity
 
 文档：https://feng3d.com/reactivity
