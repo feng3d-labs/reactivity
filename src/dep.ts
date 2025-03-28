@@ -64,7 +64,7 @@ export class Dep<T = any>
         {
             this._parents.forEach((parent) =>
             {
-                parent.trigger(this);
+                parent.trigger();
             });
 
             //

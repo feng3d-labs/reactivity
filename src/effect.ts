@@ -55,11 +55,11 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
         }
     }
 
-    trigger(dep?: Dep)
+    trigger()
     {
         startBatch();
 
-        super.trigger(dep);
+        super.trigger();
 
         if (this._isEnable)
         {

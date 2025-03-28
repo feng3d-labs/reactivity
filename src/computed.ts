@@ -77,10 +77,8 @@ export class ComputedDep<T = any> extends Dep<T>
      * 冒泡到所有父节点，设置失效子节点。
      * 
      * 把触发节点添加到失效子节点队列中。
-     * 
-     * @param dep 触发节点。
      */
-    trigger(dep?: Dep): void
+    trigger(): void
     {
         if (Dep.activeReactivity === this)
         {
