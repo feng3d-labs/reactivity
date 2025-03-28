@@ -65,7 +65,22 @@ export class PropertyDep<T, K extends keyof T> extends Dep<T>
         super();
         this._target = target;
         this._key = key;
-        this._value = (target as any)[key as any];
+        if (target instanceof Map
+            || target instanceof WeakMap
+        )
+        {
+            this._value = (target as any as WeakMap<any, any>).get(key);
+        }
+        else if (target instanceof Set
+            || target instanceof WeakSet
+        )
+        {
+            this._value = (target as any as WeakSet<any>).has(key) as any;
+        }
+        else
+        {
+            this._value = (target as any)[key as any];
+        }
     }
 
     triggerIfChanged()
