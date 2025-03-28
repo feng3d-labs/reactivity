@@ -438,11 +438,11 @@ function noTracking(
     args: unknown[] = [],
 )
 {
-    let res: any;
     startBatch();
-    noTrack(()=>{
-        res = (toRaw(self) as any)[method].apply(self, args);
-    })
+    let res = noTrack(() =>
+    {
+        return (toRaw(self) as any)[method].apply(self, args);
+    });
     endBatch();
 
     return res;

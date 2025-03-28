@@ -98,11 +98,13 @@ export function batch(dep: ComputedDep, isRunning: boolean): void
  *
  * @param fn 要执行的函数，在此函数中多次修改反应式对象。
  */
-export function batchRun(fn: () => void)
+export function batchRun<T>(fn: () => T): T
 {
     startBatch();
-    fn();
+    const result = fn();
     endBatch();
+
+    return result;
 }
 
 let _batchDepth = 0;
