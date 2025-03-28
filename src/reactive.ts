@@ -10,6 +10,11 @@ export function reactive<T extends object>(target: T): T
         return target
     }
 
+    if (target[ReactiveFlags.RAW])
+    {
+        return target
+    }
+
     // only specific value types can be observed.
     const targetType = getTargetType(target)
     if (targetType === TargetType.INVALID)

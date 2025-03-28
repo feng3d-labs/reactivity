@@ -1,5 +1,5 @@
 import { assert, describe, expect, test } from 'vitest';
-import { reactive } from '../src';
+import { effect, reactive } from '../src';
 import { isReactive } from '../src/reactive';
 const { ok, equal, deepEqual } = assert;
 
@@ -48,6 +48,63 @@ describe('reactivity/reactive', () =>
         expect(isReactive(observed.array[0])).toBe(true)
     })
 
+    test('observing subtypes of IterableCollections(Map, Set)', () =>
+    {
+        // subtypes of Map
+        class CustomMap extends Map { }
+        const cmap = reactive(new CustomMap())
+
+        expect(cmap).toBeInstanceOf(Map)
+        expect(isReactive(cmap)).toBe(true)
+
+        cmap.set('key', {})
+        expect(isReactive(cmap.get('key'))).toBe(true)
+
+        // subtypes of Set
+        class CustomSet extends Set { }
+        const cset = reactive(new CustomSet())
+
+        expect(cset).toBeInstanceOf(Set)
+        expect(isReactive(cset)).toBe(true)
+
+        let dummy;
+        effect(() => (dummy = cset.has('value')))
+        expect(dummy).toBe(false)
+        cset.add('value')
+        expect(dummy).toBe(true)
+        cset.delete('value')
+        expect(dummy).toBe(false)
+    })
+
+    test('observing subtypes of WeakCollections(WeakMap, WeakSet)', () =>
+    {
+        // subtypes of WeakMap
+        class CustomMap extends WeakMap { }
+        const cmap = reactive(new CustomMap())
+
+        expect(cmap).toBeInstanceOf(WeakMap)
+        expect(isReactive(cmap)).toBe(true)
+
+        const key = {}
+        cmap.set(key, {})
+        expect(isReactive(cmap.get(key))).toBe(true)
+
+        // subtypes of WeakSet
+        class CustomSet extends WeakSet { }
+        const cset = reactive(new CustomSet())
+
+        expect(cset).toBeInstanceOf(WeakSet)
+        expect(isReactive(cset)).toBe(true)
+
+        let dummy
+        effect(() => (dummy = cset.has(key)))
+        expect(dummy).toBe(false)
+        cset.add(key)
+        expect(dummy).toBe(true)
+        cset.delete(key)
+        expect(dummy).toBe(false)
+    })
+
     test('observed value should proxy mutations to original (Object)', () =>
     {
         const original: any = { foo: 1 }
@@ -76,6 +133,7 @@ describe('reactivity/reactive', () =>
         expect('foo' in observed).toBe(false)
     })
 
+
     test('setting a property with an unobserved value should wrap with reactive', () =>
     {
         const observed = reactive<{ foo?: object }>({})
@@ -85,13 +143,19 @@ describe('reactivity/reactive', () =>
         expect(isReactive(observed.foo)).toBe(true)
     })
 
-    // test('observing already observed value should return same Proxy', () =>
-    // {
-    //     const original = { foo: 1 }
-    //     const observed = reactive(original)
-    //     const observed2 = reactive(observed)
-    //     expect(observed2).toBe(observed)
-    // })
+    test('observing already observed value should return same Proxy', () =>
+    {
+        const original = { foo: 1 }
+        const observed = reactive(original)
+        const observed2 = reactive(observed)
+        expect(observed2).toBe(observed)
+    })
 
-
+    test('observing the same value multiple times should return same Proxy', () =>
+    {
+        const original = { foo: 1 }
+        const observed = reactive(original)
+        const observed2 = reactive(original)
+        expect(observed2).toBe(observed)
+    })
 })
