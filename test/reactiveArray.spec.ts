@@ -639,6 +639,7 @@ describe('reactivity/reactive/Array', () =>
           expect(bar).toBe('bar');
           expect(baz).toBe('baz');
           // @ts-expect-error our code is limited to es2016 but user code is not
+
           return super.findLast((obj) => obj.id === bar);
         }
 

@@ -1,3 +1,5 @@
+/* eslint-disable prefer-rest-params */
+
 import { endBatch, startBatch } from './batch';
 import { Dep } from './dep';
 import { isProxy, toReactive } from './reactive';

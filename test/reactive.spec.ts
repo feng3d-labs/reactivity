@@ -329,11 +329,11 @@ describe('reactivity/reactive', () =>
   test('should trigger reactivity when Map key is undefined', () =>
   {
     const map = reactive(new Map());
-    const c = computed(() => map.get(void 0));
+    const c = computed(() => map.get(undefined));
 
-    expect(c.value).toBe(void 0);
+    expect(c.value).toBe(undefined);
 
-    map.set(void 0, 1);
+    map.set(undefined, 1);
     expect(c.value).toBe(1);
   });
 });

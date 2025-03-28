@@ -23,7 +23,7 @@ describe('reactivity/computed', () =>
         {
             oldValue.value = pre;
 
-return count.value;
+            return count.value;
         });
         expect(curValue.value).toBe(0);
         expect(oldValue.value).toBe(undefined);
@@ -92,7 +92,7 @@ return count.value;
         const value = reactive({ foo: 0 });
         const getter1 = vi.fn(() => value.foo);
         const getter2 = vi.fn(() =>
-        c1.value + 1);
+            c1.value + 1);
         const c1 = computed(getter1);
         const c2 = computed(getter2);
 
@@ -116,7 +116,7 @@ return count.value;
         const value = reactive({ foo: 0 });
         const getter1 = vi.fn(() => value.foo);
         const getter2 = vi.fn(() =>
-        c1.value + 1);
+            c1.value + 1);
         const c1 = computed(getter1);
         const c2 = computed(getter2);
 
@@ -160,16 +160,16 @@ return count.value;
     {
         const cSpy = vi.fn();
 
-        const a = ref<null | { v: number }>({
+        const a = ref({
             v: 1,
         });
         const b = computed(() =>
-        a.value);
+            a.value);
         const c = computed(() =>
         {
             cSpy();
 
-return b.value?.v;
+            return b.value?.v;
         });
         const d = computed(() =>
         {
@@ -178,12 +178,12 @@ return b.value?.v;
                 return c.value;
             }
 
-return 0;
+            return 0;
         });
 
         d.value;
         a.value!.v = 2;
-        a.value = null;
+        a.value = null as any;
         d.value;
         expect(cSpy).toHaveBeenCalledTimes(1);
     });
@@ -195,7 +195,7 @@ return 0;
 
         const items = ref<number[]>();
         const isLoaded = computed(() =>
-        !!items.value);
+            !!items.value);
         const msg = computed(() =>
         {
             if (isLoaded.value)
@@ -203,7 +203,7 @@ return 0;
                 return 'The items are loaded';
             }
 
-return 'The items are not loaded';
+            return 'The items are not loaded';
         });
 
         effect(() =>
@@ -224,7 +224,7 @@ return 'The items are not loaded';
 
         const items = ref<number[]>();
         const isLoaded = computed(() =>
-        !!items.value);
+            !!items.value);
         const msg = computed(() =>
         {
             if (isLoaded.value)
@@ -232,7 +232,7 @@ return 'The items are not loaded';
                 return 'The items are loaded';
             }
 
-return 'The items are not loaded';
+            return 'The items are not loaded';
         });
 
         _msg = msg.value;
@@ -252,7 +252,7 @@ return 'The items are not loaded';
 
         const a = ref(0) as RefReactivity;
         const b = computed(() =>
-        a.value % 3 !== 0) as ComputedDep;
+            a.value % 3 !== 0) as ComputedDep;
         const c = computed(() =>
         {
             cSpy();
@@ -261,10 +261,10 @@ return 'The items are not loaded';
                 return 'expensive';
             }
 
-return 'cheap';
+            return 'cheap';
         }) as ComputedDep;
         const d = computed(() =>
-        a.value % 3 === 2) as ComputedDep;
+            a.value % 3 === 2) as ComputedDep;
         const e = computed(() =>
         {
             if (b.value)
@@ -275,7 +275,7 @@ return 'cheap';
                 }
             }
 
-return c.value;
+            return c.value;
         }) as ComputedDep;
 
         e.value;
@@ -364,7 +364,7 @@ return c.value;
                 v.value = 1;
             }
 
-return v.value;
+            return v.value;
         });
         const c2 = computed(() => c1.value);
         const c3 = computed(() => c2.value);
@@ -382,7 +382,7 @@ return v.value;
                 v.value = 1;
             }
 
-return 'foo';
+            return 'foo';
         });
         const c2 = computed(() => v.value + c1.value);
         expect(c2.value).toBe('0foo');
@@ -400,7 +400,7 @@ return 'foo';
                 v.value = 1;
             }
 
-return 'foo';
+            return 'foo';
         });
         const c2 = computed(() => v.value + c1.value);
 
@@ -449,13 +449,13 @@ return 'foo';
         {
             c1Spy();
 
-return src.value % 2;
+            return src.value % 2;
         });
         const c2 = computed(() =>
         {
             c2Spy();
 
-return c1.value + 1;
+            return c1.value + 1;
         });
 
         effect(() =>
@@ -480,10 +480,10 @@ return c1.value + 1;
         {
             v.value = 1;
 
-return 0;
+            return 0;
         });
         const c2 = computed(() =>
-        `${v.value},${c1.value}`);
+            `${v.value},${c1.value}`);
 
         expect(c2.value).toBe('0,0');
         v.value = 1;
@@ -501,13 +501,13 @@ return 0;
         {
             c1Spy();
 
-return src.value % 2;
+            return src.value % 2;
         });
         const c2 = computed(() =>
         {
             c2Spy();
 
-return c1.value + 1;
+            return c1.value + 1;
         });
 
         effect(() =>
@@ -537,13 +537,13 @@ return c1.value + 1;
         {
             c1Spy();
 
-return src.value % 2;
+            return src.value % 2;
         });
         const c2 = computed(() =>
         {
             c2Spy();
 
-return c1.value + 1;
+            return c1.value + 1;
         });
 
         effect(() =>
@@ -575,13 +575,13 @@ return c1.value + 1;
         {
             c1Spy();
 
-return src.value % 2;
+            return src.value % 2;
         });
         const c2 = computed(() =>
         {
             c2Spy();
 
-return c1.value + 1;
+            return c1.value + 1;
         });
 
         effect(() =>
@@ -636,7 +636,7 @@ return c1.value + 1;
         {
             a.value = true;
 
-return b.value;
+            return b.value;
         });
         effect(() =>
         {
@@ -683,10 +683,10 @@ return b.value;
         {
             v.value = 1;
 
-return 0;
+            return 0;
         });
         const c2 = computed(() =>
-        `${v.value},${c1.value}`);
+            `${v.value},${c1.value}`);
 
         expect(c2.value).toBe('0,0');
         v.value = 1;
@@ -711,7 +711,7 @@ return 0;
         const toggle = ref(true);
         const state = reactive({ a: 1 });
         const p = computed(() =>
-        (toggle.value ? state.a : 111));
+            (toggle.value ? state.a : 111));
         const pp = computed(() => state.a);
         effect(() => p.value);
 
@@ -808,7 +808,7 @@ return 0;
 
             computeds.push(
                 computed(() =>
-                base.value + earlier.reduce((sum, c) => sum + c.value, 0)) as ComputedDep,
+                    base.value + earlier.reduce((sum, c) => sum + c.value, 0)) as ComputedDep,
             );
         }
 
