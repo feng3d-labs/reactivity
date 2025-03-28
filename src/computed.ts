@@ -10,10 +10,17 @@ import { hasChanged } from "./shared/general";
  * @param func 检测的可能包含响应式的函数。
  * @returns 包含 value 属性的对象，用于获取计算结果。
  */
-export function computed<T>(func: (oldValue?: T) => T): { readonly value: T }
+export function computed<T>(func: (oldValue?: T) => T): Computed<T>
 {
-    return new ComputedDep(func);
+    return new ComputedDep(func) as any;
 }
+
+export interface Computed<T = any>
+{
+    readonly value: T
+    [ComputedSymbol]: true
+}
+declare const ComputedSymbol: unique symbol
 
 /**
  * 计算依赖。
@@ -24,6 +31,11 @@ export function computed<T>(func: (oldValue?: T) => T): { readonly value: T }
  */
 export class ComputedDep<T = any> extends Dep<T>
 {
+    /**
+     * @internal
+     */
+    readonly __v_isRef = true
+
     /**
      * 监听的函数。
      */

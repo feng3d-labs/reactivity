@@ -10,22 +10,22 @@ import { hasChanged, toRaw } from "./shared/general";
  * @param value 引用的值。
  * @returns 包含 value 属性的对象，用于获取和设置引用的值。
  */
-export function ref<T>(value?: T): { value: T }
+export function ref<T>(value?: T): Ref<T>
 {
     if (isRef(value))
     {
         return value as any;
     }
 
-    return new RefReactivity<T>(value);
+    return new RefReactivity<T>(value) as any;
 }
 
 /**
  * 判断一个对象是否为引用。
  * @param r 引用。 
  */
-export function isRef<T>(r: { value: T } | unknown): r is { value: T }
-export function isRef(r: any): r is { value: any }
+export function isRef<T>(r: Ref<T> | unknown): r is Ref<T>
+export function isRef(r: any): r is Ref
 {
     return r ? r[ReactiveFlags.IS_REF] === true : false
 }
@@ -78,3 +78,10 @@ export class RefReactivity<T = any> extends Dep<T>
     }
 }
 
+export interface Ref<T = any, S = T>
+{
+    get value(): T
+    set value(_: S)
+    [RefSymbol]: true
+}
+declare const RefSymbol: unique symbol
