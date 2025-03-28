@@ -1,8 +1,8 @@
-import { endBatch, startBatch } from "./batch";
-import { Dep } from "./dep";
-import { toReactive } from "./reactive";
-import { ReactiveFlags } from "./shared/constants";
-import { hasChanged, toRaw } from "./shared/general";
+import { endBatch, startBatch } from './batch';
+import { Dep } from './dep';
+import { toReactive } from './reactive';
+import { ReactiveFlags } from './shared/constants';
+import { hasChanged, toRaw } from './shared/general';
 
 /**
  * 创建一个引用，该引用的值可以被响应式系统追踪和更新。
@@ -22,24 +22,24 @@ export function ref<T>(value?: T): Ref<T>
 
 /**
  * 判断一个对象是否为引用。
- * @param r 引用。 
+ * @param r 引用。
  */
-export function isRef<T>(r: Ref<T> | unknown): r is Ref<T>
+export function isRef<T>(r: Ref<T> | unknown): r is Ref<T>;
 export function isRef(r: any): r is Ref
 {
-    return r ? r[ReactiveFlags.IS_REF] === true : false
+    return r ? r[ReactiveFlags.IS_REF] === true : false;
 }
 
 export interface RefReactivity<T = any> extends Ref<T> { }
 
 /**
  * 引用反应式节点。
- * 
+ *
  * 当使用 ref 函数时，会创建一个 RefReactivity 对象。
  */
 export class RefReactivity<T = any> extends Dep<T> implements Ref<T>
 {
-    public readonly [ReactiveFlags.IS_REF] = true
+    public readonly [ReactiveFlags.IS_REF] = true;
 
     get value()
     {
@@ -51,7 +51,7 @@ export class RefReactivity<T = any> extends Dep<T> implements Ref<T>
     set value(v: T)
     {
         const oldValue = this._rawValue;
-        const newValue = toRaw(v)
+        const newValue = toRaw(v);
 
         if (!hasChanged(oldValue, newValue)) return;
 
@@ -59,7 +59,7 @@ export class RefReactivity<T = any> extends Dep<T> implements Ref<T>
 
         this.trigger();
 
-        this._value = toReactive(newValue)
+        this._value = toReactive(newValue);
         this._rawValue = toRaw(newValue);
 
         endBatch();
@@ -67,7 +67,7 @@ export class RefReactivity<T = any> extends Dep<T> implements Ref<T>
 
     /**
      * 原始值。
-     * 
+     *
      * 用于比较值是否发生变化。
      */
     private _rawValue: T;
@@ -86,4 +86,4 @@ export interface Ref<T = any, S = T>
     set value(_: S)
     [RefSymbol]: true
 }
-declare const RefSymbol: unique symbol
+declare const RefSymbol: unique symbol;

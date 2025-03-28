@@ -1,15 +1,15 @@
-import { toReactive } from "./reactive"
-import { ITERATE_KEY, MAP_KEY_ITERATE_KEY, ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./shared/constants"
-import { hasChanged, hasOwn, isMap, Target, toRaw, toRawType, warn } from "./shared/general"
-import { PropertyDep } from "./property"
+import { toReactive } from './reactive';
+import { ITERATE_KEY, MAP_KEY_ITERATE_KEY, ReactiveFlags, TrackOpTypes, TriggerOpTypes } from './shared/constants';
+import { hasChanged, hasOwn, isMap, Target, toRaw, toRawType, warn } from './shared/general';
+import { PropertyDep } from './property';
 
 export const mutableCollectionHandlers: ProxyHandler<CollectionTypes> = {
     get: createInstrumentationGetter(),
-}
+};
 
 function createInstrumentationGetter()
 {
-    const instrumentations = createInstrumentations()
+    const instrumentations = createInstrumentations();
 
     return (
         target: CollectionTypes,
@@ -20,9 +20,10 @@ function createInstrumentationGetter()
         if (key === ReactiveFlags.IS_REACTIVE)
         {
             return true;
-        } else if (key === ReactiveFlags.RAW)
+        }
+        else if (key === ReactiveFlags.RAW)
         {
-            return target
+            return target;
         }
 
         return Reflect.get(
@@ -31,11 +32,11 @@ function createInstrumentationGetter()
                 : target,
             key,
             receiver,
-        )
-    }
+        );
+    };
 }
 
-type Instrumentations = Record<string | symbol, Function | number>
+type Instrumentations = Record<string | symbol, Function | number>;
 
 function createInstrumentations(): Instrumentations
 {
@@ -44,143 +45,153 @@ function createInstrumentations(): Instrumentations
         {
             // #1772: readonly(reactive(Map)) should return readonly + reactive version
             // of the value
-            const target = this[ReactiveFlags.RAW]
-            const rawTarget = toRaw(target)
-            const rawKey = toRaw(key)
+            const target = this[ReactiveFlags.RAW];
+            const rawTarget = toRaw(target);
+            const rawKey = toRaw(key);
 
             if (hasChanged(key, rawKey))
             {
-                PropertyDep.track(rawTarget, TrackOpTypes.GET, key)
+                PropertyDep.track(rawTarget, TrackOpTypes.GET, key);
             }
-            PropertyDep.track(rawTarget, TrackOpTypes.GET, rawKey)
+            PropertyDep.track(rawTarget, TrackOpTypes.GET, rawKey);
 
-            const { has } = getProto(rawTarget)
-            const wrap = toReactive
+            const { has } = getProto(rawTarget);
+            const wrap = toReactive;
             if (has.call(rawTarget, key))
             {
-                return wrap(target.get(key))
-            } else if (has.call(rawTarget, rawKey))
+                return wrap(target.get(key));
+            }
+            else if (has.call(rawTarget, rawKey))
             {
-                return wrap(target.get(rawKey))
-            } else if (target !== rawTarget)
+                return wrap(target.get(rawKey));
+            }
+            else if (target !== rawTarget)
             {
                 // #3602 readonly(reactive(Map))
                 // ensure that the nested reactive `Map` can do tracking for itself
-                target.get(key)
+                target.get(key);
             }
         },
         get size()
         {
-            const target = (this as unknown as IterableCollections)[ReactiveFlags.RAW]
-            PropertyDep.track(toRaw(target), TrackOpTypes.ITERATE, ITERATE_KEY)
-            return Reflect.get(target, 'size', target)
+            const target = (this as unknown as IterableCollections)[ReactiveFlags.RAW];
+            PropertyDep.track(toRaw(target), TrackOpTypes.ITERATE, ITERATE_KEY);
+
+            return Reflect.get(target, 'size', target);
         },
         has(this: CollectionTypes, key: unknown): boolean
         {
-            const target = this[ReactiveFlags.RAW]
-            const rawTarget = toRaw(target)
-            const rawKey = toRaw(key)
+            const target = this[ReactiveFlags.RAW];
+            const rawTarget = toRaw(target);
+            const rawKey = toRaw(key);
 
             if (hasChanged(key, rawKey))
             {
-                PropertyDep.track(rawTarget, TrackOpTypes.HAS, key)
+                PropertyDep.track(rawTarget, TrackOpTypes.HAS, key);
             }
-            PropertyDep.track(rawTarget, TrackOpTypes.HAS, rawKey)
+            PropertyDep.track(rawTarget, TrackOpTypes.HAS, rawKey);
 
             return key === rawKey
                 ? target.has(key)
-                : target.has(key) || target.has(rawKey)
+                : target.has(key) || target.has(rawKey);
         },
         forEach(this: IterableCollections, callback: Function, thisArg?: unknown)
         {
-            const observed = this
-            const target = observed[ReactiveFlags.RAW]
-            const rawTarget = toRaw(target)
-            const wrap = toReactive
-            PropertyDep.track(rawTarget, TrackOpTypes.ITERATE, ITERATE_KEY)
+            const observed = this;
+            const target = observed[ReactiveFlags.RAW];
+            const rawTarget = toRaw(target);
+            const wrap = toReactive;
+            PropertyDep.track(rawTarget, TrackOpTypes.ITERATE, ITERATE_KEY);
+
             return target.forEach((value: unknown, key: unknown) =>
-            {
+
                 // important: make sure the callback is
                 // 1. invoked with the reactive map as `this` and 3rd arg
                 // 2. the value received should be a corresponding reactive/readonly.
-                return callback.call(thisArg, wrap(value), wrap(key), observed)
-            })
+                callback.call(thisArg, wrap(value), wrap(key), observed)
+            );
         },
 
         add(this: SetTypes, value: unknown)
         {
-            value = toRaw(value)
-            const target = toRaw(this)
-            const proto = getProto(target)
-            const hadKey = proto.has.call(target, value)
+            value = toRaw(value);
+            const target = toRaw(this);
+            const proto = getProto(target);
+            const hadKey = proto.has.call(target, value);
             if (!hadKey)
             {
-                target.add(value)
-                PropertyDep.trigger(target, TriggerOpTypes.ADD, value, value)
+                target.add(value);
+                PropertyDep.trigger(target, TriggerOpTypes.ADD, value, value);
             }
-            return this
+
+            return this;
         },
         set(this: MapTypes, key: unknown, value: unknown)
         {
-            value = toRaw(value)
-            const target = toRaw(this)
-            const { has, get } = getProto(target)
+            value = toRaw(value);
+            const target = toRaw(this);
+            const { has, get } = getProto(target);
 
-            let hadKey = has.call(target, key)
+            let hadKey = has.call(target, key);
             if (!hadKey)
             {
-                key = toRaw(key)
-                hadKey = has.call(target, key)
-            } else if (__DEV__)
+                key = toRaw(key);
+                hadKey = has.call(target, key);
+            }
+            else if (__DEV__)
             {
-                checkIdentityKeys(target, has, key)
+                checkIdentityKeys(target, has, key);
             }
 
-            const oldValue = get.call(target, key)
-            target.set(key, value)
+            const oldValue = get.call(target, key);
+            target.set(key, value);
             if (!hadKey)
             {
-                PropertyDep.trigger(target, TriggerOpTypes.ADD, key, value)
-            } else if (hasChanged(value, oldValue))
-            {
-                PropertyDep.trigger(target, TriggerOpTypes.SET, key, value, oldValue)
+                PropertyDep.trigger(target, TriggerOpTypes.ADD, key, value);
             }
-            return this
+            else if (hasChanged(value, oldValue))
+            {
+                PropertyDep.trigger(target, TriggerOpTypes.SET, key, value, oldValue);
+            }
+
+            return this;
         },
         delete(this: CollectionTypes, key: unknown)
         {
-            const target = toRaw(this)
-            const { has, get } = getProto(target)
-            let hadKey = has.call(target, key)
+            const target = toRaw(this);
+            const { has, get } = getProto(target);
+            let hadKey = has.call(target, key);
             if (!hadKey)
             {
-                key = toRaw(key)
-                hadKey = has.call(target, key)
-            } else if (__DEV__)
+                key = toRaw(key);
+                hadKey = has.call(target, key);
+            }
+            else if (__DEV__)
             {
-                checkIdentityKeys(target, has, key)
+                checkIdentityKeys(target, has, key);
             }
 
-            const oldValue = get ? get.call(target, key) : undefined
+            const oldValue = get ? get.call(target, key) : undefined;
             // forward the operation before queueing reactions
-            const result = target.delete(key)
+            const result = target.delete(key);
             if (hadKey)
             {
-                PropertyDep.trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue)
+                PropertyDep.trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue);
             }
-            return result
+
+            return result;
         },
         clear(this: IterableCollections)
         {
-            const target = toRaw(this)
-            const hadItems = target.size !== 0
+            const target = toRaw(this);
+            const hadItems = target.size !== 0;
             const oldTarget = __DEV__
                 ? isMap(target)
                     ? new Map(target)
                     : new Set(target)
-                : undefined
+                : undefined;
             // forward the operation before queueing reactions
-            const result = target.clear()
+            const result = target.clear();
             if (hadItems)
             {
                 PropertyDep.trigger(
@@ -189,25 +200,26 @@ function createInstrumentations(): Instrumentations
                     undefined,
                     undefined,
                     oldTarget,
-                )
+                );
             }
-            return result
+
+            return result;
         },
-    }
+    };
 
     const iteratorMethods = [
         'keys',
         'values',
         'entries',
         Symbol.iterator,
-    ] as const
+    ] as const;
 
-    iteratorMethods.forEach(method =>
+    iteratorMethods.forEach((method) =>
     {
-        instrumentations[method] = createIterableMethod(method)
-    })
+        instrumentations[method] = createIterableMethod(method);
+    });
 
-    return instrumentations
+    return instrumentations;
 }
 
 function createIterableMethod(method: string | symbol)
@@ -217,20 +229,20 @@ function createIterableMethod(method: string | symbol)
         ...args: unknown[]
     ): Iterable<unknown> & Iterator<unknown>
     {
-        const target = this[ReactiveFlags.RAW]
-        const rawTarget = toRaw(target)
-        const targetIsMap = isMap(rawTarget)
-        const isPair =
-            method === 'entries' || (method === Symbol.iterator && targetIsMap)
-        const isKeyOnly = method === 'keys' && targetIsMap
-        const innerIterator = target[method](...args)
-        const wrap = toReactive
+        const target = this[ReactiveFlags.RAW];
+        const rawTarget = toRaw(target);
+        const targetIsMap = isMap(rawTarget);
+        const isPair
+            = method === 'entries' || (method === Symbol.iterator && targetIsMap);
+        const isKeyOnly = method === 'keys' && targetIsMap;
+        const innerIterator = target[method](...args);
+        const wrap = toReactive;
 
         PropertyDep.track(
             rawTarget,
             TrackOpTypes.ITERATE,
             isKeyOnly ? MAP_KEY_ITERATE_KEY : ITERATE_KEY,
-        )
+        );
 
         // return a wrapped iterator which returns observed versions of the
         // values emitted from the real iterator
@@ -238,23 +250,23 @@ function createIterableMethod(method: string | symbol)
             // iterator protocol
             next()
             {
-                const { value, done } = innerIterator.next()
+                const { value, done } = innerIterator.next();
+
                 return done
                     ? { value, done }
                     : {
                         value: isPair ? [wrap(value[0]), wrap(value[1])] : wrap(value),
                         done,
-                    }
+                    };
             },
             // iterable protocol
             [Symbol.iterator]()
             {
-                return this
+                return this;
             },
-        }
-    }
+        };
+    };
 }
-
 
 function checkIdentityKeys(
     target: CollectionTypes,
@@ -262,26 +274,25 @@ function checkIdentityKeys(
     key: unknown,
 )
 {
-    const rawKey = toRaw(key)
+    const rawKey = toRaw(key);
     if (rawKey !== key && has.call(target, rawKey))
     {
-        const type = toRawType(target)
+        const type = toRawType(target);
         warn(
-            `Reactive ${type} contains both the raw and reactive ` +
-            `versions of the same object${type === `Map` ? ` as keys` : ``}, ` +
-            `which can lead to inconsistencies. ` +
-            `Avoid differentiating between the raw and reactive versions ` +
-            `of an object and only use the reactive version if possible.`,
-        )
+            `Reactive ${type} contains both the raw and reactive `
+            + `versions of the same object${type === `Map` ? ` as keys` : ``}, `
+            + `which can lead to inconsistencies. `
+            + `Avoid differentiating between the raw and reactive versions `
+            + `of an object and only use the reactive version if possible.`,
+        );
     }
 }
 
+const getProto = <T extends CollectionTypes>(v: T): any => Reflect.getPrototypeOf(v);
 
-const getProto = <T extends CollectionTypes>(v: T): any => Reflect.getPrototypeOf(v)
+type CollectionTypes = IterableCollections | WeakCollections;
 
-type CollectionTypes = IterableCollections | WeakCollections
-
-type IterableCollections = (Map<any, any> | Set<any>) & Target
-type WeakCollections = (WeakMap<any, any> | WeakSet<any>) & Target
-type MapTypes = (Map<any, any> | WeakMap<any, any>) & Target
-type SetTypes = (Set<any> | WeakSet<any>) & Target
+type IterableCollections = (Map<any, any> | Set<any>) & Target;
+type WeakCollections = (WeakMap<any, any> | WeakSet<any>) & Target;
+type MapTypes = (Map<any, any> | WeakMap<any, any>) & Target;
+type SetTypes = (Set<any> | WeakSet<any>) & Target;

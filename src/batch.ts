@@ -1,12 +1,12 @@
-import { ComputedDep } from "./computed";
-import { Dep } from "./dep";
+import { ComputedDep } from './computed';
+import { Dep } from './dep';
 
 /**
  * 开始批次处理。
  */
 export function startBatch(): void
 {
-    _batchDepth++
+    _batchDepth++;
 }
 
 /**
@@ -16,7 +16,7 @@ export function endBatch(): void
 {
     if (--_batchDepth > 0)
     {
-        return
+        return;
     }
 
     // 处理已经运行过的依赖，
@@ -46,7 +46,7 @@ export function endBatch(): void
             const pre = Dep.activeReactivity;
             Dep.activeReactivity = null;
 
-            dep.runIfDirty()
+            dep.runIfDirty();
 
             Dep.activeReactivity = pre;
         });
@@ -56,9 +56,9 @@ export function endBatch(): void
 
 /**
  * 合批处理。
- * 
- * @param dep 
- * @param isRunning 添加时是否是正在运行。 
+ *
+ * @param dep
+ * @param isRunning 添加时是否是正在运行。
  */
 export function batch(dep: ComputedDep, isRunning: boolean): void
 {
@@ -74,15 +74,15 @@ export function batch(dep: ComputedDep, isRunning: boolean): void
 
 /**
  * 批次执行多次修改反应式对象，可以减少不必要的反应式触发。
- * 
+ *
  * ```ts
  * batchRun(() => {
  *     // 修改反应式对象
  *     reactiveObj.a = 1;
- *     reactiveObj.b = 2; 
+ *     reactiveObj.b = 2;
  * })
  * ```
- * 
+ *
  * 等价于以下代码：
  * ```ts
  * startBatch();
@@ -90,7 +90,7 @@ export function batch(dep: ComputedDep, isRunning: boolean): void
  * reactiveObj.b = 2;
  * endBatch();
  * ```
- * 
+ *
  * @param fn 要执行的函数，在此函数中多次修改反应式对象。
  */
 export function batchRun(fn: () => void)
@@ -100,12 +100,12 @@ export function batchRun(fn: () => void)
     endBatch();
 }
 
-let _batchDepth = 0
+let _batchDepth = 0;
 /**
  * 正在运行的依赖。
  */
-let _needEffectDeps: ComputedDep[] = [];
+const _needEffectDeps: ComputedDep[] = [];
 /**
  * 已经运行过的依赖，只需要修复与子节点关系。
  */
-let _isRunedDeps: ComputedDep[] = [];
+const _isRunedDeps: ComputedDep[] = [];

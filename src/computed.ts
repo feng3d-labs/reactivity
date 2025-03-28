@@ -1,12 +1,12 @@
-import { batch } from "./batch";
-import { Dep } from "./dep";
-import { hasChanged } from "./shared/general";
+import { batch } from './batch';
+import { Dep } from './dep';
+import { hasChanged } from './shared/general';
 
 /**
  * 创建计算反应式对象。
- * 
+ *
  * 首次获取值将会执行函数，后续获取值且在依赖发生变化的情况下将会重新计算。
- * 
+ *
  * @param func 检测的可能包含响应式的函数。
  * @returns 包含 value 属性的对象，用于获取计算结果。
  */
@@ -20,7 +20,7 @@ export interface Computed<T = any>
     readonly value: T
     [ComputedSymbol]: true
 }
-declare const ComputedSymbol: unique symbol
+declare const ComputedSymbol: unique symbol;
 
 export interface ComputedDep<T = any> extends Computed<T> { }
 
@@ -28,7 +28,7 @@ export interface ComputedDep<T = any> extends Computed<T> { }
  * 计算依赖。
  *
  * 当使用 computed 函数时，会创建一个 ComputedDep 对象。
- * 
+ *
  * 首次获取值将会执行函数，后续获取值且在依赖发生变化的情况下将会重新计算。
  */
 export class ComputedDep<T = any> extends Dep<T>
@@ -36,7 +36,7 @@ export class ComputedDep<T = any> extends Dep<T>
     /**
      * @internal
      */
-    readonly __v_isRef = true
+    readonly __v_isRef = true;
 
     /**
      * 监听的函数。
@@ -45,9 +45,9 @@ export class ComputedDep<T = any> extends Dep<T>
 
     /**
      * 引用的子节点。
-     * 
+     *
      * @private
-     * 
+     *
      * ### 备注 （有损性能的选择）
      * 1. 子节点的维护放弃使用链表采用Map，遍历性能略有下降（看不出来），代码可读性提升。
      * 2. 放弃只维护失效子节点而选择保留全量子节点来确保遍历子节点时顺序不变。(检查遍历消耗可能更高，但捕获时可以更好的进行剪枝以及防止过期子节点触发来提升性能)
@@ -56,9 +56,9 @@ export class ComputedDep<T = any> extends Dep<T>
 
     /**
      * 是否脏，是否需要重新计算。
-     * 
+     *
      * 用于在没有值发生变化时，避免重复计算。
-     * 
+     *
      * @private
      */
     _isDirty = true;
@@ -75,7 +75,7 @@ export class ComputedDep<T = any> extends Dep<T>
 
     /**
      * 捕捉。
-     * 
+     *
      * 建立与父节点的依赖关系。
      */
     track()
@@ -87,16 +87,16 @@ export class ComputedDep<T = any> extends Dep<T>
 
     /**
      * 触发。
-     * 
+     *
      * 冒泡到所有父节点，设置失效子节点。
-     * 
+     *
      * 把触发节点添加到失效子节点队列中。
      */
     trigger(): void
     {
         if (Dep.activeReactivity === this)
         {
-            batch(this, Dep.activeReactivity === this)
+            batch(this, Dep.activeReactivity === this);
         }
 
         super.trigger();
@@ -127,7 +127,7 @@ export class ComputedDep<T = any> extends Dep<T>
 
     /**
      * 检查当前节点是否脏。
-     * 
+     *
      * 如果脏，则执行计算。
      */
     runIfDirty()
