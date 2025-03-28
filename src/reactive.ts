@@ -6,10 +6,8 @@ import { ReactiveFlags, TargetType } from './shared/constants';
 import { getTargetType, isObject, Target } from './shared/general';
 
 /**
- * 响应式对象。
- * 
  * 创建或者获取响应式对象的代理对象。
- * 
+ *
  * @param target 被响应式的对象。
  * @returns 响应式代理对象。
  */
@@ -49,11 +47,23 @@ export function reactive<T extends object>(target: T): Reactive<T>
 }
 export const reactiveMap = new WeakMap<Target, any>();
 
+/**
+ * 判断一个对象是否为响应式对象。
+ *
+ * @param value 对象。
+ * @returns
+ */
 export function isReactive(value: unknown): boolean
 {
     return !!(value && (value as Target)[ReactiveFlags.IS_REACTIVE]);
 }
 
+/**
+ * 转换为响应式对象。
+ *
+ * @param value 对象。
+ * @returns
+ */
 export const toReactive = <T>(value: T): T =>
 {
     if (isObject(value))
@@ -64,6 +74,12 @@ export const toReactive = <T>(value: T): T =>
     return value;
 };
 
+/**
+ * 判断一个对象是否为代理对象。
+ *
+ * @param value 对象。
+ * @returns
+ */
 export function isProxy(value: any): boolean
 {
     return value ? !!value[ReactiveFlags.RAW] : false;

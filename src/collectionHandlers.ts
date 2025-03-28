@@ -1,7 +1,7 @@
 import { toReactive } from './reactive';
 import { ITERATE_KEY, MAP_KEY_ITERATE_KEY, ReactiveFlags, TrackOpTypes, TriggerOpTypes } from './shared/constants';
 import { hasChanged, hasOwn, isMap, Target, toRaw, toRawType, warn } from './shared/general';
-import { PropertyDep } from './property';
+import { PropertyReactivity } from './property';
 
 export const mutableCollectionHandlers: ProxyHandler<CollectionTypes> = {
     get: createInstrumentationGetter(),
@@ -51,9 +51,9 @@ function createInstrumentations(): Instrumentations
 
             if (hasChanged(key, rawKey))
             {
-                PropertyDep.track(rawTarget, TrackOpTypes.GET, key);
+                PropertyReactivity.track(rawTarget, TrackOpTypes.GET, key);
             }
-            PropertyDep.track(rawTarget, TrackOpTypes.GET, rawKey);
+            PropertyReactivity.track(rawTarget, TrackOpTypes.GET, rawKey);
 
             const { has } = getProto(rawTarget);
             const wrap = toReactive;
@@ -75,7 +75,7 @@ function createInstrumentations(): Instrumentations
         get size()
         {
             const target = (this as unknown as IterableCollections)[ReactiveFlags.RAW];
-            PropertyDep.track(toRaw(target), TrackOpTypes.ITERATE, ITERATE_KEY);
+            PropertyReactivity.track(toRaw(target), TrackOpTypes.ITERATE, ITERATE_KEY);
 
             return Reflect.get(target, 'size', target);
         },
@@ -87,9 +87,9 @@ function createInstrumentations(): Instrumentations
 
             if (hasChanged(key, rawKey))
             {
-                PropertyDep.track(rawTarget, TrackOpTypes.HAS, key);
+                PropertyReactivity.track(rawTarget, TrackOpTypes.HAS, key);
             }
-            PropertyDep.track(rawTarget, TrackOpTypes.HAS, rawKey);
+            PropertyReactivity.track(rawTarget, TrackOpTypes.HAS, rawKey);
 
             return key === rawKey
                 ? target.has(key)
@@ -101,7 +101,7 @@ function createInstrumentations(): Instrumentations
             const target = observed[ReactiveFlags.RAW];
             const rawTarget = toRaw(target);
             const wrap = toReactive;
-            PropertyDep.track(rawTarget, TrackOpTypes.ITERATE, ITERATE_KEY);
+            PropertyReactivity.track(rawTarget, TrackOpTypes.ITERATE, ITERATE_KEY);
 
             return target.forEach((value: unknown, key: unknown) =>
 
@@ -121,7 +121,7 @@ function createInstrumentations(): Instrumentations
             if (!hadKey)
             {
                 target.add(value);
-                PropertyDep.trigger(target, TriggerOpTypes.ADD, value, value);
+                PropertyReactivity.trigger(target, TriggerOpTypes.ADD, value, value);
             }
 
             return this;
@@ -147,11 +147,11 @@ function createInstrumentations(): Instrumentations
             target.set(key, value);
             if (!hadKey)
             {
-                PropertyDep.trigger(target, TriggerOpTypes.ADD, key, value);
+                PropertyReactivity.trigger(target, TriggerOpTypes.ADD, key, value);
             }
             else if (hasChanged(value, oldValue))
             {
-                PropertyDep.trigger(target, TriggerOpTypes.SET, key, value, oldValue);
+                PropertyReactivity.trigger(target, TriggerOpTypes.SET, key, value, oldValue);
             }
 
             return this;
@@ -176,7 +176,7 @@ function createInstrumentations(): Instrumentations
             const result = target.delete(key);
             if (hadKey)
             {
-                PropertyDep.trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue);
+                PropertyReactivity.trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue);
             }
 
             return result;
@@ -194,7 +194,7 @@ function createInstrumentations(): Instrumentations
             const result = target.clear();
             if (hadItems)
             {
-                PropertyDep.trigger(
+                PropertyReactivity.trigger(
                     target,
                     TriggerOpTypes.CLEAR,
                     undefined,
@@ -238,7 +238,7 @@ function createIterableMethod(method: string | symbol)
         const innerIterator = target[method](...args);
         const wrap = toReactive;
 
-        PropertyDep.track(
+        PropertyReactivity.track(
             rawTarget,
             TrackOpTypes.ITERATE,
             isKeyOnly ? MAP_KEY_ITERATE_KEY : ITERATE_KEY,

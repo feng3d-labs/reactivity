@@ -1,19 +1,43 @@
-import { ComputedDep } from './computed';
-import { Dep } from './dep';
+import { ComputedReactivity } from './computed';
+import { Reactivity } from './Reactivity';
 
 /**
- * 开始批次处理。
+ * 合批处理。
+ *
+ * @param dep 要处理的依赖。
+ * @param isRunning 添加时是否是正在运行。
  */
-export function startBatch(): void
+export function batch(dep: ComputedReactivity, isRunning: boolean): void
 {
-    _batchDepth++;
+    if (isRunning)
+    {
+        _isRunedDeps.push(dep);
+    }
+    else
+    {
+        _needEffectDeps.push(dep);
+    }
 }
 
 /**
- * 结束批次处理。
+ * 批次执行多次修改反应式对象，可以减少不必要的反应式触发。
+ *
+ * ```ts
+ * batchRun(() => {
+ *     // 修改反应式对象
+ *     reactiveObj.a = 1;
+ *     reactiveObj.b = 2;
+ * })
+ * ```
+ *
+ * @param fn 要执行的函数，在此函数中多次修改反应式对象。
  */
-export function endBatch(): void
+export function batchRun<T>(fn: () => T): T
 {
+    _batchDepth++;
+
+    const result = fn();
+
     if (--_batchDepth > 0)
     {
         return;
@@ -48,61 +72,15 @@ export function endBatch(): void
         _needEffectDeps.forEach((dep) =>
         {
             // 独立执行回调
-            const pre = Dep.activeReactivity;
-            Dep.activeReactivity = null;
+            const pre = Reactivity.activeReactivity;
+            Reactivity.activeReactivity = null;
 
             dep.runIfDirty();
 
-            Dep.activeReactivity = pre;
+            Reactivity.activeReactivity = pre;
         });
         _needEffectDeps.length = 0;
     }
-}
-
-/**
- * 合批处理。
- *
- * @param dep
- * @param isRunning 添加时是否是正在运行。
- */
-export function batch(dep: ComputedDep, isRunning: boolean): void
-{
-    if (isRunning)
-    {
-        _isRunedDeps.push(dep);
-    }
-    else
-    {
-        _needEffectDeps.push(dep);
-    }
-}
-
-/**
- * 批次执行多次修改反应式对象，可以减少不必要的反应式触发。
- *
- * ```ts
- * batchRun(() => {
- *     // 修改反应式对象
- *     reactiveObj.a = 1;
- *     reactiveObj.b = 2;
- * })
- * ```
- *
- * 等价于以下代码：
- * ```ts
- * startBatch();
- * reactiveObj.a = 1;
- * reactiveObj.b = 2;
- * endBatch();
- * ```
- *
- * @param fn 要执行的函数，在此函数中多次修改反应式对象。
- */
-export function batchRun<T>(fn: () => T): T
-{
-    startBatch();
-    const result = fn();
-    endBatch();
 
     return result;
 }
@@ -111,8 +89,8 @@ let _batchDepth = 0;
 /**
  * 正在运行的依赖。
  */
-const _needEffectDeps: ComputedDep[] = [];
+const _needEffectDeps: ComputedReactivity[] = [];
 /**
  * 已经运行过的依赖，只需要修复与子节点关系。
  */
-const _isRunedDeps: ComputedDep[] = [];
+const _isRunedDeps: ComputedReactivity[] = [];

@@ -1,6 +1,5 @@
 import { describe, expect, it, test, vi } from 'vitest';
-import { Computed, computed, ComputedDep, effect, reactive, ref, RefReactivity } from '../src';
-import { noTrack } from '../src/dep';
+import { Computed, computed, ComputedDep, effect, noTrack, reactive, ref, RefReactivity } from '../src';
 
 describe('reactivity/computed', () =>
 {

@@ -1,5 +1,5 @@
 import { batchRun } from './batch';
-import { Dep } from './dep';
+import { Reactivity } from './Reactivity';
 import { toReactive } from './reactive';
 import { ReactiveFlags } from './shared/constants';
 import { hasChanged, toRaw } from './shared/general';
@@ -37,7 +37,7 @@ export interface RefReactivity<T = any> extends Ref<T> { }
  *
  * 当使用 ref 函数时，会创建一个 RefReactivity 对象。
  */
-export class RefReactivity<T = any> extends Dep<T> implements Ref<T>
+export class RefReactivity<T = any> extends Reactivity<T> implements Ref<T>
 {
     public readonly [ReactiveFlags.IS_REF] = true;
 

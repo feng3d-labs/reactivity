@@ -3,7 +3,7 @@ import { reactive, reactiveMap } from './reactive';
 import { isRef } from './ref';
 import { ITERATE_KEY, ReactiveFlags, TrackOpTypes, TriggerOpTypes } from './shared/constants';
 import { hasChanged, hasOwn, isArray, isIntegerKey, isObject, isSymbol, makeMap, Target, toRaw } from './shared/general';
-import { PropertyDep } from './property';
+import { PropertyReactivity } from './property';
 
 /**
  * 基础响应式处理器。
@@ -66,7 +66,7 @@ class BaseReactiveHandler implements ProxyHandler<Target>
         }
 
         //
-        PropertyDep.track(target, TrackOpTypes.GET, key as any);
+        PropertyReactivity.track(target, TrackOpTypes.GET, key as any);
 
         // 如果是 ref，则返回 ref.value
         if (isRef(res))
@@ -134,11 +134,11 @@ class MutableReactiveHandler extends BaseReactiveHandler
         {
             if (!hadKey)
             {
-                PropertyDep.trigger(target, TriggerOpTypes.ADD, key, value);
+                PropertyReactivity.trigger(target, TriggerOpTypes.ADD, key, value);
             }
             else if (hasChanged(value, oldValue))
             {
-                PropertyDep.trigger(target, TriggerOpTypes.SET, key, value, oldValue);
+                PropertyReactivity.trigger(target, TriggerOpTypes.SET, key, value, oldValue);
             }
         }
 
@@ -162,7 +162,7 @@ class MutableReactiveHandler extends BaseReactiveHandler
         const result = Reflect.deleteProperty(target, key);
         if (result && hadKey)
         {
-            PropertyDep.trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue);
+            PropertyReactivity.trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue);
         }
 
         return result;
@@ -173,7 +173,7 @@ class MutableReactiveHandler extends BaseReactiveHandler
         const result = Reflect.has(target, key);
         if (!isSymbol(key) || !builtInSymbols.has(key))
         {
-            PropertyDep.track(target, TrackOpTypes.HAS, key);
+            PropertyReactivity.track(target, TrackOpTypes.HAS, key);
         }
 
         return result;
@@ -181,7 +181,7 @@ class MutableReactiveHandler extends BaseReactiveHandler
 
     ownKeys(target: Record<string | symbol, unknown>): (string | symbol)[]
     {
-        PropertyDep.track(
+        PropertyReactivity.track(
             target,
             TrackOpTypes.ITERATE,
             isArray(target) ? 'length' : ITERATE_KEY,
@@ -201,7 +201,7 @@ function hasOwnProperty(this: object, key: unknown)
     // #10455 hasOwnProperty may be called with non-string values
     if (!isSymbol(key)) key = String(key);
     const obj = toRaw(this);
-    PropertyDep.track(obj, TrackOpTypes.HAS, key);
+    PropertyReactivity.track(obj, TrackOpTypes.HAS, key);
 
     return obj.hasOwnProperty(key as string);
 }

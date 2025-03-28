@@ -1,5 +1,5 @@
 import { batch } from './batch';
-import { Dep, forceTrack } from './dep';
+import { Reactivity, forceTrack } from './Reactivity';
 import { hasChanged } from './shared/general';
 
 /**
@@ -12,9 +12,12 @@ import { hasChanged } from './shared/general';
  */
 export function computed<T>(func: (oldValue?: T) => T): Computed<T>
 {
-    return new ComputedDep(func) as any;
+    return new ComputedReactivity(func) as any;
 }
 
+/**
+ * 计算反应式对象。
+ */
 export interface Computed<T = any>
 {
     readonly value: T
@@ -22,16 +25,16 @@ export interface Computed<T = any>
 }
 declare const ComputedSymbol: unique symbol;
 
-export interface ComputedDep<T = any> extends Computed<T> { }
+export interface ComputedReactivity<T = any> extends Computed<T> { }
 
 /**
- * 计算依赖。
+ * 计算反应式节点。
  *
  * 当使用 computed 函数时，会创建一个 ComputedDep 对象。
  *
  * 首次获取值将会执行函数，后续获取值且在依赖发生变化的情况下将会重新计算。
  */
-export class ComputedDep<T = any> extends Dep<T>
+export class ComputedReactivity<T = any> extends Reactivity<T>
 {
     /**
      * @internal
@@ -106,9 +109,9 @@ export class ComputedDep<T = any> extends Dep<T>
      */
     trigger(): void
     {
-        if (Dep.activeReactivity === this)
+        if (Reactivity.activeReactivity === this)
         {
-            batch(this, Dep.activeReactivity === this);
+            batch(this, Reactivity.activeReactivity === this);
         }
 
         super.trigger();
@@ -123,14 +126,14 @@ export class ComputedDep<T = any> extends Dep<T>
         forceTrack(() =>
         {
             // 保存当前节点作为父节点。
-            const parentReactiveNode = Dep.activeReactivity;
+            const parentReactiveNode = Reactivity.activeReactivity;
             // 设置当前节点为活跃节点。
-            Dep.activeReactivity = this as any;
+            Reactivity.activeReactivity = this as any;
 
             this._value = this._func(this._value);
 
             // 执行完毕后恢复父节点。
-            Dep.activeReactivity = parentReactiveNode;
+            Reactivity.activeReactivity = parentReactiveNode;
         });
     }
 
@@ -166,8 +169,8 @@ export class ComputedDep<T = any> extends Dep<T>
         let isChanged = false;
 
         // 避免在检查过程建立依赖关系。
-        const preReactiveNode = Dep.activeReactivity;
-        Dep.activeReactivity = null;
+        const preReactiveNode = Reactivity.activeReactivity;
+        Reactivity.activeReactivity = null;
 
         let node = this._childrenHead;
         while (node)
@@ -190,7 +193,7 @@ export class ComputedDep<T = any> extends Dep<T>
         }
 
         // 恢复父节点。
-        Dep.activeReactivity = preReactiveNode;
+        Reactivity.activeReactivity = preReactiveNode;
 
         // 如果子节点有值发生变化，需要清除所有与子节点的关系。
         if (isChanged)
@@ -214,4 +217,4 @@ export class ComputedDep<T = any> extends Dep<T>
 /**
  * 反应式节点链。
  */
-type ReactivityLink = { node: Dep, value: any, next: ReactivityLink };
+type ReactivityLink = { node: Reactivity, value: any, next: ReactivityLink };

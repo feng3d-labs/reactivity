@@ -1,11 +1,11 @@
 import { batch, batchRun } from './batch';
-import { ComputedDep } from './computed';
-import { Dep } from './dep';
+import { ComputedReactivity } from './computed';
+import { Reactivity } from './Reactivity';
 
 /**
- * 创建副作用。
+ * 创建效果反应式节点。
  *
- * 被作用的函数所引用的响应式对象发生变化时，会立即执行 fn 函数。
+ * 将会维持反应式效果，当被作用的函数所引用的响应式对象发生变化时，会立即执行 fn 函数。
  *
  * @param fn 要执行的函数
  * @returns  暂停和恢复副作用的函数
@@ -18,13 +18,13 @@ import { Dep } from './dep';
  */
 export function effect<T = any>(fn: () => T): Effect
 {
-    return new EffectDep(fn);
+    return new EffectReactivity(fn);
 }
 
 /**
- * 副作用节点。
+ * 效果反应式节点。
  */
-export class EffectDep<T = any> extends ComputedDep<T> implements Effect
+export class EffectReactivity<T = any> extends ComputedReactivity<T> implements Effect
 {
     /**
      * 是否为启用, 默认为 true。
@@ -48,9 +48,9 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
     {
         if (this._isEnable) return;
         this._isEnable = true;
-        if (EffectDep.pausedQueueEffects.has(this))
+        if (EffectReactivity.pausedQueueEffects.has(this))
         {
-            EffectDep.pausedQueueEffects.delete(this);
+            EffectReactivity.pausedQueueEffects.delete(this);
             this.trigger();
         }
     }
@@ -64,15 +64,15 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
             if (this._isEnable)
             {
                 // 合批时需要判断是否已经运行的依赖。
-                batch(this, Dep.activeReactivity === this);
+                batch(this, Reactivity.activeReactivity === this);
             }
             else
             {
-                EffectDep.pausedQueueEffects.add(this);
+                EffectReactivity.pausedQueueEffects.add(this);
             }
         });
     }
-    private static pausedQueueEffects = new WeakSet<EffectDep>();
+    private static pausedQueueEffects = new WeakSet<EffectReactivity>();
 
     /**
      * 执行当前节点。
@@ -93,7 +93,7 @@ export class EffectDep<T = any> extends ComputedDep<T> implements Effect
 }
 
 /**
- * 副作用。
+ * 维持反应式效果。
  */
 export interface Effect
 {

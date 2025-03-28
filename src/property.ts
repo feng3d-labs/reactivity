@@ -1,5 +1,5 @@
 import { batchRun } from './batch';
-import { Dep } from './dep';
+import { Reactivity } from './Reactivity';
 import { ARRAY_ITERATE_KEY, ITERATE_KEY, MAP_KEY_ITERATE_KEY, TrackOpTypes, TriggerOpTypes } from './shared/constants';
 import { isArray, isIntegerKey, isMap, isSymbol } from './shared/general';
 
@@ -10,20 +10,20 @@ import { isArray, isIntegerKey, isMap, isSymbol } from './shared/general';
  * @param key 属性
  * @returns 反应式属性。
  */
-export function property<T, K extends keyof T>(target: T, key: K)
+function property<T, K extends keyof T>(target: T, key: K)
 {
-    let depsMap = PropertyDep._targetMap.get(target);
+    let depsMap = PropertyReactivity._targetMap.get(target);
     if (!depsMap)
     {
         depsMap = new Map();
-        PropertyDep._targetMap.set(target, depsMap);
+        PropertyReactivity._targetMap.set(target, depsMap);
     }
 
     //
     let dep = depsMap.get(key);
     if (!dep)
     {
-        dep = new PropertyDep(target, key);
+        dep = new PropertyReactivity(target, key);
         depsMap.set(key, dep);
     }
 
@@ -31,9 +31,9 @@ export function property<T, K extends keyof T>(target: T, key: K)
 }
 
 /**
- * 反应式属性。
+ * 属性反应式节点。
  */
-export class PropertyDep<T, K extends keyof T> extends Dep<T>
+export class PropertyReactivity<T, K extends keyof T> extends Reactivity<T>
 {
     /**
      * 获取当前节点值。
@@ -113,7 +113,7 @@ export class PropertyDep<T, K extends keyof T> extends Dep<T>
     /**
      * @private
      */
-    static _targetMap: WeakMap<any, Map<any, PropertyDep<any, any>>> = new WeakMap();
+    static _targetMap: WeakMap<any, Map<any, PropertyReactivity<any, any>>> = new WeakMap();
 
     /**
      * 触发属性的变化。
@@ -130,7 +130,7 @@ export class PropertyDep<T, K extends keyof T> extends Dep<T>
         const depsMap = this._targetMap.get(target);
         if (!depsMap) return;
 
-        const run = (dep: PropertyDep<any, any> | undefined) =>
+        const run = (dep: PropertyReactivity<any, any> | undefined) =>
         {
             if (dep)
             {

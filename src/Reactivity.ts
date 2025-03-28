@@ -1,13 +1,13 @@
-import { type ComputedDep } from './computed';
+import { type ComputedReactivity } from './computed';
 
 /**
- * 反应节点。
+ * 反应式节点。
  *
- * 用于记录依赖关系。
+ * 拥有节点值以及被捕捉与触发的能力。
  *
  * 用于被 computed effect 等构建的节点所继承。
  */
-export class Dep<T = any>
+export class Reactivity<T = any>
 {
     /**
      * 获取当前节点值。
@@ -34,7 +34,7 @@ export class Dep<T = any>
      *
      * @private
      */
-    _parents = new Set<ComputedDep>();
+    _parents = new Set<ComputedReactivity>();
 
     /**
      * 捕捉。
@@ -46,7 +46,7 @@ export class Dep<T = any>
         if (!_shouldTrack) return;
 
         // 连接父节点和子节点。
-        const parent = Dep.activeReactivity;
+        const parent = Reactivity.activeReactivity;
         if (parent)
         {
             this._parents.add(parent);
@@ -90,7 +90,7 @@ export class Dep<T = any>
      *
      * @internal
      */
-    static activeReactivity: ComputedDep;
+    static activeReactivity: ComputedReactivity;
 }
 
 /**

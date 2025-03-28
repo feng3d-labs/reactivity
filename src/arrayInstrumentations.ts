@@ -1,8 +1,8 @@
 /* eslint-disable prefer-rest-params */
 
 import { batchRun } from './batch';
-import { noTrack } from './dep';
-import { PropertyDep } from './property';
+import { noTrack } from './Reactivity';
+import { PropertyReactivity } from './property';
 import { isProxy, toReactive } from './reactive';
 import { ARRAY_ITERATE_KEY, TrackOpTypes } from './shared/constants';
 import { isArray, toRaw } from './shared/general';
@@ -319,7 +319,7 @@ function iterator(
  */
 function shallowReadArray<T>(arr: T[]): T[]
 {
-    PropertyDep.track((arr = toRaw(arr)), TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY);
+    PropertyReactivity.track((arr = toRaw(arr)), TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY);
 
     return arr;
 }
@@ -328,7 +328,7 @@ function reactiveReadArray<T>(array: T[]): T[]
 {
     const raw = toRaw(array);
     if (raw === array) return raw;
-    PropertyDep.track(raw, TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY);
+    PropertyReactivity.track(raw, TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY);
 
     return raw.map(toReactive);
 }
@@ -415,7 +415,7 @@ function searchProxy(
 )
 {
     const arr = toRaw(self) as any;
-    PropertyDep.track(arr, TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY);
+    PropertyReactivity.track(arr, TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY);
     // we run the method using the original args first (which may be reactive)
     const res = arr[method](...args);
 
