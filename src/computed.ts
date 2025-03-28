@@ -1,5 +1,5 @@
 import { batch } from './batch';
-import { Dep } from './dep';
+import { Dep, forceTrack } from './dep';
 import { hasChanged } from './shared/general';
 
 /**
@@ -120,21 +120,18 @@ export class ComputedDep<T = any> extends Dep<T>
     run()
     {
         // 不受嵌套的 effect 影响。
-        const preShouldTrack = Dep._shouldTrack;
-        Dep._shouldTrack = true;
+        forceTrack(() =>
+        {
+            // 保存当前节点作为父节点。
+            const parentReactiveNode = Dep.activeReactivity;
+            // 设置当前节点为活跃节点。
+            Dep.activeReactivity = this as any;
 
-        // 保存当前节点作为父节点。
-        const parentReactiveNode = Dep.activeReactivity;
-        // 设置当前节点为活跃节点。
-        Dep.activeReactivity = this as any;
+            this._value = this._func(this._value);
 
-        this._value = this._func(this._value);
-
-        // 执行完毕后恢复父节点。
-        Dep.activeReactivity = parentReactiveNode;
-
-        //
-        Dep._shouldTrack = preShouldTrack;
+            // 执行完毕后恢复父节点。
+            Dep.activeReactivity = parentReactiveNode;
+        });
     }
 
     /**

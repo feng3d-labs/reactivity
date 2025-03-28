@@ -43,7 +43,7 @@ export class Dep<T = any>
      */
     track()
     {
-        if (!Dep._shouldTrack) return;
+        if (!_shouldTrack) return;
 
         // 连接父节点和子节点。
         const parent = Dep.activeReactivity;
@@ -91,38 +91,53 @@ export class Dep<T = any>
      * @internal
      */
     static activeReactivity: ComputedDep;
-
-    /**
-     * 是否应该跟踪的标志
-     * 控制是否进行依赖跟踪
-     *
-     * @private
-     */
-    static _shouldTrack = true;
-
-    /**
-     * @private
-     */
-    private static _trackStack: boolean[] = [];
-
-    /**
-     * 暂停跟踪
-     * 暂时停止依赖跟踪
-     */
-    static pauseTracking(): void
-    {
-        Dep._trackStack.push(Dep._shouldTrack);
-        Dep._shouldTrack = false;
-    }
-
-    /**
-     * 重置跟踪状态
-     * 恢复之前的全局依赖跟踪状态
-     */
-    static resetTracking(): void
-    {
-        const last = Dep._trackStack.pop();
-        Dep._shouldTrack = last === undefined ? true : last;
-    }
 }
+
+export function forceTrack(fn: () => void)
+{
+    const preShouldTrack = _shouldTrack;
+    _shouldTrack = true;
+    fn();
+    _shouldTrack = preShouldTrack;
+}
+
+export function pauseTrack(fn: () => void)
+{
+    pauseTracking();
+    fn();
+    resetTracking();
+}
+
+/**
+ * 暂停跟踪
+ * 暂时停止依赖跟踪
+ */
+export function pauseTracking(): void
+{
+    _trackStack.push(_shouldTrack);
+    _shouldTrack = false;
+}
+
+/**
+ * 重置跟踪状态
+ * 恢复之前的全局依赖跟踪状态
+ */
+export function resetTracking(): void
+{
+    const last = _trackStack.pop();
+    _shouldTrack = last === undefined ? true : last;
+}
+
+/**
+ * 是否应该跟踪的标志
+ * 控制是否进行依赖跟踪
+ *
+ * @private
+ */
+let _shouldTrack = true;
+
+/**
+ * @private
+ */
+let _trackStack: boolean[] = [];
 

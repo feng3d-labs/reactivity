@@ -1,11 +1,11 @@
 /* eslint-disable prefer-rest-params */
 
 import { endBatch, startBatch } from './batch';
-import { Dep } from './dep';
+import { pauseTracking, resetTracking } from './dep';
+import { PropertyDep } from './property';
 import { isProxy, toReactive } from './reactive';
 import { ARRAY_ITERATE_KEY, TrackOpTypes } from './shared/constants';
 import { isArray, toRaw } from './shared/general';
-import { PropertyDep } from './property';
 
 export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     __proto__: null,
@@ -439,9 +439,9 @@ function noTracking(
 )
 {
     startBatch();
-    Dep.pauseTracking();
+    pauseTracking();
     const res = (toRaw(self) as any)[method].apply(self, args);
-    Dep.resetTracking();
+    resetTracking();
     endBatch();
 
     return res;
