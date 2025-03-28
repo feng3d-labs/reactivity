@@ -56,11 +56,11 @@ export class Dep<T = any>
     /**
      * 触发。
      *
-     * 冒泡到所有父节点，设置失效子节点。
+     * 冒泡到所有父节点，设置失效子节点链表。
      */
     trigger()
     {
-        // 冒泡到所有父节点，设置失效子节点。
+        // 冒泡到所有父节点，设置失效子节点链表。
         if (this._parents.size > 0)
         {
             this._parents.forEach((parent) =>

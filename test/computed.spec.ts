@@ -185,7 +185,7 @@ describe('reactivity/computed', () =>
         a.value!.v = 2;
         a.value = null as any;
         d.value;
-        expect(cSpy).toHaveBeenCalledTimes(1);
+        expect(cSpy).toHaveBeenCalledTimes(2); // 采用了失效子节点链表的方式，此处结果不再是1，而为2。
     });
 
     // https://github.com/vuejs/core/pull/5912#issuecomment-1738257692
