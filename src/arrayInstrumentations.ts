@@ -439,13 +439,10 @@ function noTracking(
 )
 {
     const res = batchRun(() =>
-    {
-        return noTrack(() =>
-        {
-            return (toRaw(self) as any)[method].apply(self, args);
-        })
-    });
-
+        noTrack(() =>
+            (toRaw(self) as any)[method].apply(self, args)
+        )
+    );
 
     return res;
 }

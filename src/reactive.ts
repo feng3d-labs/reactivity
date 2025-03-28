@@ -6,9 +6,12 @@ import { ReactiveFlags, TargetType } from './shared/constants';
 import { getTargetType, isObject, Target } from './shared/general';
 
 /**
- *
- * @param target
- * @returns
+ * 响应式对象。
+ * 
+ * 创建或者获取响应式对象的代理对象。
+ * 
+ * @param target 被响应式的对象。
+ * @returns 响应式代理对象。
  */
 export function reactive<T extends object>(target: T): Reactive<T>
 {

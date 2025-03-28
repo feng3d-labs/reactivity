@@ -141,7 +141,6 @@ export class PropertyDep<T, K extends keyof T> extends Dep<T>
 
         batchRun(() =>
         {
-
             if (type === TriggerOpTypes.CLEAR)
             {
                 // collection being cleared
@@ -219,7 +218,6 @@ export class PropertyDep<T, K extends keyof T> extends Dep<T>
                     }
                 }
             }
-
         });
     }
 }
