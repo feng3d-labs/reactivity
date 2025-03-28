@@ -1,4 +1,5 @@
-import { ReactiveFlags, TargetType } from "./constants";
+/* eslint-disable no-var */
+import { ReactiveFlags, TargetType } from './constants';
 
 export { };
 declare global
@@ -12,28 +13,26 @@ globalThis.__DEV__ ??= true;
 
 export const isObject = (val: unknown): val is Record<any, any> => val !== null && typeof val === 'object';
 // 判断是否为数组
-export const isArray: typeof Array.isArray = Array.isArray
-export const isSymbol = (val: unknown): val is symbol => typeof val === 'symbol'
-export const isString = (val: unknown): val is string => typeof val === 'string'
+export const isArray: typeof Array.isArray = Array.isArray;
+export const isSymbol = (val: unknown): val is symbol => typeof val === 'symbol';
+export const isString = (val: unknown): val is string => typeof val === 'string';
 export const isIntegerKey = (key: unknown): boolean =>
-    isString(key) &&
-    key !== 'NaN' &&
-    key[0] !== '-' &&
-    '' + parseInt(key as any, 10) === key
+    isString(key)
+    && key !== 'NaN'
+    && key[0] !== '-'
+    && `${parseInt(key as any, 10)}` === key;
 export const isMap = (val: unknown): val is Map<any, any> =>
-    toTypeString(val) === '[object Map]'
+    toTypeString(val) === '[object Map]';
 
 // 判断对象是否拥有指定属性
 export const hasOwn = (
     val: object,
     key: string | symbol,
-): key is keyof typeof val => Object.prototype.hasOwnProperty.call(val, key)
-
-
+): key is keyof typeof val => Object.prototype.hasOwnProperty.call(val, key);
 
 // 比较两个值是否发生变化，考虑 NaN 的情况
 export const hasChanged = (value: any, oldValue: any): boolean =>
-    !Object.is(value, oldValue)
+    !Object.is(value, oldValue);
 
 function targetTypeMap(rawType: string)
 {
@@ -41,14 +40,14 @@ function targetTypeMap(rawType: string)
     {
         case 'Object':
         case 'Array':
-            return TargetType.COMMON
+            return TargetType.COMMON;
         case 'Map':
         case 'Set':
         case 'WeakMap':
         case 'WeakSet':
-            return TargetType.COLLECTION
+            return TargetType.COLLECTION;
         default:
-            return TargetType.INVALID
+            return TargetType.INVALID;
     }
 }
 
@@ -59,14 +58,13 @@ export function getTargetType(value: Target)
     return targetTypeMap(toRawType(value));
 }
 
-const toTypeString = (value: unknown): string => Object.prototype.toString.call(value)
+const toTypeString = (value: unknown): string => Object.prototype.toString.call(value);
 
 // 获取值的原始类型
 export const toRawType = (value: unknown): string =>
-{
+
     // 从类似 "[object RawType]" 的字符串中提取 "RawType"
-    return toTypeString(value).slice(8, -1)
-}
+    toTypeString(value).slice(8, -1);
 
 export interface Target
 {
@@ -76,18 +74,19 @@ export interface Target
 
 /**
  * 将一个响应式对象转换为原始对象。
- * @param observed 响应式对象。 
+ * @param observed 响应式对象。
  * @returns 原始对象。
  */
 export function toRaw<T>(observed: T): T
 {
-    const raw = observed && (observed as Target)[ReactiveFlags.RAW]
-    return raw ? toRaw(raw) : observed
+    const raw = observed && (observed as Target)[ReactiveFlags.RAW];
+
+    return raw ? toRaw(raw) : observed;
 }
 
 export function warn(msg: string, ...args: any[]): void
 {
-    console.warn(`[Vue warn] ${msg}`, ...args)
+    console.warn(`[Vue warn] ${msg}`, ...args);
 }
 
 /**
@@ -96,15 +95,15 @@ export function warn(msg: string, ...args: any[]): void
  * 以便在必要时 Rollup 可以进行 tree-shaking。
  */
 
-/*! #__NO_SIDE_EFFECTS__ */
+/* ! #__NO_SIDE_EFFECTS__ */
 export function makeMap(str: string): (key: string) => boolean
 {
     // 创建一个空对象作为映射，使用 Object.create(null) 避免原型链上的属性干扰
-    const map = Object.create(null)
+    const map = Object.create(null);
 
     // 将输入的字符串按逗号分隔，遍历每个键并将其添加到映射中，值为 1
-    for (const key of str.split(',')) map[key] = 1
+    for (const key of str.split(',')) map[key] = 1;
 
     // 返回一个函数，该函数接受一个键值，并检查该键是否存在于映射中
-    return val => val in map
+    return (val) => val in map;
 }

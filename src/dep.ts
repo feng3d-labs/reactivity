@@ -1,22 +1,23 @@
-import { type ComputedDep } from "./computed";
+import { type ComputedDep } from './computed';
 
 /**
  * 反应节点。
  *
  * 用于记录依赖关系。
- * 
+ *
  * 用于被 computed effect 等构建的节点所继承。
  */
 export class Dep<T = any>
 {
     /**
      * 获取当前节点值。
-     * 
+     *
      * 取值时将会建立与父节点的依赖关系。
      */
     get value(): T
     {
         this.track();
+
         return this._value;
     }
     /**
@@ -28,16 +29,16 @@ export class Dep<T = any>
      * 父反应节点。
      *
      * 记录了哪些节点调用了当前节点。
-     * 
+     *
      * 当前节点失效时，会通知并移除所有父节点。
-     * 
+     *
      * @private
      */
     _parents = new Set<ComputedDep>();
 
     /**
      * 捕捉。
-     * 
+     *
      * 建立与父节点的依赖关系。
      */
     track()
@@ -66,7 +67,7 @@ export class Dep<T = any>
 
     /**
      * 触发。
-     * 
+     *
      * 冒泡到所有父节点，设置失效子节点。
      */
     trigger()
@@ -76,7 +77,7 @@ export class Dep<T = any>
         {
             this._parents.forEach((parent) =>
             {
-                parent.trigger(this);
+                parent.trigger();
             });
 
             //
@@ -86,7 +87,7 @@ export class Dep<T = any>
 
     /**
      * 当前正在执行的反应式节点。
-     * 
+     *
      * @internal
      */
     static activeReactivity: ComputedDep;
@@ -94,15 +95,15 @@ export class Dep<T = any>
     /**
      * 是否应该跟踪的标志
      * 控制是否进行依赖跟踪
-     * 
+     *
      * @private
      */
-    static _shouldTrack = true
+    static _shouldTrack = true;
 
     /**
      * @private
      */
-    private static _trackStack: boolean[] = []
+    private static _trackStack: boolean[] = [];
 
     /**
      * 暂停跟踪
@@ -110,8 +111,8 @@ export class Dep<T = any>
      */
     static pauseTracking(): void
     {
-        Dep._trackStack.push(Dep._shouldTrack)
-        Dep._shouldTrack = false
+        Dep._trackStack.push(Dep._shouldTrack);
+        Dep._shouldTrack = false;
     }
 
     /**
@@ -120,8 +121,8 @@ export class Dep<T = any>
      */
     static resetTracking(): void
     {
-        const last = Dep._trackStack.pop()
-        Dep._shouldTrack = last === undefined ? true : last
+        const last = Dep._trackStack.pop();
+        Dep._shouldTrack = last === undefined ? true : last;
     }
 }
 

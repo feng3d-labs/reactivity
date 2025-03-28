@@ -1,9 +1,11 @@
-import { endBatch, startBatch } from "./batch"
-import { Dep } from "./dep"
-import { isProxy, toReactive } from "./reactive"
-import { ARRAY_ITERATE_KEY, TrackOpTypes } from "./shared/constants"
-import { isArray, toRaw } from "./shared/general"
-import { PropertyDep } from "./property"
+/* eslint-disable prefer-rest-params */
+
+import { endBatch, startBatch } from './batch';
+import { Dep } from './dep';
+import { isProxy, toReactive } from './reactive';
+import { ARRAY_ITERATE_KEY, TrackOpTypes } from './shared/constants';
+import { isArray, toRaw } from './shared/general';
+import { PropertyDep } from './property';
 
 export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     __proto__: null,
@@ -13,7 +15,7 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
      */
     [Symbol.iterator]()
     {
-        return iterator(this, Symbol.iterator, toReactive)
+        return iterator(this, Symbol.iterator, toReactive);
     },
 
     /**
@@ -22,8 +24,8 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     concat(...args: unknown[])
     {
         return reactiveReadArray(this).concat(
-            ...args.map(x => (isArray(x) ? reactiveReadArray(x) : x)),
-        )
+            ...args.map((x) => (isArray(x) ? reactiveReadArray(x) : x)),
+        );
     },
 
     /**
@@ -33,75 +35,70 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     {
         return iterator(this, 'entries', (value: [number, unknown]) =>
         {
-            value[1] = toReactive(value[1])
-            return value
-        })
+            value[1] = toReactive(value[1]);
+
+            return value;
+        });
     },
 
     /**
      * 测试数组中的所有元素是否都通过了指定函数的测试
      */
-    every(
-        fn: (item: unknown, index: number, array: unknown[]) => unknown,
+    every(fn: (item: unknown, index: number, array: unknown[]) => unknown,
         thisArg?: unknown,
     )
     {
-        return apply(this, 'every', fn, thisArg, undefined, arguments)
+        return apply(this, 'every', fn, thisArg, undefined, arguments);
     },
 
     /**
      * 创建一个新数组，包含通过指定函数测试的所有元素
      */
-    filter(
-        fn: (item: unknown, index: number, array: unknown[]) => unknown,
+    filter(fn: (item: unknown, index: number, array: unknown[]) => unknown,
         thisArg?: unknown,
     )
     {
-        return apply(this, 'filter', fn, thisArg, v => v.map(toReactive), arguments)
+        return apply(this, 'filter', fn, thisArg, (v) => v.map(toReactive), arguments);
     },
 
     /**
      * 返回数组中满足指定测试函数的第一个元素
      */
-    find(
-        fn: (item: unknown, index: number, array: unknown[]) => boolean,
+    find(fn: (item: unknown, index: number, array: unknown[]) => boolean,
         thisArg?: unknown,
     )
     {
-        return apply(this, 'find', fn, thisArg, toReactive, arguments)
+        return apply(this, 'find', fn, thisArg, toReactive, arguments);
     },
 
     /**
      * 返回数组中满足指定测试函数的第一个元素的索引
      */
-    findIndex(
-        fn: (item: unknown, index: number, array: unknown[]) => boolean,
+    findIndex(fn: (item: unknown, index: number, array: unknown[]) => boolean,
         thisArg?: unknown,
     )
     {
-        return apply(this, 'findIndex', fn, thisArg, undefined, arguments)
+        return apply(this, 'findIndex', fn, thisArg, undefined, arguments);
     },
 
     /**
      * 返回数组中满足指定测试函数的最后一个元素
      */
-    findLast(
-        fn: (item: unknown, index: number, array: unknown[]) => boolean,
+    findLast(fn: (item: unknown, index: number, array: unknown[]) => boolean,
         thisArg?: unknown,
     )
     {
-        return apply(this, 'findLast', fn, thisArg, toReactive, arguments)
+        return apply(this, 'findLast', fn, thisArg, toReactive, arguments);
     },
 
     /**
      * 返回数组中满足指定测试函数的最后一个元素的索引
      */
-    findLastIndex(
-        fn: (item: unknown, index: number, array: unknown[]) => boolean,
+    findLastIndex(fn: (item: unknown, index: number, array: unknown[]) => boolean,
         thisArg?: unknown,
     )
     {
-        return apply(this, 'findLastIndex', fn, thisArg, undefined, arguments)
+        return apply(this, 'findLastIndex', fn, thisArg, undefined, arguments);
     },
 
     // flat, flatMap could benefit from ARRAY_ITERATE but are not straight-forward to implement
@@ -109,12 +106,11 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     /**
      * 对数组中的每个元素执行指定函数
      */
-    forEach(
-        fn: (item: unknown, index: number, array: unknown[]) => unknown,
+    forEach(fn: (item: unknown, index: number, array: unknown[]) => unknown,
         thisArg?: unknown,
     )
     {
-        return apply(this, 'forEach', fn, thisArg, undefined, arguments)
+        return apply(this, 'forEach', fn, thisArg, undefined, arguments);
     },
 
     /**
@@ -122,7 +118,7 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
      */
     includes(...args: unknown[])
     {
-        return searchProxy(this, 'includes', args)
+        return searchProxy(this, 'includes', args);
     },
 
     /**
@@ -130,7 +126,7 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
      */
     indexOf(...args: unknown[])
     {
-        return searchProxy(this, 'indexOf', args)
+        return searchProxy(this, 'indexOf', args);
     },
 
     /**
@@ -138,7 +134,7 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
      */
     join(separator?: string)
     {
-        return reactiveReadArray(this).join(separator)
+        return reactiveReadArray(this).join(separator);
     },
 
     // keys() iterator only reads `length`, no optimisation required
@@ -148,18 +144,17 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
      */
     lastIndexOf(...args: unknown[])
     {
-        return searchProxy(this, 'lastIndexOf', args)
+        return searchProxy(this, 'lastIndexOf', args);
     },
 
     /**
      * 创建一个新数组，包含对原数组每个元素调用指定函数的结果
      */
-    map(
-        fn: (item: unknown, index: number, array: unknown[]) => unknown,
+    map(fn: (item: unknown, index: number, array: unknown[]) => unknown,
         thisArg?: unknown,
     )
     {
-        return apply(this, 'map', fn, thisArg, undefined, arguments)
+        return apply(this, 'map', fn, thisArg, undefined, arguments);
     },
 
     /**
@@ -167,7 +162,7 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
      */
     pop()
     {
-        return noTracking(this, 'pop')
+        return noTracking(this, 'pop');
     },
 
     /**
@@ -175,23 +170,22 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
      */
     push(...args: unknown[])
     {
-        return noTracking(this, 'push', args)
+        return noTracking(this, 'push', args);
     },
 
     /**
      * 对数组中的每个元素执行累加器函数，并返回最终结果
      */
-    reduce(
-        fn: (
-            acc: unknown,
-            item: unknown,
-            index: number,
-            array: unknown[],
-        ) => unknown,
+    reduce(fn: (
+        acc: unknown,
+        item: unknown,
+        index: number,
+        array: unknown[],
+    ) => unknown,
         ...args: unknown[]
     )
     {
-        return reduce(this, 'reduce', fn, args)
+        return reduce(this, 'reduce', fn, args);
     },
 
     /**
@@ -207,7 +201,7 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
         ...args: unknown[]
     )
     {
-        return reduce(this, 'reduceRight', fn, args)
+        return reduce(this, 'reduceRight', fn, args);
     },
 
     /**
@@ -215,7 +209,7 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
      */
     shift()
     {
-        return noTracking(this, 'shift')
+        return noTracking(this, 'shift');
     },
 
     // slice could use ARRAY_ITERATE but also seems to beg for range tracking
@@ -228,7 +222,7 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
         thisArg?: unknown,
     )
     {
-        return apply(this, 'some', fn, thisArg, undefined, arguments)
+        return apply(this, 'some', fn, thisArg, undefined, arguments);
     },
 
     /**
@@ -236,7 +230,7 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
      */
     splice(...args: unknown[])
     {
-        return noTracking(this, 'splice', args)
+        return noTracking(this, 'splice', args);
     },
 
     /**
@@ -245,7 +239,7 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     toReversed()
     {
         // @ts-expect-error user code may run in es2016+
-        return reactiveReadArray(this).toReversed()
+        return reactiveReadArray(this).toReversed();
     },
 
     /**
@@ -254,7 +248,7 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     toSorted(comparer?: (a: unknown, b: unknown) => number)
     {
         // @ts-expect-error user code may run in es2016+
-        return reactiveReadArray(this).toSorted(comparer)
+        return reactiveReadArray(this).toSorted(comparer);
     },
 
     /**
@@ -263,7 +257,7 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     toSpliced(...args: unknown[])
     {
         // @ts-expect-error user code may run in es2016+
-        return (reactiveReadArray(this).toSpliced as any)(...args)
+        return (reactiveReadArray(this).toSpliced as any)(...args);
     },
 
     /**
@@ -271,7 +265,7 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
      */
     unshift(...args: unknown[])
     {
-        return noTracking(this, 'unshift', args)
+        return noTracking(this, 'unshift', args);
     },
 
     /**
@@ -279,9 +273,9 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
      */
     values()
     {
-        return iterator(this, 'values', toReactive)
+        return iterator(this, 'values', toReactive);
     },
-}
+};
 
 // instrument iterators to take ARRAY_ITERATE dependency
 function iterator(
@@ -298,24 +292,26 @@ function iterator(
     // partially iterated in another, then iterated more in yet another.
     // given that JS iterator can only be read once, this doesn't seem like
     // a plausible use-case, so this tracking simplification seems ok.
-    const arr = shallowReadArray(self)
+    const arr = shallowReadArray(self);
     const iter = (arr[method] as any)() as IterableIterator<unknown> & {
         _next: IterableIterator<unknown>['next']
-    }
+    };
     if (arr !== self)
     {
-        iter._next = iter.next
+        iter._next = iter.next;
         iter.next = () =>
         {
-            const result = iter._next()
+            const result = iter._next();
             if (result.value)
             {
-                result.value = wrapValue(result.value)
+                result.value = wrapValue(result.value);
             }
-            return result
-        }
+
+            return result;
+        };
     }
-    return iter
+
+    return iter;
 }
 
 /**
@@ -323,21 +319,23 @@ function iterator(
  */
 function shallowReadArray<T>(arr: T[]): T[]
 {
-    PropertyDep.track((arr = toRaw(arr)), TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY)
-    return arr
+    PropertyDep.track((arr = toRaw(arr)), TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY);
+
+    return arr;
 }
 
 function reactiveReadArray<T>(array: T[]): T[]
 {
-    const raw = toRaw(array)
-    if (raw === array) return raw
-    PropertyDep.track(raw, TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY)
-    return raw.map(toReactive)
+    const raw = toRaw(array);
+    if (raw === array) return raw;
+    PropertyDep.track(raw, TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY);
+
+    return raw.map(toReactive);
 }
 
 // in the codebase we enforce es2016, but user code may run in environments
 // higher than that
-type ArrayMethods = keyof Array<any> | 'findLast' | 'findLastIndex'
+type ArrayMethods = keyof Array<any> | 'findLast' | 'findLastIndex';
 
 // instrument functions that read (potentially) all items
 // to take ARRAY_ITERATE dependency
@@ -350,9 +348,9 @@ function apply(
     args?: IArguments,
 )
 {
-    const arr = shallowReadArray(self)
-    const needsWrap = arr !== self
-    const methodFn = arr[method]
+    const arr = shallowReadArray(self);
+    const needsWrap = arr !== self;
+    const methodFn = arr[method];
 
     // #11759
     // If the method being called is from a user-extended Array, the arguments will be unknown
@@ -360,29 +358,32 @@ function apply(
     // handling and directly call apply with self.
     if (methodFn !== Array.prototype[method as any])
     {
-        const result = methodFn.apply(self, args)
-        return needsWrap ? toReactive(result) : result
+        const result = methodFn.apply(self, args);
+
+        return needsWrap ? toReactive(result) : result;
     }
 
-    let wrappedFn = fn
+    let wrappedFn = fn;
     if (arr !== self)
     {
         if (needsWrap)
         {
             wrappedFn = function (this: unknown, item, index)
             {
-                return fn.call(this, toReactive(item), index, self)
-            }
-        } else if (fn.length > 2)
+                return fn.call(this, toReactive(item), index, self);
+            };
+        }
+        else if (fn.length > 2)
         {
             wrappedFn = function (this: unknown, item, index)
             {
-                return fn.call(this, item, index, self)
-            }
+                return fn.call(this, item, index, self);
+            };
         }
     }
-    const result = methodFn.call(arr, wrappedFn, thisArg)
-    return needsWrap && wrappedRetFn ? wrappedRetFn(result) : result
+    const result = methodFn.call(arr, wrappedFn, thisArg);
+
+    return needsWrap && wrappedRetFn ? wrappedRetFn(result) : result;
 }
 
 // instrument reduce and reduceRight to take ARRAY_ITERATE dependency
@@ -393,16 +394,17 @@ function reduce(
     args: unknown[],
 )
 {
-    const arr = shallowReadArray(self)
-    let wrappedFn = fn
+    const arr = shallowReadArray(self);
+    let wrappedFn = fn;
     if (arr !== self)
     {
         wrappedFn = function (this: unknown, acc, item, index)
         {
-            return fn.call(this, acc, toReactive(item), index, self)
-        }
+            return fn.call(this, acc, toReactive(item), index, self);
+        };
     }
-    return (arr[method] as any)(wrappedFn, ...args)
+
+    return (arr[method] as any)(wrappedFn, ...args);
 }
 
 // instrument identity-sensitive methods to account for reactive proxies
@@ -412,19 +414,20 @@ function searchProxy(
     args: unknown[],
 )
 {
-    const arr = toRaw(self) as any
-    PropertyDep.track(arr, TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY)
+    const arr = toRaw(self) as any;
+    PropertyDep.track(arr, TrackOpTypes.ITERATE, ARRAY_ITERATE_KEY);
     // we run the method using the original args first (which may be reactive)
-    const res = arr[method](...args)
+    const res = arr[method](...args);
 
     // if that didn't work, run it again using raw values.
     if ((res === -1 || res === false) && isProxy(args[0]))
     {
-        args[0] = toRaw(args[0])
-        return arr[method](...args)
+        args[0] = toRaw(args[0]);
+
+        return arr[method](...args);
     }
 
-    return res
+    return res;
 }
 
 // instrument length-altering mutation methods to avoid length being tracked
@@ -435,10 +438,11 @@ function noTracking(
     args: unknown[] = [],
 )
 {
-    startBatch()
-    Dep.pauseTracking()
-    const res = (toRaw(self) as any)[method].apply(self, args)
-    Dep.resetTracking()
-    endBatch()
-    return res
+    startBatch();
+    Dep.pauseTracking();
+    const res = (toRaw(self) as any)[method].apply(self, args);
+    Dep.resetTracking();
+    endBatch();
+
+    return res;
 }
