@@ -26,8 +26,6 @@ export function updateResults(result: {
 
     document.getElementById('vue-time').textContent = vueResult.time;
     document.getElementById('vue-values').textContent = vueResult.values.join(', ');
-    document.getElementById('feng3d-结论').textContent = 结论?.feng3d ?? "未提供";
-    document.getElementById('vue-结论').textContent = 结论?.vue ?? "未提供";
 }
 
 function unescapeUnicode(escapedStr)
