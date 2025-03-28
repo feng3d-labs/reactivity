@@ -1,9 +1,5 @@
-import { assert, describe, expect, test } from 'vitest';
-import { computed, effect, reactive } from '../src';
-import { isProxy, isReactive } from '../src/reactive';
-import { isRef, ref } from '../src/ref';
-import { toRaw } from '../src/shared/general';
-const { ok, equal, deepEqual } = assert;
+import { describe, expect, test } from 'vitest';
+import { computed, effect, isProxy, isReactive, isRef, reactive, ref, toRaw } from '../src';
 
 describe('reactivity/reactive', () =>
 {

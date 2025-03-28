@@ -1,8 +1,5 @@
 import { describe, expect, it, test, vi } from 'vitest';
-import { computed, effect, reactive, ref } from '../src';
-import { RefReactivity } from '../src/ref';
-import { ComputedDep } from '../src/computed';
-import { Dep } from '../src/dep';
+import { Computed, computed, ComputedDep, Dep, effect, reactive, ref, RefReactivity } from '../src';
 
 describe('reactivity/computed', () =>
 {
@@ -346,8 +343,8 @@ describe('reactivity/computed', () =>
     it('should chained recursive effects clear dirty after trigger', () =>
     {
         const v = ref(1);
-        const c1 = computed(() => v.value) as ComputedDep;
-        const c2 = computed(() => c1.value) as ComputedDep;
+        const c1 = computed(() => v.value) as Computed;
+        const c2 = computed(() => c1.value) as Computed;
 
         c2.value;
         expect(c1['_isDirty']).toBeFalsy();
@@ -602,13 +599,13 @@ describe('reactivity/computed', () =>
         const spy1 = vi.fn();
         const spy2 = vi.fn();
 
-        let c: ComputedDep;
+        let c: Computed;
         effect(() =>
         {
             spy1();
             Dep.pauseTracking();
             n.value;
-            c = computed(() => n.value + 1) as ComputedDep;
+            c = computed(() => n.value + 1) as Computed;
             // access computed now to force refresh
             c.value;
             effect(() => spy2(c.value));
@@ -798,7 +795,7 @@ describe('reactivity/computed', () =>
     {
         const base = ref(1);
         const trigger = ref(true);
-        const computeds: ComputedDep<number>[] = [];
+        const computeds: Computed<number>[] = [];
 
         const LAYERS = 30;
 
@@ -808,7 +805,7 @@ describe('reactivity/computed', () =>
 
             computeds.push(
                 computed(() =>
-                    base.value + earlier.reduce((sum, c) => sum + c.value, 0)) as ComputedDep,
+                    base.value + earlier.reduce((sum, c) => sum + c.value, 0)) as Computed,
             );
         }
 

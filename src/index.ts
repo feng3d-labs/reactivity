@@ -1,8 +1,7 @@
-export { computed } from './computed';
-export { effect } from './effect';
-export { reactive } from './reactive';
-export { ref } from './ref';
-
-export { isReactive } from './reactive';
-
+export { batchRun, endBatch, startBatch } from './batch';
+export { ComputedDep, computed, type Computed } from './computed';
+export { Dep } from './dep';
+export { EffectDep, effect, type Effect } from './effect';
+export { isProxy, isReactive, reactive, type Reactive } from './reactive';
+export { RefReactivity, isRef, ref, type Ref } from './ref';
 export { toRaw } from './shared/general';

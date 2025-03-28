@@ -1,9 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { toRaw } from '../src';
-import { type ComputedDep, computed } from '../src/computed';
-import { effect } from '../src/effect';
-import { isReactive, reactive } from '../src/reactive';
-import { isRef, ref } from '../src/ref';
+import { computed, effect, isReactive, isRef, reactive, ref, toRaw } from '../src';
 
 describe('reactivity/reactive/Array', () =>
 {
