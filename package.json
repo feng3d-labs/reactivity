@@ -1,7 +1,7 @@
 {
   "name": "@feng3d/reactivity",
   "type": "module",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "反应式",
   "homepage": "https://feng3d.com/reactivity",
   "main": "./src/index.ts",
