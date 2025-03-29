@@ -34,7 +34,7 @@ describe('reactivity/effect', () =>
     it('should handle multiple effects', () =>
     {
         let dummy1; let
-dummy2;
+            dummy2;
         const counter = reactive({ num: 0 });
         effect(() => (dummy1 = counter.num));
         effect(() => (dummy2 = counter.num));
@@ -120,7 +120,7 @@ dummy2;
     it('should observe inherited property accessors', () =>
     {
         let dummy; let parentDummy; let
-hiddenValue: any;
+            hiddenValue: any;
         const obj = reactive<{ prop?: number }>({});
         const parent = reactive({
             set prop(value)
@@ -226,7 +226,7 @@ hiddenValue: any;
     {
         const key = Symbol('symbol keyed prop');
         let dummy; let
-hasDummy;
+            hasDummy;
         const obj = reactive<{ [key]?: string }>({ [key]: 'value' });
         effect(() => (dummy = obj[key]));
         effect(() => (hasDummy = key in obj));
@@ -340,7 +340,7 @@ hasDummy;
     it('should not observe set operations without a value change', () =>
     {
         let hasDummy; let
-getDummy;
+            getDummy;
         const obj = reactive({ prop: 'value' });
 
         const getSpy = vi.fn(() => (getDummy = obj.prop));
@@ -382,7 +382,7 @@ getDummy;
     it('should not be triggered by inherited raw setters', () =>
     {
         let dummy; let parentDummy; let
-hiddenValue: any;
+            hiddenValue: any;
         const obj = reactive<{ prop?: number }>({});
         const parent = reactive({
             set prop(value)
@@ -531,7 +531,7 @@ hiddenValue: any;
         {
             dummy = obj.run ? obj.prop : 'other';
         });
-        const e = effect(conditionalSpy);
+        effect(conditionalSpy);
 
         expect(dummy).toBe('value');
         expect(conditionalSpy).toHaveBeenCalledTimes(1);
@@ -549,7 +549,7 @@ hiddenValue: any;
         const effects: { fx: Effect; index: number }[] = [];
         for (let i = 1; i < 40; i++)
         {
-             ((index) =>
+            ((index) =>
             {
                 const fx = effect(() =>
                 {
@@ -796,7 +796,7 @@ hiddenValue: any;
     {
         const observed: any = reactive([1]);
         let dummy; let
-record;
+            record;
         effect(() =>
         {
             dummy = observed.length;
