@@ -63,7 +63,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
 
     /**
      * 版本号。
-     * 
+     *
      * 重新计算后自动递增。用于判断子节点中的父节点引用是否过期。
      *
      * @private
@@ -178,6 +178,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
             {
                 // 子节点变化，需要重新计算。
                 isChanged = true;
+
                 return;
             }
         });
