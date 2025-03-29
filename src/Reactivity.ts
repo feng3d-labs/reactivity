@@ -34,7 +34,7 @@ export class Reactivity<T = any>
      *
      * @private
      */
-    _parents = new Set<ComputedReactivity>();
+    _parents = new Map<ComputedReactivity, number>();
 
     /**
      * 捕捉。
@@ -49,7 +49,7 @@ export class Reactivity<T = any>
         const parent = Reactivity.activeReactivity;
         if (parent)
         {
-            this._parents.add(parent);
+            this._parents.set(parent, parent._version);
         }
     }
 
@@ -63,8 +63,10 @@ export class Reactivity<T = any>
         // 冒泡到所有父节点，设置失效子节点链表。
         if (this._parents.size > 0)
         {
-            this._parents.forEach((parent) =>
+            this._parents.forEach((version, parent) =>
             {
+                if (parent._version !== version) return;
+
                 parent.trigger();
                 // 失效时添加子节点到父节点的子节点表尾。
                 const node: ReactivityLink = { node: this, value: this._value, next: undefined };

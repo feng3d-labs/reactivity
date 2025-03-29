@@ -55,7 +55,7 @@ export function batchRun<T>(fn: () => T): T
             while (node)
             {
                 // 修复与子节点关系
-                node.node._parents.add(dep);
+                node.node._parents.set(dep, dep._version);
                 //
                 node = node.next;
             }

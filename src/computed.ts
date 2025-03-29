@@ -78,6 +78,8 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      */
     _isDirty = true;
 
+    _version = -1;
+
     /**
      * 创建计算依赖。
      * @param func 检测的可能包含响应式的函数。
@@ -154,6 +156,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
             this._isDirty = false;
 
             //
+            this._version++;
             this.run();
         }
     }
@@ -192,7 +195,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
             // 修复与子节点关系
             for (let node = this._childrenHead; node; node = node.next)
             {
-                node.node._parents.add(this);
+                node.node._parents.set(this, this._version);
             }
         }
 
