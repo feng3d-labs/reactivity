@@ -72,9 +72,9 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
 
     /**
      * 获取值。
-     * 
+     *
      * 取值时将会建立与父节点的依赖关系。
-     * 
+     *
      * 同时会检查子节点是否发生变化，如果发生变化，则重新计算。
      */
     get value(): T
