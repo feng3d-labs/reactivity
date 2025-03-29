@@ -102,6 +102,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      */
     trigger(): void
     {
+        // 正在运行时被触发，需要在运行结束后修复父子节点关系。
         if (Reactivity.activeReactivity === this)
         {
             batch(this, Reactivity.activeReactivity === this);
