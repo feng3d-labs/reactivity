@@ -47,27 +47,11 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
     protected _func: (oldValue?: T) => T;
 
     /**
-     * 失效子节点表头。
-     *
-     * @private
-     *
-     * ### 注意
-     * （综合性能远大于全量链表与字典）为了性能，选择使用失效子节点链表形式放弃使用全量子节点链表与字典形式维护子节点。
-     *
-     * ### 存在隐患
-     * 1. 存在过期子节点还会引用父节点情况，会导致过期的触发（可能影响性能）。
-     * 2. 只能按照触发时顺序遍历失效子节点，无法按照捕获时顺序遍历失效子节点（可能影响性能）。
-     */
-    _childrenHead: ReactivityLink;
-
-    /**
-     * 失效子节点表尾。
-     *
-     * 用于新增失效子节点到表尾。
+     * 失效子节点。
      *
      * @private
      */
-    _childrenTail: ReactivityLink;
+    _children = new Map<Reactivity, any>();
 
     /**
      * 是否脏，是否需要重新计算。
@@ -78,6 +62,13 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      */
     _isDirty = true;
 
+    /**
+     * 版本号。
+     * 
+     * 重新计算后自动递增。用于判断子节点中的父节点引用是否过期。
+     *
+     * @private
+     */
     _version = -1;
 
     /**
@@ -132,6 +123,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
             // 设置当前节点为活跃节点。
             Reactivity.activeReactivity = this as any;
 
+            this._version++;
             this._value = this._func(this._value);
 
             // 执行完毕后恢复父节点。
@@ -156,7 +148,6 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
             this._isDirty = false;
 
             //
-            this._version++;
             this.run();
         }
     }
@@ -166,7 +157,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      */
     protected isChildrenChanged()
     {
-        if (!this._childrenHead) return false;
+        if (this._children.size === 0) return false;
 
         // 检查是否存在子节点发生变化。
         let isChanged = false;
@@ -176,16 +167,16 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
         Reactivity.activeReactivity = null;
 
         // 检查子节点是否发生变化。
-        for (let node = this._childrenHead; node; node = node.next)
+        this._children.forEach((value, node) =>
         {
-            const oldValue = node.value;
-            const newValue = node.node.value;
-            if (hasChanged(oldValue, newValue))
+            if(isChanged) return;
+            if ( node.value !== value)
             {
+                // 子节点变化，需要重新计算。
                 isChanged = true;
-                break;
+                return;
             }
-        }
+        });
 
         // 恢复父节点。
         Reactivity.activeReactivity = preReactiveNode;
@@ -193,15 +184,14 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
         if (!isChanged)
         {
             // 修复与子节点关系
-            for (let node = this._childrenHead; node; node = node.next)
+            this._children.forEach((version, node) =>
             {
-                node.node._parents.set(this, this._version);
-            }
+                node._parents.set(this, this._version);
+            });
         }
 
         // 清空子节点。
-        this._childrenHead = undefined;
-        this._childrenTail = undefined;
+        this._children.clear();
 
         return isChanged;
     }

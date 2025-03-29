@@ -61,29 +61,17 @@ export class Reactivity<T = any>
     trigger()
     {
         // 冒泡到所有父节点，设置失效子节点链表。
-        if (this._parents.size > 0)
+        this._parents.forEach((version, parent) =>
         {
-            this._parents.forEach((version, parent) =>
-            {
-                if (parent._version !== version) return;
+            if (parent._version !== version) return;
 
-                parent.trigger();
-                // 失效时添加子节点到父节点的子节点表尾。
-                const node: ReactivityLink = { node: this, value: this._value, next: undefined };
-                if (parent._childrenTail)
-                {
-                    parent._childrenTail.next = node;
-                    parent._childrenTail = parent._childrenTail.next;
-                }
-                else
-                {
-                    parent._childrenHead = parent._childrenTail = node;
-                }
-            });
+            parent.trigger();
+            // 失效时添加子节点到父节点中。
+            parent._children.set(this, this._value);
+        });
 
-            //
-            this._parents.clear();
-        }
+        //
+        this._parents.clear();
     }
 
     /**
