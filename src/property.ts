@@ -105,6 +105,8 @@ export class PropertyReactivity<T, K extends keyof T> extends Reactivity<T>
      */
     static track(target: object, type: TrackOpTypes, key: unknown): void
     {
+        if (!Reactivity.activeReactivity) return;
+
         const dep = property(target as any, key as any);
 
         // 取值，建立依赖关系。

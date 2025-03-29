@@ -43,7 +43,7 @@ export class Reactivity<T = any>
      */
     track()
     {
-        if (!_shouldTrack) return;
+        if (!Reactivity.activeReactivity || !_shouldTrack) return;
 
         // 连接父节点和子节点。
         const parent = Reactivity.activeReactivity;

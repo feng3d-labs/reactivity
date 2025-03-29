@@ -491,8 +491,8 @@ describe('reactivity/collections', () =>
     it('should trigger Set.has only once for non-reactive keys', () =>
     {
       const [proxy, spy] = coverCollectionFn(new Set(), 'has');
-      proxy.has('foo'); // 与 @vue/reactivity 不同，初始化时会触发一次 has，此处在调用一次。
-      expect(spy).toBeCalledTimes(2);
+      proxy.has('foo');
+      expect(spy).toBeCalledTimes(1);
     });
 
     it('should trigger Set.add only once for non-reactive keys', () =>

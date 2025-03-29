@@ -1,6 +1,5 @@
 import { batch } from './batch';
-import { Reactivity, ReactivityLink, forceTrack } from './Reactivity';
-import { hasChanged } from './shared/general';
+import { Reactivity, forceTrack } from './Reactivity';
 
 /**
  * 创建计算反应式对象。
@@ -72,6 +71,22 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
     _version = -1;
 
     /**
+     * 获取值。
+     * 
+     * 取值时将会建立与父节点的依赖关系。
+     * 
+     * 同时会检查子节点是否发生变化，如果发生变化，则重新计算。
+     */
+    get value(): T
+    {
+        this.runIfDirty();
+
+        this.track();
+
+        return this._value;
+    }
+
+    /**
      * 创建计算依赖。
      * @param func 检测的可能包含响应式的函数。
      */
@@ -79,18 +94,6 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
     {
         super();
         this._func = func;
-    }
-
-    /**
-     * 捕捉。
-     *
-     * 建立与父节点的依赖关系。
-     */
-    track()
-    {
-        this.runIfDirty();
-
-        super.track();
     }
 
     /**
@@ -170,8 +173,8 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
         // 检查子节点是否发生变化。
         this._children.forEach((value, node) =>
         {
-            if(isChanged) return;
-            if ( node.value !== value)
+            if (isChanged) return;
+            if (node.value !== value)
             {
                 // 子节点变化，需要重新计算。
                 isChanged = true;
