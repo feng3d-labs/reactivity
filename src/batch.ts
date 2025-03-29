@@ -51,16 +51,12 @@ export function batchRun<T>(fn: () => T): T
             // 此时依赖以及子依赖都已经运行过了，只需修复与子节点关系。
             __DEV__ && console.assert(dep._isDirty === false, 'dep.dirty === false');
 
-            let node = dep._childrenHead;
-            while (node)
+            // 修复与子节点关系
+            dep._children.forEach((version, node) =>
             {
-                // 修复与子节点关系
-                node.node._parents.add(dep);
-                //
-                node = node.next;
-            }
-            dep._childrenHead = undefined;
-            dep._childrenTail = undefined;
+                node._parents.set(dep, dep._version);
+            });
+            dep._children.clear();
         });
         _isRunedDeps.length = 0;
     }

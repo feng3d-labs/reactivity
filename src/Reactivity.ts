@@ -26,6 +26,15 @@ export class Reactivity<T = any>
     _value: T;
 
     /**
+     * 版本号。
+     * 
+     * 重新计算后自动递增。用于判断子节点中的父节点引用是否过期。
+     *
+     * @private
+     */
+    _version = -1;
+
+    /**
      * 父反应节点。
      *
      * 记录了哪些节点调用了当前节点。
@@ -34,7 +43,7 @@ export class Reactivity<T = any>
      *
      * @private
      */
-    _parents = new Set<ComputedReactivity>();
+    _parents = new Map<ComputedReactivity, number>();
 
     /**
      * 捕捉。
@@ -49,7 +58,7 @@ export class Reactivity<T = any>
         const parent = Reactivity.activeReactivity;
         if (parent)
         {
-            this._parents.add(parent);
+            this._parents.set(parent, parent._version);
         }
     }
 
@@ -61,27 +70,17 @@ export class Reactivity<T = any>
     trigger()
     {
         // 冒泡到所有父节点，设置失效子节点链表。
-        if (this._parents.size > 0)
+        this._parents.forEach((version, parent) =>
         {
-            this._parents.forEach((parent) =>
-            {
-                parent.trigger();
-                // 失效时添加子节点到父节点的子节点表尾。
-                const node: ReactivityLink = { node: this, value: this._value, next: undefined };
-                if (parent._childrenTail)
-                {
-                    parent._childrenTail.next = node;
-                    parent._childrenTail = parent._childrenTail.next;
-                }
-                else
-                {
-                    parent._childrenHead = parent._childrenTail = node;
-                }
-            });
+            if (parent._version !== version) return;
 
-            //
-            this._parents.clear();
-        }
+            parent.trigger();
+            // 失效时添加子节点到父节点中。
+            parent._children.set(this, this._version);
+        });
+
+        //
+        this._parents.clear();
     }
 
     /**
