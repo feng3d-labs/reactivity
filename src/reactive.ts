@@ -10,6 +10,10 @@ import { getTargetType, isObject, Target } from './shared/general';
  *
  * @param target 被响应式的对象。
  * @returns 响应式代理对象。
+ * 
+ * 注意：
+ * 
+ * 扩大被反应式的对象的类型范围，只有`Object.isExtensible`不通过的对象不被响应化。Float32Array等都允许被响应化。
  */
 export function reactive<T extends object>(target: T): Reactive<T>
 {

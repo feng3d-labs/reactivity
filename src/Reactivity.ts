@@ -56,11 +56,11 @@ export class Reactivity<T = any>
     /**
      * 触发。
      *
-     * 冒泡到所有父节点，设置失效子节点链表。
+     * 冒泡到所有父节点，设置失效子节点字典。
      */
     trigger()
     {
-        // 冒泡到所有父节点，设置失效子节点链表。
+        // 冒泡到所有父节点，设置失效子节点字典。
         this._parents.forEach((version, parent) =>
         {
             if (parent._version !== version) return;

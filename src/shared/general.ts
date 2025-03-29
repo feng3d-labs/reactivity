@@ -47,7 +47,7 @@ function targetTypeMap(rawType: string)
         case 'WeakSet':
             return TargetType.COLLECTION;
         default:
-            return TargetType.INVALID;
+            return TargetType.COMMON;
     }
 }
 

@@ -96,9 +96,9 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
     /**
      * 触发。
      *
-     * 冒泡到所有父节点，设置失效子节点链表。
+     * 冒泡到所有父节点，设置失效子节点字典。
      *
-     * 把触发节点添加到失效子节点链表队列中。
+     * 把触发节点添加到失效子节点字典队列中。
      */
     trigger(): void
     {
@@ -139,7 +139,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      */
     runIfDirty()
     {
-        // 检查是否存在失效子节点链表。
+        // 检查是否存在失效子节点字典。
         this._isDirty = this._isDirty || this.isChildrenChanged();
 
         // 标记为脏的情况下，执行计算。
