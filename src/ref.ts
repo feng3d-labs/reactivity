@@ -59,8 +59,6 @@ export class RefReactivity<T = any> extends Reactivity<T> implements Ref<T>
         {
             this.trigger();
 
-            this._version++;
-
             this._rawValue = newValue;
             this._value = toReactive(newValue);
         });

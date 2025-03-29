@@ -51,7 +51,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      *
      * @private
      */
-    _children = new Map<Reactivity, number>();
+    _children = new Map<Reactivity, any>();
 
     /**
      * 是否脏，是否需要重新计算。
@@ -61,6 +61,15 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      * @private
      */
     _isDirty = true;
+
+    /**
+     * 版本号。
+     * 
+     * 重新计算后自动递增。用于判断子节点中的父节点引用是否过期。
+     *
+     * @private
+     */
+    _version = -1;
 
     /**
      * 创建计算依赖。
@@ -158,15 +167,12 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
         Reactivity.activeReactivity = null;
 
         // 检查子节点是否发生变化。
-        this._children.forEach((version, node) =>
+        this._children.forEach((value, node) =>
         {
             if(isChanged) return;
-            // 检查子节点是否过期。
-            node.value; // 更新值。
-            //
-            if (node._version !== version)
+            if ( node.value !== value)
             {
-                // 子节点过期，需要重新计算。
+                // 子节点变化，需要重新计算。
                 isChanged = true;
                 return;
             }

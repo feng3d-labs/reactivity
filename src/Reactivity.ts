@@ -26,15 +26,6 @@ export class Reactivity<T = any>
     _value: T;
 
     /**
-     * 版本号。
-     * 
-     * 重新计算后自动递增。用于判断子节点中的父节点引用是否过期。
-     *
-     * @private
-     */
-    _version = -1;
-
-    /**
      * 父反应节点。
      *
      * 记录了哪些节点调用了当前节点。
@@ -76,7 +67,7 @@ export class Reactivity<T = any>
 
             parent.trigger();
             // 失效时添加子节点到父节点中。
-            parent._children.set(this, this._version);
+            parent._children.set(this, this._value);
         });
 
         //

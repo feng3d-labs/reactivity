@@ -60,7 +60,6 @@ export class PropertyReactivity<T, K extends keyof T> extends Reactivity<T>
         if (v === this._value) return;
         // 触发属性的变化。
         this.trigger();
-        this._version++;
         this._value = v;
     }
 
