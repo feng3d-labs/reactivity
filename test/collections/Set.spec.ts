@@ -6,8 +6,9 @@ describe('reactivity/collections', () =>
   function coverCollectionFn(collection: Set<any>, fnName: string)
   {
     const spy = vi.fn();
-    const proxy = reactive(collection)
-      ; (collection as any)[fnName] = () => spy();
+    const proxy = reactive(collection);
+
+    (collection as any)[fnName] = spy;
 
     return [proxy as any, spy];
   }
