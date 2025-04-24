@@ -1,0 +1,197 @@
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>@feng3d/reactivity</title><meta name="description" content="Documentation for @feng3d/reactivity"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script defer src="assets/main.js"></script><script async src="assets/search.js" id="tsd-search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container">
+<div class="table-cell" id="tsd-search" data-base=".">
+<div class="field"><label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
+<div class="field">
+<div id="tsd-toolbar-links"></div></div>
+<ul class="results">
+<li class="state loading">Preparing search index...</li>
+<li class="state failure">The search index is not available</li></ul><a href="index.html" class="title">@feng3d/reactivity</a></div>
+<div class="table-cell" id="tsd-widgets"><a href="#" class="tsd-widget tsd-toolbar-icon menu no-caption" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="7" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="11" width="14" height="2" fill="var(--color-text)"></rect></svg></a></div></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<h2>@feng3d/reactivity</h2></div>
+<div class="tsd-panel tsd-typography"><a id="md:feng3dreactivity" class="tsd-anchor"></a><h1><a href="#md:feng3dreactivity">@feng3d/reactivity</a></h1><p>feng3d的响应式库，使用方式以及API与@vue/reactivity基本保持一致。</p>
+<p>源码：<a href="https://gitee.com/feng3d/reactivity">https://gitee.com/feng3d/reactivity</a></p>
+<p>文档：<a href="https://feng3d.com/reactivity">https://feng3d.com/reactivity</a></p>
+<a id="md:网站" class="tsd-anchor"></a><h2><a href="#md:网站">网站</a></h2><p><a href="https://feng3d.com/reactivity">https://feng3d.com/reactivity</a></p>
+<a id="md:安装" class="tsd-anchor"></a><h2><a href="#md:安装">安装</a></h2><pre><code><span class="hl-0">npm</span><span class="hl-1"> </span><span class="hl-0">install</span><span class="hl-1"> @</span><span class="hl-0">feng3d</span><span class="hl-1">/</span><span class="hl-0">reactivity</span>
+</code><button>Copy</button></pre>
+<a id="md:快速开始" class="tsd-anchor"></a><h2><a href="#md:快速开始">快速开始</a></h2><pre><code class="language-ts"><span class="hl-2">import</span><span class="hl-1"> { </span><span class="hl-0">ref</span><span class="hl-1">, </span><span class="hl-0">computed</span><span class="hl-1"> } </span><span class="hl-2">from</span><span class="hl-1"> </span><span class="hl-3">&quot;@feng3d/reactivity&quot;</span><span class="hl-1">;</span><br/><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">a</span><span class="hl-1"> = </span><span class="hl-6">ref</span><span class="hl-1">(</span><span class="hl-7">1</span><span class="hl-1">);</span><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">b</span><span class="hl-1"> = </span><span class="hl-6">ref</span><span class="hl-1">(</span><span class="hl-7">2</span><span class="hl-1">);</span><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">c</span><span class="hl-1"> = </span><span class="hl-6">computed</span><span class="hl-1">(() </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-0">a</span><span class="hl-1">.</span><span class="hl-0">value</span><span class="hl-1"> + </span><span class="hl-0">b</span><span class="hl-1">.</span><span class="hl-0">value</span><span class="hl-1">);</span><br/><br/><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-6">log</span><span class="hl-1">(</span><span class="hl-0">c</span><span class="hl-1">.</span><span class="hl-0">value</span><span class="hl-1">); </span><span class="hl-8">// 3</span><br/><span class="hl-0">a</span><span class="hl-1">.</span><span class="hl-0">value</span><span class="hl-1"> = </span><span class="hl-7">3</span><span class="hl-1">;</span><br/><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-6">log</span><span class="hl-1">(</span><span class="hl-0">c</span><span class="hl-1">.</span><span class="hl-0">value</span><span class="hl-1">); </span><span class="hl-8">// 5</span>
+</code><button>Copy</button></pre>
+<a id="md:缘由" class="tsd-anchor"></a><h2><a href="#md:缘由">缘由</a></h2><p>在feng3d引擎中使用<code>@vue/reactivity</code>代替<code>@feng3d/watcher</code>来维护数据驱动功能时发现性能严重下降。</p>
+<p>为了解决这个问题，我重新实现了一个响应式库，并且在性能上进行了优化。</p>
+<a id="md:问题示例" class="tsd-anchor"></a><h3><a href="#md:问题示例">问题示例</a></h3><p>示例： <a href="https://feng3d.com/reactivity/#%E5%A4%8D%E6%9D%82%E6%83%85%E5%86%B5%E5%8F%96%E5%80%BC">https://feng3d.com/reactivity/#复杂情况取值</a></p>
+<table>
+<thead>
+<tr>
+<th>运行库</th>
+<th>性能(ms)</th>
+<th>速度(x)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>@feng3d/reactivity</td>
+<td>2.8</td>
+<td>286</td>
+</tr>
+<tr>
+<td>@vue/reactivity</td>
+<td>801</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<a id="md:测试代码" class="tsd-anchor"></a><h3><a href="#md:测试代码">测试代码</a></h3><pre><code class="language-ts"><span class="hl-6">复杂情况取值</span><span class="hl-1">(</span><span class="hl-0">ref</span><span class="hl-1">, </span><span class="hl-0">computed</span><span class="hl-1">, </span><span class="hl-7">10000</span><span class="hl-1">);</span><br/><br/><span class="hl-2">export</span><span class="hl-1"> </span><span class="hl-4">function</span><span class="hl-1"> </span><span class="hl-6">复杂情况取值</span><span class="hl-1">(</span><span class="hl-6">ref</span><span class="hl-1">: &lt;</span><span class="hl-9">T</span><span class="hl-1">&gt;(</span><span class="hl-0">value</span><span class="hl-1">?: </span><span class="hl-9">T</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> { </span><span class="hl-0">value</span><span class="hl-1">: </span><span class="hl-9">T</span><span class="hl-1"> }, </span><span class="hl-6">computed</span><span class="hl-1">: &lt;</span><span class="hl-9">T</span><span class="hl-1">&gt;(</span><span class="hl-6">func</span><span class="hl-1">: (</span><span class="hl-0">oldValue</span><span class="hl-1">?: </span><span class="hl-9">T</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-9">T</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> { </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-0">value</span><span class="hl-1">: </span><span class="hl-9">T</span><span class="hl-1"> }, </span><span class="hl-0">count</span><span class="hl-1">: </span><span class="hl-9">number</span><span class="hl-1">)</span><br/><span class="hl-1">{</span><br/><span class="hl-1">    </span><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">result</span><span class="hl-1"> = { </span><span class="hl-0">time:</span><span class="hl-1"> </span><span class="hl-4">undefined</span><span class="hl-1">, </span><span class="hl-0">values:</span><span class="hl-1"> [] };</span><br/><br/><span class="hl-1">    </span><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">b</span><span class="hl-1"> = </span><span class="hl-6">ref</span><span class="hl-1">(</span><span class="hl-7">2</span><span class="hl-1">);</span><br/><br/><span class="hl-1">    </span><span class="hl-4">function</span><span class="hl-1"> </span><span class="hl-6">递归</span><span class="hl-1">(</span><span class="hl-0">depth</span><span class="hl-1"> = </span><span class="hl-7">10</span><span class="hl-1">)</span><br/><span class="hl-1">    {</span><br/><span class="hl-1">        </span><span class="hl-2">if</span><span class="hl-1"> (</span><span class="hl-0">depth</span><span class="hl-1"> &lt;= </span><span class="hl-7">0</span><span class="hl-1">) </span><span class="hl-2">return</span><span class="hl-1"> </span><span class="hl-6">computed</span><span class="hl-1">(() </span><span class="hl-4">=&gt;</span><br/><span class="hl-1">        {</span><br/><span class="hl-1">            </span><span class="hl-2">return</span><span class="hl-1"> </span><span class="hl-0">b</span><span class="hl-1">.</span><span class="hl-0">value</span><br/><span class="hl-1">        }).</span><span class="hl-0">value</span><span class="hl-1">;</span><br/><br/><span class="hl-1">        </span><span class="hl-2">return</span><span class="hl-1"> </span><span class="hl-6">computed</span><span class="hl-1">(() </span><span class="hl-4">=&gt;</span><br/><span class="hl-1">        {</span><br/><span class="hl-1">            </span><span class="hl-2">return</span><span class="hl-1"> </span><span class="hl-6">递归</span><span class="hl-1">(</span><span class="hl-0">depth</span><span class="hl-1"> - </span><span class="hl-7">1</span><span class="hl-1">) + </span><span class="hl-6">递归</span><span class="hl-1">(</span><span class="hl-0">depth</span><span class="hl-1"> - </span><span class="hl-7">2</span><span class="hl-1">);</span><br/><span class="hl-1">        }).</span><span class="hl-0">value</span><span class="hl-1">;</span><br/><span class="hl-1">    }</span><br/><br/><span class="hl-1">    </span><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">cb</span><span class="hl-1"> = </span><span class="hl-6">computed</span><span class="hl-1">(() </span><span class="hl-4">=&gt;</span><br/><span class="hl-1">    {</span><br/><span class="hl-1">        </span><span class="hl-2">return</span><span class="hl-1"> </span><span class="hl-6">递归</span><span class="hl-1">(</span><span class="hl-7">16</span><span class="hl-1">);</span><br/><span class="hl-1">    });</span><br/><br/><span class="hl-1">    </span><span class="hl-0">b</span><span class="hl-1">.</span><span class="hl-0">value</span><span class="hl-1">++;</span><br/><span class="hl-1">    </span><span class="hl-0">cb</span><span class="hl-1">.</span><span class="hl-0">value</span><span class="hl-1">;</span><br/><br/><span class="hl-1">    </span><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">start</span><span class="hl-1"> = </span><span class="hl-0">performance</span><span class="hl-1">.</span><span class="hl-6">now</span><span class="hl-1">();</span><br/><span class="hl-1">    </span><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-4">let</span><span class="hl-1"> </span><span class="hl-0">i</span><span class="hl-1"> = </span><span class="hl-7">0</span><span class="hl-1">; </span><span class="hl-0">i</span><span class="hl-1"> &lt; </span><span class="hl-0">count</span><span class="hl-1">; </span><span class="hl-0">i</span><span class="hl-1">++)</span><br/><span class="hl-1">    {</span><br/><span class="hl-1">        </span><span class="hl-6">ref</span><span class="hl-1">(</span><span class="hl-7">1</span><span class="hl-1">).</span><span class="hl-0">value</span><span class="hl-1">++; </span><span class="hl-8">// 添加此行代码将会导致 @vue/reactivity 版本的性能下降，而 @feng3d/reactivity 版本的性能保持不变</span><br/><br/><span class="hl-1">        </span><span class="hl-0">cb</span><span class="hl-1">.</span><span class="hl-0">value</span><span class="hl-1">;</span><br/><span class="hl-1">    }</span><br/><span class="hl-1">    </span><span class="hl-0">result</span><span class="hl-1">.</span><span class="hl-0">time</span><span class="hl-1"> = </span><span class="hl-0">performance</span><span class="hl-1">.</span><span class="hl-6">now</span><span class="hl-1">() - </span><span class="hl-0">start</span><span class="hl-1">;</span><br/><br/><span class="hl-1">    </span><span class="hl-0">result</span><span class="hl-1">.</span><span class="hl-0">values</span><span class="hl-1">.</span><span class="hl-6">push</span><span class="hl-1">(</span><span class="hl-0">cb</span><span class="hl-1">.</span><span class="hl-0">value</span><span class="hl-1">);</span><br/><br/><span class="hl-1">    </span><span class="hl-2">return</span><span class="hl-1"> </span><span class="hl-0">result</span><span class="hl-1">;</span><br/><span class="hl-1">}</span>
+</code><button>Copy</button></pre>
+<a id="md:分析" class="tsd-anchor"></a><h3><a href="#md:分析">分析</a></h3><p>@feng3d/reactivity自下而上的使用脏标记进行维护状态，当发生变化时只会冒泡一次到父节点，全局有变化时（ref(1).value++ 标记变化）并不会触发重新计算。
+@vue/reactivity自上而下的使用版本号进行维护状态，当全局有变化时（ref(1).value++ 标记变化）每次取值时都会遍历整个树的子节点比对版本号判断是否需要重新计算。</p>
+<a id="md:性能情况" class="tsd-anchor"></a><h2><a href="#md:性能情况">性能情况</a></h2><a id="md:使用不同方式维护子节点" class="tsd-anchor"></a><h3><a href="#md:使用不同方式维护子节点">使用不同方式维护子节点</a></h3><p>// 修改第一个元素 <code>arr[0].value++;</code></p>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>性能(ms)</th>
+<th>速度(x)</th>
+<th>隐患</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>失效子节点字典</td>
+<td>126</td>
+<td>8.8</td>
+<td>当节点失效时无法完全清除子节点，并且无法保障检查节点的顺序，导致触发过时的依赖性能或许更差，但一般情况性能最佳。</td>
+</tr>
+<tr>
+<td>全量子节点链表</td>
+<td>679</td>
+<td>1.6</td>
+<td>无</td>
+</tr>
+<tr>
+<td>全量子节点字典</td>
+<td>1110</td>
+<td>1</td>
+<td>无</td>
+</tr>
+<tr>
+<td>@vue/reactivity</td>
+<td>216</td>
+<td>5.1</td>
+<td>无</td>
+</tr>
+</tbody></table>
+<p>// 修改最后一个元素 <code>arr[9999].value++</code></p>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>性能(ms)</th>
+<th>速度(x)</th>
+<th>隐患</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>失效子节点字典</td>
+<td>125</td>
+<td>9.68</td>
+<td>当节点失效时无法完全清除子节点，并且无法保障检查节点的顺序，导致触发过时的依赖性能或许更差，但一般情况性能最佳。</td>
+</tr>
+<tr>
+<td>全量子节点链表</td>
+<td>730</td>
+<td>1.65</td>
+<td>无</td>
+</tr>
+<tr>
+<td>全量子节点字典</td>
+<td>1210</td>
+<td>1</td>
+<td>无</td>
+</tr>
+<tr>
+<td>@vue/reactivity</td>
+<td>253</td>
+<td>4.78</td>
+<td>无</td>
+</tr>
+</tbody></table>
+<pre><code class="language-ts"><span class="hl-2">import</span><span class="hl-1"> { </span><span class="hl-0">computed</span><span class="hl-1">, </span><span class="hl-0">ref</span><span class="hl-1"> } </span><span class="hl-2">from</span><span class="hl-1"> </span><span class="hl-3">&quot;@feng3d/reactivity&quot;</span><span class="hl-1">;</span><br/><br/><span class="hl-6">数组取值</span><span class="hl-1">(</span><span class="hl-0">ref</span><span class="hl-1">, </span><span class="hl-0">computed</span><span class="hl-1">, </span><span class="hl-7">1000</span><span class="hl-1">)</span><br/><br/><span class="hl-2">export</span><span class="hl-1"> </span><span class="hl-4">function</span><span class="hl-1"> </span><span class="hl-6">数组取值</span><span class="hl-1">(</span><span class="hl-6">ref</span><span class="hl-1">: &lt;</span><span class="hl-9">T</span><span class="hl-1">&gt;(</span><span class="hl-0">value</span><span class="hl-1">?: </span><span class="hl-9">T</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> { </span><span class="hl-0">value</span><span class="hl-1">: </span><span class="hl-9">T</span><span class="hl-1"> }, </span><span class="hl-6">computed</span><span class="hl-1">: &lt;</span><span class="hl-9">T</span><span class="hl-1">&gt;(</span><span class="hl-6">func</span><span class="hl-1">: (</span><span class="hl-0">oldValue</span><span class="hl-1">?: </span><span class="hl-9">T</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-9">T</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> { </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-0">value</span><span class="hl-1">: </span><span class="hl-9">T</span><span class="hl-1"> },</span><span class="hl-0">count</span><span class="hl-1">: </span><span class="hl-9">number</span><span class="hl-1">)</span><br/><span class="hl-1">{</span><br/><span class="hl-1">    </span><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">result</span><span class="hl-1"> = { </span><span class="hl-0">time:</span><span class="hl-1"> </span><span class="hl-4">undefined</span><span class="hl-1">, </span><span class="hl-0">values:</span><span class="hl-1"> [] };</span><br/><br/><span class="hl-1">    </span><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">arr</span><span class="hl-1">:{</span><br/><span class="hl-1">        </span><span class="hl-0">value</span><span class="hl-1">: </span><span class="hl-9">number</span><span class="hl-1">;</span><br/><span class="hl-1">    }[] = </span><span class="hl-4">new</span><span class="hl-1"> </span><span class="hl-6">Array</span><span class="hl-1">(</span><span class="hl-7">10000</span><span class="hl-1">).</span><span class="hl-6">fill</span><span class="hl-1">(</span><span class="hl-7">0</span><span class="hl-1">).</span><span class="hl-6">map</span><span class="hl-1">(() </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-6">ref</span><span class="hl-1">(</span><span class="hl-7">0</span><span class="hl-1">));</span><br/><br/><span class="hl-1">    </span><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">cb</span><span class="hl-1"> = </span><span class="hl-6">computed</span><span class="hl-1">(() </span><span class="hl-4">=&gt;</span><br/><span class="hl-1">    {</span><br/><span class="hl-1">        </span><span class="hl-2">return</span><span class="hl-1"> </span><span class="hl-0">arr</span><span class="hl-1">.</span><span class="hl-6">reduce</span><span class="hl-1">((</span><span class="hl-0">prev</span><span class="hl-1">, </span><span class="hl-0">curr</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-0">prev</span><span class="hl-1"> + </span><span class="hl-0">curr</span><span class="hl-1">.</span><span class="hl-0">value</span><span class="hl-1">, </span><span class="hl-7">0</span><span class="hl-1">);</span><br/><span class="hl-1">    });</span><br/><br/><span class="hl-1">    </span><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">start</span><span class="hl-1"> = </span><span class="hl-0">performance</span><span class="hl-1">.</span><span class="hl-6">now</span><span class="hl-1">();</span><br/><span class="hl-1">    </span><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-4">let</span><span class="hl-1"> </span><span class="hl-0">i</span><span class="hl-1"> = </span><span class="hl-7">0</span><span class="hl-1">; </span><span class="hl-0">i</span><span class="hl-1"> &lt; </span><span class="hl-0">count</span><span class="hl-1">; </span><span class="hl-0">i</span><span class="hl-1">++)</span><br/><span class="hl-1">    {</span><br/><span class="hl-1">        </span><span class="hl-8">// arr[0].value++; // 修改第一个元素</span><br/><span class="hl-1">        </span><span class="hl-0">arr</span><span class="hl-1">[</span><span class="hl-7">9999</span><span class="hl-1">].</span><span class="hl-0">value</span><span class="hl-1">++; </span><span class="hl-8">// 修改最后一个元素</span><br/><span class="hl-1">        </span><span class="hl-0">cb</span><span class="hl-1">.</span><span class="hl-0">value</span><span class="hl-1">;</span><br/><span class="hl-1">    }</span><br/><span class="hl-1">    </span><span class="hl-0">result</span><span class="hl-1">.</span><span class="hl-0">time</span><span class="hl-1"> = </span><span class="hl-0">performance</span><span class="hl-1">.</span><span class="hl-6">now</span><span class="hl-1">() - </span><span class="hl-0">start</span><span class="hl-1">;</span><br/><br/><span class="hl-1">    </span><span class="hl-0">result</span><span class="hl-1">.</span><span class="hl-0">values</span><span class="hl-1">.</span><span class="hl-6">push</span><span class="hl-1">(</span><span class="hl-0">cb</span><span class="hl-1">.</span><span class="hl-0">value</span><span class="hl-1">);</span><br/><br/><span class="hl-1">    </span><span class="hl-2">return</span><span class="hl-1"> </span><span class="hl-0">result</span><span class="hl-1">;</span><br/><span class="hl-1">}</span><br/>
+</code><button>Copy</button></pre>
+<a id="md:为了库的简单易用性不支持以下内容" class="tsd-anchor"></a><h2><a href="#md:为了库的简单易用性不支持以下内容">为了库的简单易用性不支持以下内容</a></h2><ul>
+<li>markRaw</li>
+<li>shallowRef</li>
+<li>shallowReactive</li>
+<li>shallowReadonly</li>
+<li>readonly</li>
+<li>computed 中 setter</li>
+<li>__v_skip</li>
+</ul>
+<a id="md:扩展" class="tsd-anchor"></a><h2><a href="#md:扩展">扩展</a></h2><ul>
+<li>扩大被反应式的对象的类型范围，只有<code>Object.isExtensible</code>不通过的对象不被响应化。Float32Array等都允许被响应化。</li>
+</ul>
+</div></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
+<h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.93896 8.531L12 15.591L19.061 8.531L16.939 6.409L12 11.349L7.06098 6.409L4.93896 8.531Z" fill="var(--color-text)" id="icon-chevronDown"></path></svg>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility">
+<h4 class="uppercase">Member Visibility</h4><form>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-private" name="private"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Private</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></form></div>
+<div class="tsd-theme-toggle">
+<h4 class="uppercase">Theme</h4><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-index-accordion tsd-page-navigation"><summary class="tsd-accordion-summary">
+<h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><use href="#icon-chevronDown"></use></svg>On This Page</h3></summary>
+<div class="tsd-accordion-details">
+<ul>
+<li>
+<ul>
+<li><a href="#md:feng3dreactivity"><span>@feng3d/reactivity</span></a></li>
+<li>
+<ul>
+<li><a href="#md:网站"><span>网站</span></a></li>
+<li><a href="#md:安装"><span>安装</span></a></li>
+<li><a href="#md:快速开始"><span>快速开始</span></a></li>
+<li><a href="#md:缘由"><span>缘由</span></a></li>
+<li>
+<ul>
+<li><a href="#md:问题示例"><span>问题示例</span></a></li>
+<li><a href="#md:测试代码"><span>测试代码</span></a></li>
+<li><a href="#md:分析"><span>分析</span></a></li></ul></li>
+<li><a href="#md:性能情况"><span>性能情况</span></a></li>
+<li>
+<ul>
+<li><a href="#md:使用不同方式维护子节点"><span>使用不同方式维护子节点</span></a></li></ul></li>
+<li><a href="#md:为了库的简单易用性不支持以下内容"><span>为了库的简单易用性不支持以下内容</span></a></li>
+<li><a href="#md:扩展"><span>扩展</span></a></li></ul></li></ul></li></ul></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="modules.html" class="current"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-4"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-namespace)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.33 16V7.24H10.77L13.446 14.74C13.43 14.54 13.41 14.296 13.386 14.008C13.37 13.712 13.354 13.404 13.338 13.084C13.33 12.756 13.326 12.448 13.326 12.16V7.24H14.37V16H12.93L10.266 8.5C10.282 8.692 10.298 8.936 10.314 9.232C10.33 9.52 10.342 9.828 10.35 10.156C10.366 10.476 10.374 10.784 10.374 11.08V16H9.33Z" fill="var(--color-text)"></path></g></svg><span>@feng3d/reactivity</span></a>
+<ul class="tsd-small-nested-navigation">
+<li><a href="classes/ComputedDep.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-128"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-class)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M11.898 16.1201C11.098 16.1201 10.466 15.8961 10.002 15.4481C9.53803 15.0001 9.30603 14.3841 9.30603 13.6001V9.64012C9.30603 8.85612 9.53803 8.24012 10.002 7.79212C10.466 7.34412 11.098 7.12012 11.898 7.12012C12.682 7.12012 13.306 7.34812 13.77 7.80412C14.234 8.25212 14.466 8.86412 14.466 9.64012H13.386C13.386 9.14412 13.254 8.76412 12.99 8.50012C12.734 8.22812 12.37 8.09212 11.898 8.09212C11.426 8.09212 11.054 8.22412 10.782 8.48812C10.518 8.75212 10.386 9.13212 10.386 9.62812V13.6001C10.386 14.0961 10.518 14.4801 10.782 14.7521C11.054 15.0161 11.426 15.1481 11.898 15.1481C12.37 15.1481 12.734 15.0161 12.99 14.7521C13.254 14.4801 13.386 14.0961 13.386 13.6001H14.466C14.466 14.3761 14.234 14.9921 13.77 15.4481C13.306 15.8961 12.682 16.1201 11.898 16.1201Z" fill="var(--color-text)"></path></g></svg><span>Computed<wbr/>Dep</span></a></li>
+<li><a href="classes/Dep.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-128"></use></svg><span>Dep</span></a></li>
+<li><a href="classes/EffectDep.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-128"></use></svg><span>Effect<wbr/>Dep</span></a></li>
+<li><a href="classes/RefReactivity.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-128"></use></svg><span>Ref<wbr/>Reactivity</span></a></li>
+<li><a href="interfaces/Computed.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-256"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-interface)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.51 16V15.016H11.298V8.224H9.51V7.24H14.19V8.224H12.402V15.016H14.19V16H9.51Z" fill="var(--color-text)"></path></g></svg><span>Computed</span></a></li>
+<li><a href="interfaces/Effect.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Effect</span></a></li>
+<li><a href="interfaces/Ref.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Ref</span></a></li>
+<li><a href="types/Reactive.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-4194304"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-type-alias)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M11.31 16V8.224H8.91V7.24H14.79V8.224H12.39V16H11.31Z" fill="var(--color-text)"></path></g></svg><span>Reactive</span></a></li>
+<li><a href="functions/batchRun.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-64"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-function)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.39 16V7.24H14.55V8.224H10.446V11.128H14.238V12.112H10.47V16H9.39Z" fill="var(--color-text)"></path></g></svg><span>batch<wbr/>Run</span></a></li>
+<li><a href="functions/computed-1.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>computed</span></a></li>
+<li><a href="functions/effect-1.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>effect</span></a></li>
+<li><a href="functions/forceTrack.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>force<wbr/>Track</span></a></li>
+<li><a href="functions/isProxy.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Proxy</span></a></li>
+<li><a href="functions/isReactive.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Reactive</span></a></li>
+<li><a href="functions/isRef.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Ref</span></a></li>
+<li><a href="functions/noTrack.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>no<wbr/>Track</span></a></li>
+<li><a href="functions/reactive-1.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>reactive</span></a></li>
+<li><a href="functions/ref-1.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>ref</span></a></li>
+<li><a href="functions/toRaw.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>to<wbr/>Raw</span></a></li></ul></nav></div></div></div>
+<div class="tsd-generator">
+<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></div>
+<div class="overlay"></div></body></html>
