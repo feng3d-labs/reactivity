@@ -22,7 +22,7 @@ type UnReadonly<T> = {
  *
  * 1. 扩大被反应式的对象的类型范围，只有`Object.isExtensible`不通过的对象不被响应化。Float32Array等都允许被响应化。
  * 2. 被反应式的对象的只读属性也会被标记为可编辑。希望被反应对象属性一般为只读属性，通过反应式来改变属性值，同时又通过反应式系统来处理其更改后响应逻辑。
- * 
+ *
  */
 export function reactive<T extends object>(target: T): UnReadonly<Reactive<T>>
 {
