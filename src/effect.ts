@@ -44,11 +44,21 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
         this.runIfDirty();
     }
 
+    /**
+     * 暂停效果。
+     *
+     * 暂停后，当依赖发生变化时不会自动执行。
+     */
     pause()
     {
         this._isEnable = false;
     }
 
+    /**
+     * 恢复效果。
+     *
+     * 恢复后，当依赖发生变化时会自动执行。
+     */
     resume()
     {
         if (this._isEnable) return;
@@ -60,12 +70,22 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
         }
     }
 
+    /**
+     * 停止效果。
+     *
+     * 停止后，效果将不再响应依赖的变化。
+     */
     stop()
     {
         this._isEnable = false;
         EffectReactivity.pausedQueueEffects.delete(this);
     }
 
+    /**
+     * 触发效果执行。
+     *
+     * 当依赖发生变化时，会调用此方法。
+     */
     trigger()
     {
         batchRun(() =>
