@@ -7,11 +7,28 @@ import { isProxy, toReactive } from './reactive';
 import { ARRAY_ITERATE_KEY, TrackOpTypes } from './shared/constants';
 import { isArray, toRaw } from './shared/general';
 
+/**
+ * 数组方法增强对象。
+ * 
+ * 为数组提供响应式增强的方法实现，包括：
+ * 1. 迭代器方法：Symbol.iterator、entries、keys、values
+ * 2. 查找方法：includes、indexOf、lastIndexOf、find、findIndex、findLast、findLastIndex
+ * 3. 遍历方法：forEach、map、filter、some、every、reduce、reduceRight
+ * 4. 修改方法：push、pop、shift、unshift、splice、toReversed、toSorted、toSpliced
+ * 5. 其他方法：concat、join
+ */
 export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     __proto__: null,
 
     /**
-     * 返回一个迭代器，用于遍历数组的响应式值
+     * 返回一个迭代器，用于遍历数组的响应式值。
+     * 
+     * 实现了以下功能：
+     * 1. 创建数组的迭代器
+     * 2. 自动将迭代的值转换为响应式
+     * 3. 自动追踪数组的访问
+     * 
+     * @returns 数组的迭代器
      */
     [Symbol.iterator]()
     {
@@ -19,7 +36,15 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 连接数组并返回新数组，处理响应式数组
+     * 连接数组并返回新数组。
+     * 
+     * 实现了以下功能：
+     * 1. 处理响应式数组的连接
+     * 2. 自动将参数中的数组转换为响应式
+     * 3. 保持原始值的引用
+     * 
+     * @param args 要连接的数组或值
+     * @returns 连接后的新数组
      */
     concat(...args: unknown[])
     {
@@ -29,7 +54,14 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 返回一个迭代器，用于遍历数组的键值对，并将值转换为响应式
+     * 返回一个迭代器，用于遍历数组的键值对。
+     * 
+     * 实现了以下功能：
+     * 1. 创建数组的键值对迭代器
+     * 2. 自动将值转换为响应式
+     * 3. 自动追踪数组的访问
+     * 
+     * @returns 数组的键值对迭代器
      */
     entries()
     {
@@ -42,7 +74,17 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 测试数组中的所有元素是否都通过了指定函数的测试
+     * 测试数组中的所有元素是否都通过了指定函数的测试。
+     * 
+     * 实现了以下功能：
+     * 1. 遍历数组元素
+     * 2. 对每个元素执行测试函数
+     * 3. 自动追踪数组的访问
+     * 4. 处理响应式值的测试
+     * 
+     * @param fn 测试函数
+     * @param thisArg 测试函数的 this 值
+     * @returns 如果所有元素都通过测试则返回 true，否则返回 false
      */
     every(fn: (item: unknown, index: number, array: unknown[]) => unknown,
         thisArg?: unknown,
@@ -52,7 +94,17 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 创建一个新数组，包含通过指定函数测试的所有元素
+     * 创建一个新数组，包含通过指定函数测试的所有元素。
+     * 
+     * 实现了以下功能：
+     * 1. 遍历数组元素
+     * 2. 对每个元素执行测试函数
+     * 3. 自动追踪数组的访问
+     * 4. 自动将结果转换为响应式
+     * 
+     * @param fn 测试函数
+     * @param thisArg 测试函数的 this 值
+     * @returns 包含通过测试的元素的新数组
      */
     filter(fn: (item: unknown, index: number, array: unknown[]) => unknown,
         thisArg?: unknown,
@@ -62,7 +114,17 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 返回数组中满足指定测试函数的第一个元素
+     * 返回数组中满足指定测试函数的第一个元素。
+     * 
+     * 实现了以下功能：
+     * 1. 遍历数组元素
+     * 2. 对每个元素执行测试函数
+     * 3. 自动追踪数组的访问
+     * 4. 自动将结果转换为响应式
+     * 
+     * @param fn 测试函数
+     * @param thisArg 测试函数的 this 值
+     * @returns 第一个满足测试的元素，如果没有则返回 undefined
      */
     find(fn: (item: unknown, index: number, array: unknown[]) => boolean,
         thisArg?: unknown,
@@ -72,7 +134,17 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 返回数组中满足指定测试函数的第一个元素的索引
+     * 返回数组中满足指定测试函数的第一个元素的索引。
+     * 
+     * 实现了以下功能：
+     * 1. 遍历数组元素
+     * 2. 对每个元素执行测试函数
+     * 3. 自动追踪数组的访问
+     * 4. 处理响应式值的查找
+     * 
+     * @param fn 测试函数
+     * @param thisArg 测试函数的 this 值
+     * @returns 第一个满足测试的元素的索引，如果没有则返回 -1
      */
     findIndex(fn: (item: unknown, index: number, array: unknown[]) => boolean,
         thisArg?: unknown,
@@ -82,7 +154,17 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 返回数组中满足指定测试函数的最后一个元素
+     * 返回数组中满足指定测试函数的最后一个元素。
+     * 
+     * 实现了以下功能：
+     * 1. 从后向前遍历数组元素
+     * 2. 对每个元素执行测试函数
+     * 3. 自动追踪数组的访问
+     * 4. 自动将结果转换为响应式
+     * 
+     * @param fn 测试函数
+     * @param thisArg 测试函数的 this 值
+     * @returns 最后一个满足测试的元素，如果没有则返回 undefined
      */
     findLast(fn: (item: unknown, index: number, array: unknown[]) => boolean,
         thisArg?: unknown,
@@ -92,7 +174,17 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 返回数组中满足指定测试函数的最后一个元素的索引
+     * 返回数组中满足指定测试函数的最后一个元素的索引。
+     * 
+     * 实现了以下功能：
+     * 1. 从后向前遍历数组元素
+     * 2. 对每个元素执行测试函数
+     * 3. 自动追踪数组的访问
+     * 4. 处理响应式值的查找
+     * 
+     * @param fn 测试函数
+     * @param thisArg 测试函数的 this 值
+     * @returns 最后一个满足测试的元素的索引，如果没有则返回 -1
      */
     findLastIndex(fn: (item: unknown, index: number, array: unknown[]) => boolean,
         thisArg?: unknown,
@@ -101,10 +193,19 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
         return apply(this, 'findLastIndex', fn, thisArg, undefined, arguments);
     },
 
-    // flat, flatMap could benefit from ARRAY_ITERATE but are not straight-forward to implement
+    // flat, flatMap 可以从 ARRAY_ITERATE 中受益，但实现起来不太直接
 
     /**
-     * 对数组中的每个元素执行指定函数
+     * 对数组中的每个元素执行指定函数。
+     * 
+     * 实现了以下功能：
+     * 1. 遍历数组元素
+     * 2. 对每个元素执行回调函数
+     * 3. 自动追踪数组的访问
+     * 4. 处理响应式值的遍历
+     * 
+     * @param fn 回调函数
+     * @param thisArg 回调函数的 this 值
      */
     forEach(fn: (item: unknown, index: number, array: unknown[]) => unknown,
         thisArg?: unknown,
@@ -114,7 +215,15 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 判断数组是否包含指定元素，处理响应式值
+     * 判断数组是否包含指定元素。
+     * 
+     * 实现了以下功能：
+     * 1. 处理响应式值的查找
+     * 2. 自动追踪数组的访问
+     * 3. 处理代理对象的查找
+     * 
+     * @param args 要查找的元素
+     * @returns 如果数组包含该元素则返回 true，否则返回 false
      */
     includes(...args: unknown[])
     {
@@ -122,7 +231,15 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 返回数组中指定元素第一次出现的索引，处理响应式值
+     * 返回数组中指定元素第一次出现的索引。
+     * 
+     * 实现了以下功能：
+     * 1. 处理响应式值的查找
+     * 2. 自动追踪数组的访问
+     * 3. 处理代理对象的查找
+     * 
+     * @param args 要查找的元素
+     * @returns 元素第一次出现的索引，如果没有则返回 -1
      */
     indexOf(...args: unknown[])
     {
@@ -130,17 +247,33 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 将数组的所有元素连接成一个字符串
+     * 将数组的所有元素连接成一个字符串。
+     * 
+     * 实现了以下功能：
+     * 1. 处理响应式数组的连接
+     * 2. 自动追踪数组的访问
+     * 3. 保持原始值的引用
+     * 
+     * @param separator 分隔符
+     * @returns 连接后的字符串
      */
     join(separator?: string)
     {
         return reactiveReadArray(this).join(separator);
     },
 
-    // keys() iterator only reads `length`, no optimisation required
+    // keys() 迭代器只读取 length，不需要优化
 
     /**
-     * 返回数组中指定元素最后一次出现的索引，处理响应式值
+     * 返回数组中指定元素最后一次出现的索引。
+     * 
+     * 实现了以下功能：
+     * 1. 处理响应式值的查找
+     * 2. 自动追踪数组的访问
+     * 3. 处理代理对象的查找
+     * 
+     * @param args 要查找的元素
+     * @returns 元素最后一次出现的索引，如果没有则返回 -1
      */
     lastIndexOf(...args: unknown[])
     {
@@ -148,7 +281,17 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 创建一个新数组，包含对原数组每个元素调用指定函数的结果
+     * 创建一个新数组，包含对原数组每个元素调用指定函数的结果。
+     * 
+     * 实现了以下功能：
+     * 1. 遍历数组元素
+     * 2. 对每个元素执行映射函数
+     * 3. 自动追踪数组的访问
+     * 4. 处理响应式值的映射
+     * 
+     * @param fn 映射函数
+     * @param thisArg 映射函数的 this 值
+     * @returns 包含映射结果的新数组
      */
     map(fn: (item: unknown, index: number, array: unknown[]) => unknown,
         thisArg?: unknown,
@@ -158,7 +301,14 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 移除数组的最后一个元素并返回该元素，避免跟踪长度变化
+     * 移除数组的最后一个元素并返回该元素。
+     * 
+     * 实现了以下功能：
+     * 1. 移除最后一个元素
+     * 2. 避免跟踪长度变化
+     * 3. 处理响应式值的移除
+     * 
+     * @returns 被移除的元素
      */
     pop()
     {
@@ -166,7 +316,15 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 向数组末尾添加一个或多个元素，并返回新的长度，避免跟踪长度变化
+     * 向数组末尾添加一个或多个元素。
+     * 
+     * 实现了以下功能：
+     * 1. 添加新元素
+     * 2. 避免跟踪长度变化
+     * 3. 处理响应式值的添加
+     * 
+     * @param args 要添加的元素
+     * @returns 数组的新长度
      */
     push(...args: unknown[])
     {
@@ -174,7 +332,17 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 对数组中的每个元素执行累加器函数，并返回最终结果
+     * 对数组中的每个元素执行累加器函数。
+     * 
+     * 实现了以下功能：
+     * 1. 从左到右遍历数组元素
+     * 2. 对每个元素执行累加器函数
+     * 3. 自动追踪数组的访问
+     * 4. 处理响应式值的累加
+     * 
+     * @param fn 累加器函数
+     * @param args 初始值（可选）
+     * @returns 累加的结果
      */
     reduce(fn: (
         acc: unknown,
@@ -189,7 +357,17 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 从右到左对数组中的每个元素执行累加器函数，并返回最终结果
+     * 从右到左对数组中的每个元素执行累加器函数。
+     * 
+     * 实现了以下功能：
+     * 1. 从右到左遍历数组元素
+     * 2. 对每个元素执行累加器函数
+     * 3. 自动追踪数组的访问
+     * 4. 处理响应式值的累加
+     * 
+     * @param fn 累加器函数
+     * @param args 初始值（可选）
+     * @returns 累加的结果
      */
     reduceRight(
         fn: (
@@ -205,17 +383,34 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 移除数组的第一个元素并返回该元素，避免跟踪长度变化
+     * 移除数组的第一个元素并返回该元素。
+     * 
+     * 实现了以下功能：
+     * 1. 移除第一个元素
+     * 2. 避免跟踪长度变化
+     * 3. 处理响应式值的移除
+     * 
+     * @returns 被移除的元素
      */
     shift()
     {
         return noTracking(this, 'shift');
     },
 
-    // slice could use ARRAY_ITERATE but also seems to beg for range tracking
+    // slice 可以使用 ARRAY_ITERATE，但似乎也需要范围追踪
 
     /**
-     * 测试数组中的某些元素是否通过了指定函数的测试
+     * 测试数组中的某些元素是否通过了指定函数的测试。
+     * 
+     * 实现了以下功能：
+     * 1. 遍历数组元素
+     * 2. 对每个元素执行测试函数
+     * 3. 自动追踪数组的访问
+     * 4. 处理响应式值的测试
+     * 
+     * @param fn 测试函数
+     * @param thisArg 测试函数的 this 值
+     * @returns 如果有元素通过测试则返回 true，否则返回 false
      */
     some(
         fn: (item: unknown, index: number, array: unknown[]) => unknown,
@@ -226,7 +421,15 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 通过删除或替换现有元素或添加新元素来修改数组，避免跟踪长度变化
+     * 通过删除或替换现有元素或添加新元素来修改数组。
+     * 
+     * 实现了以下功能：
+     * 1. 修改数组内容
+     * 2. 避免跟踪长度变化
+     * 3. 处理响应式值的修改
+     * 
+     * @param args 要删除的起始索引、要删除的元素数量和要添加的元素
+     * @returns 包含被删除元素的新数组
      */
     splice(...args: unknown[])
     {
@@ -234,7 +437,14 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 返回一个新数组，包含原数组的反转副本
+     * 返回一个新数组，包含原数组的反转副本。
+     * 
+     * 实现了以下功能：
+     * 1. 创建数组的反转副本
+     * 2. 自动将结果转换为响应式
+     * 3. 保持原始值的引用
+     * 
+     * @returns 反转后的新数组
      */
     toReversed()
     {
@@ -243,7 +453,15 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 返回一个新数组，包含原数组的排序副本
+     * 返回一个新数组，包含原数组的排序副本。
+     * 
+     * 实现了以下功能：
+     * 1. 创建数组的排序副本
+     * 2. 自动将结果转换为响应式
+     * 3. 保持原始值的引用
+     * 
+     * @param comparer 比较函数
+     * @returns 排序后的新数组
      */
     toSorted(comparer?: (a: unknown, b: unknown) => number)
     {
@@ -252,16 +470,32 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 返回一个新数组，包含原数组的切片副本
+     * 返回一个新数组，包含原数组的切片副本。
+     * 
+     * 实现了以下功能：
+     * 1. 创建数组的切片副本
+     * 2. 自动将结果转换为响应式
+     * 3. 保持原始值的引用
+     * 
+     * @param args 起始索引和结束索引
+     * @returns 切片后的新数组
      */
     toSpliced(...args: unknown[])
     {
         // @ts-expect-error user code may run in es2016+
-        return (reactiveReadArray(this).toSpliced as any)(...args);
+        return reactiveReadArray(this).toSpliced(...args);
     },
 
     /**
-     * 向数组开头添加一个或多个元素，并返回新的长度，避免跟踪长度变化
+     * 向数组开头添加一个或多个元素。
+     * 
+     * 实现了以下功能：
+     * 1. 添加新元素
+     * 2. 避免跟踪长度变化
+     * 3. 处理响应式值的添加
+     * 
+     * @param args 要添加的元素
+     * @returns 数组的新长度
      */
     unshift(...args: unknown[])
     {
@@ -269,7 +503,14 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 
     /**
-     * 返回一个迭代器，用于遍历数组的响应式值
+     * 返回一个迭代器，用于遍历数组的值。
+     * 
+     * 实现了以下功能：
+     * 1. 创建数组的值迭代器
+     * 2. 自动将迭代的值转换为响应式
+     * 3. 自动追踪数组的访问
+     * 
+     * @returns 数组的值迭代器
      */
     values()
     {
