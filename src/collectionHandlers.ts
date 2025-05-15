@@ -3,10 +3,26 @@ import { ITERATE_KEY, MAP_KEY_ITERATE_KEY, ReactiveFlags, TrackOpTypes, TriggerO
 import { hasChanged, hasOwn, isMap, Target, toRaw, toRawType, warn } from './shared/general';
 import { PropertyReactivity } from './property';
 
+/**
+ * 可变集合响应式处理器。
+ * 
+ * 用于处理集合类型（Map、Set、WeakMap、WeakSet）的响应式代理。
+ * 通过拦截集合的操作方法，实现响应式功能。
+ */
 export const mutableCollectionHandlers: ProxyHandler<CollectionTypes> = {
     get: createInstrumentationGetter(),
 };
 
+/**
+ * 创建集合方法的拦截器。
+ * 
+ * 返回一个 get 拦截器函数，用于：
+ * 1. 处理响应式标识和原始对象获取
+ * 2. 拦截集合的操作方法
+ * 3. 转发其他属性访问
+ * 
+ * @returns 集合方法的拦截器函数
+ */
 function createInstrumentationGetter()
 {
     const instrumentations = createInstrumentations();
@@ -17,15 +33,18 @@ function createInstrumentationGetter()
         receiver: CollectionTypes,
     ) =>
     {
+        // 处理响应式标识
         if (key === ReactiveFlags.IS_REACTIVE)
         {
             return true;
         }
+        // 获取原始对象
         else if (key === ReactiveFlags.RAW)
         {
             return target;
         }
 
+        // 如果方法在增强对象中存在，则使用增强版本
         return Reflect.get(
             hasOwn(instrumentations, key) && key in target
                 ? instrumentations
@@ -36,19 +55,45 @@ function createInstrumentationGetter()
     };
 }
 
+/**
+ * 集合方法增强类型。
+ * 
+ * 定义了所有需要增强的集合方法的类型。
+ */
 type Instrumentations = Record<string | symbol, Function | number>;
 
+/**
+ * 创建集合方法的增强实现。
+ * 
+ * 为集合类型（Map、Set、WeakMap、WeakSet）创建响应式增强方法：
+ * 1. 基本操作：get、set、has、delete、clear
+ * 2. 遍历操作：forEach、keys、values、entries
+ * 3. 大小获取：size
+ * 
+ * @returns 增强后的集合方法对象
+ */
 function createInstrumentations(): Instrumentations
 {
     const instrumentations: Instrumentations = {
+        /**
+         * 获取 Map 中的值。
+         * 
+         * 实现了以下功能：
+         * 1. 支持原始键和响应式键的查找
+         * 2. 自动追踪键的访问
+         * 3. 自动将返回值转换为响应式
+         * 
+         * @param key 要查找的键
+         * @returns 找到的值，如果不存在则返回 undefined
+         */
         get(this: MapTypes, key: unknown)
         {
-            // #1772: readonly(reactive(Map)) should return readonly + reactive version
-            // of the value
+            // #1772: readonly(reactive(Map)) 应该返回只读的响应式值
             const target = this[ReactiveFlags.RAW];
             const rawTarget = toRaw(target);
             const rawKey = toRaw(key);
 
+            // 追踪键的访问
             if (hasChanged(key, rawKey))
             {
                 PropertyReactivity.track(rawTarget, TrackOpTypes.GET, key);
@@ -68,10 +113,18 @@ function createInstrumentations(): Instrumentations
             else if (target !== rawTarget)
             {
                 // #3602 readonly(reactive(Map))
-                // ensure that the nested reactive `Map` can do tracking for itself
+                // 确保嵌套的响应式 Map 可以追踪自身
                 target.get(key);
             }
         },
+
+        /**
+         * 获取集合的大小。
+         * 
+         * 实现了以下功能：
+         * 1. 追踪集合大小的访问
+         * 2. 返回集合的实际大小
+         */
         get size()
         {
             const target = (this as unknown as IterableCollections)[ReactiveFlags.RAW];
@@ -79,12 +132,24 @@ function createInstrumentations(): Instrumentations
 
             return Reflect.get(target, 'size', target);
         },
+
+        /**
+         * 检查集合是否包含某个值。
+         * 
+         * 实现了以下功能：
+         * 1. 支持原始键和响应式键的检查
+         * 2. 自动追踪键的检查
+         * 
+         * @param key 要检查的键
+         * @returns 如果集合包含该键则返回 true，否则返回 false
+         */
         has(this: CollectionTypes, key: unknown): boolean
         {
             const target = this[ReactiveFlags.RAW];
             const rawTarget = toRaw(target);
             const rawKey = toRaw(key);
 
+            // 追踪键的检查
             if (hasChanged(key, rawKey))
             {
                 PropertyReactivity.track(rawTarget, TrackOpTypes.HAS, key);
@@ -95,6 +160,18 @@ function createInstrumentations(): Instrumentations
                 ? target.has(key)
                 : target.has(key) || target.has(rawKey);
         },
+
+        /**
+         * 遍历集合中的所有元素。
+         * 
+         * 实现了以下功能：
+         * 1. 追踪集合的遍历操作
+         * 2. 自动将遍历的值转换为响应式
+         * 3. 保持回调函数的 this 上下文
+         * 
+         * @param callback 遍历回调函数
+         * @param thisArg 回调函数的 this 值
+         */
         forEach(this: IterableCollections, callback: Function, thisArg?: unknown)
         {
             const observed = this;
@@ -104,14 +181,24 @@ function createInstrumentations(): Instrumentations
             PropertyReactivity.track(rawTarget, TrackOpTypes.ITERATE, ITERATE_KEY);
 
             return target.forEach((value: unknown, key: unknown) =>
-
-                // important: make sure the callback is
-                // 1. invoked with the reactive map as `this` and 3rd arg
-                // 2. the value received should be a corresponding reactive/readonly.
+                // 重要：确保回调函数
+                // 1. 使用响应式 map 作为 this 和第三个参数
+                // 2. 接收到的值应该是相应的响应式/只读版本
                 callback.call(thisArg, wrap(value), wrap(key), observed)
             );
         },
 
+        /**
+         * 向 Set 中添加值。
+         * 
+         * 实现了以下功能：
+         * 1. 自动将值转换为原始值
+         * 2. 避免重复添加
+         * 3. 触发添加操作的通知
+         * 
+         * @param value 要添加的值
+         * @returns 集合本身，支持链式调用
+         */
         add(this: SetTypes, value: unknown)
         {
             value = toRaw(value);
@@ -126,6 +213,19 @@ function createInstrumentations(): Instrumentations
 
             return this;
         },
+
+        /**
+         * 设置 Map 中的值。
+         * 
+         * 实现了以下功能：
+         * 1. 自动将值转换为原始值
+         * 2. 支持原始键和响应式键的设置
+         * 3. 触发添加或修改操作的通知
+         * 
+         * @param key 要设置的键
+         * @param value 要设置的值
+         * @returns 集合本身，支持链式调用
+         */
         set(this: MapTypes, key: unknown, value: unknown)
         {
             value = toRaw(value);
@@ -156,6 +256,17 @@ function createInstrumentations(): Instrumentations
 
             return this;
         },
+
+        /**
+         * 从集合中删除值。
+         * 
+         * 实现了以下功能：
+         * 1. 支持原始键和响应式键的删除
+         * 2. 触发删除操作的通知
+         * 
+         * @param key 要删除的键
+         * @returns 如果删除成功则返回 true，否则返回 false
+         */
         delete(this: CollectionTypes, key: unknown)
         {
             const target = toRaw(this);
@@ -172,7 +283,7 @@ function createInstrumentations(): Instrumentations
             }
 
             const oldValue = get ? get.call(target, key) : undefined;
-            // forward the operation before queueing reactions
+            // 在触发反应之前执行操作
             const result = target.delete(key);
             if (hadKey)
             {
@@ -181,6 +292,17 @@ function createInstrumentations(): Instrumentations
 
             return result;
         },
+
+        /**
+         * 清空集合。
+         * 
+         * 实现了以下功能：
+         * 1. 清空集合中的所有元素
+         * 2. 触发清空操作的通知
+         * 3. 在开发模式下保存旧值用于调试
+         * 
+         * @returns 如果清空成功则返回 true，否则返回 false
+         */
         clear(this: IterableCollections)
         {
             const target = toRaw(this);
@@ -190,7 +312,7 @@ function createInstrumentations(): Instrumentations
                     ? new Map(target)
                     : new Set(target)
                 : undefined;
-            // forward the operation before queueing reactions
+            // 在触发反应之前执行操作
             const result = target.clear();
             if (hadItems)
             {
@@ -207,6 +329,7 @@ function createInstrumentations(): Instrumentations
         },
     };
 
+    // 添加迭代器方法
     const iteratorMethods = [
         'keys',
         'values',
@@ -222,6 +345,18 @@ function createInstrumentations(): Instrumentations
     return instrumentations;
 }
 
+/**
+ * 创建迭代器方法。
+ * 
+ * 为集合创建响应式的迭代器方法，包括：
+ * 1. keys() - 返回键的迭代器
+ * 2. values() - 返回值的迭代器
+ * 3. entries() - 返回键值对的迭代器
+ * 4. [Symbol.iterator] - 返回默认迭代器
+ * 
+ * @param method 迭代器方法名
+ * @returns 增强后的迭代器方法
+ */
 function createIterableMethod(method: string | symbol)
 {
     return function (
@@ -238,20 +373,19 @@ function createIterableMethod(method: string | symbol)
         const innerIterator = target[method](...args);
         const wrap = toReactive;
 
+        // 追踪迭代操作
         PropertyReactivity.track(
             rawTarget,
             TrackOpTypes.ITERATE,
             isKeyOnly ? MAP_KEY_ITERATE_KEY : ITERATE_KEY,
         );
 
-        // return a wrapped iterator which returns observed versions of the
-        // values emitted from the real iterator
+        // 返回一个包装的迭代器，它会返回响应式版本的值
         return {
-            // iterator protocol
+            // 迭代器协议
             next()
             {
                 const { value, done } = innerIterator.next();
-
                 return done
                     ? { value, done }
                     : {
@@ -259,7 +393,7 @@ function createIterableMethod(method: string | symbol)
                         done,
                     };
             },
-            // iterable protocol
+            // 可迭代协议
             [Symbol.iterator]()
             {
                 return this;
@@ -268,6 +402,15 @@ function createIterableMethod(method: string | symbol)
     };
 }
 
+/**
+ * 检查键的身份。
+ * 
+ * 在开发模式下检查键的身份，确保不会出现重复的键。
+ * 
+ * @param target 目标集合
+ * @param has 检查方法
+ * @param key 要检查的键
+ */
 function checkIdentityKeys(
     target: CollectionTypes,
     has: (key: unknown) => boolean,
@@ -279,20 +422,53 @@ function checkIdentityKeys(
     {
         const type = toRawType(target);
         warn(
-            `Reactive ${type} contains both the raw and reactive `
-            + `versions of the same object${type === `Map` ? ` as keys` : ``}, `
-            + `which can lead to inconsistencies. `
-            + `Avoid differentiating between the raw and reactive versions `
-            + `of an object and only use the reactive version if possible.`,
+            `Reactive ${type} contains both the raw and reactive ` +
+            `versions of the same object${type === `Map` ? ` as keys` : ``}, ` +
+            `which can lead to inconsistencies. ` +
+            `It is recommended to use only the reactive version.`,
         );
     }
 }
 
+/**
+ * 获取对象的原型。
+ * 
+ * @param v 目标对象
+ * @returns 对象的原型
+ */
 const getProto = <T extends CollectionTypes>(v: T): any => Reflect.getPrototypeOf(v);
 
+/**
+ * 集合类型。
+ * 
+ * 包括可迭代集合和弱引用集合。
+ */
 type CollectionTypes = IterableCollections | WeakCollections;
 
+/**
+ * 可迭代集合类型。
+ * 
+ * 包括 Map 和 Set。
+ */
 type IterableCollections = (Map<any, any> | Set<any>) & Target;
+
+/**
+ * 弱引用集合类型。
+ * 
+ * 包括 WeakMap 和 WeakSet。
+ */
 type WeakCollections = (WeakMap<any, any> | WeakSet<any>) & Target;
+
+/**
+ * Map 类型。
+ * 
+ * 包括 Map 和 WeakMap。
+ */
 type MapTypes = (Map<any, any> | WeakMap<any, any>) & Target;
+
+/**
+ * Set 类型。
+ * 
+ * 包括 Set 和 WeakSet。
+ */
 type SetTypes = (Set<any> | WeakSet<any>) & Target;
