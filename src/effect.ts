@@ -1,5 +1,6 @@
 import { batch, batchRun } from './batch';
 import { ComputedReactivity } from './computed';
+import { activeEffectScope } from './effectScope';
 import { Reactivity } from './Reactivity';
 
 /**
@@ -36,6 +37,10 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
     constructor(func: (oldValue?: T) => T)
     {
         super(func);
+        if (activeEffectScope && activeEffectScope.active)
+        {
+            activeEffectScope.effects.push(this)
+        }
         this.runIfDirty();
     }
 
@@ -53,6 +58,12 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
             EffectReactivity.pausedQueueEffects.delete(this);
             this.trigger();
         }
+    }
+
+    stop()
+    {
+        this._isEnable = false;
+        EffectReactivity.pausedQueueEffects.delete(this);
     }
 
     trigger()
@@ -101,8 +112,14 @@ export interface Effect
      * 暂停。
      */
     pause: () => void;
+
     /**
      * 恢复。
      */
     resume: () => void;
+
+    /**
+     * 停止。
+     */
+    stop: () => void;
 }
