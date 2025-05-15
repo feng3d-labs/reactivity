@@ -277,21 +277,33 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
     },
 };
 
-// instrument iterators to take ARRAY_ITERATE dependency
+/**
+ * 创建数组的迭代器。
+ * 
+ * 实现了以下功能：
+ * 1. 创建数组的迭代器
+ * 2. 自动将迭代的值转换为响应式
+ * 3. 自动追踪数组的访问
+ * 
+ * 注意：在这里获取 ARRAY_ITERATE 依赖并不完全等同于在代理数组上调用迭代。
+ * 创建迭代器时不会访问任何数组属性：
+ * 只有在调用 .next() 时才会访问 length 和索引。
+ * 从极端情况来看，迭代器可以在一个 effect scope 中创建，
+ * 在另一个 scope 中部分迭代，然后在第三个 scope 中继续迭代。
+ * 考虑到 JS 迭代器只能读取一次，这似乎不是一个合理的用例，
+ * 所以这种跟踪简化是可以接受的。
+ * 
+ * @param self 目标数组
+ * @param method 迭代器方法名
+ * @param wrapValue 值包装函数
+ * @returns 数组的迭代器
+ */
 function iterator(
     self: unknown[],
     method: keyof Array<unknown>,
     wrapValue: (value: any) => unknown,
 )
 {
-    // note that taking ARRAY_ITERATE dependency here is not strictly equivalent
-    // to calling iterate on the proxified array.
-    // creating the iterator does not access any array property:
-    // it is only when .next() is called that length and indexes are accessed.
-    // pushed to the extreme, an iterator could be created in one effect scope,
-    // partially iterated in another, then iterated more in yet another.
-    // given that JS iterator can only be read once, this doesn't seem like
-    // a plausible use-case, so this tracking simplification seems ok.
     const arr = shallowReadArray(self);
     const iter = (arr[method] as any)() as IterableIterator<unknown> & {
         _next: IterableIterator<unknown>['next']
@@ -315,7 +327,14 @@ function iterator(
 }
 
 /**
- * 跟踪数组的迭代操作并返回原始数组
+ * 创建数组的浅层响应式副本。
+ * 
+ * 实现了以下功能：
+ * 1. 跟踪数组的迭代操作
+ * 2. 返回原始数组的引用
+ * 
+ * @param arr 目标数组
+ * @returns 数组的浅层响应式副本
  */
 function shallowReadArray<T>(arr: T[]): T[]
 {
@@ -324,6 +343,16 @@ function shallowReadArray<T>(arr: T[]): T[]
     return arr;
 }
 
+/**
+ * 创建数组的深层响应式副本。
+ * 
+ * 实现了以下功能：
+ * 1. 跟踪数组的迭代操作
+ * 2. 递归转换所有值为响应式
+ * 
+ * @param array 目标数组
+ * @returns 数组的深层响应式副本
+ */
 function reactiveReadArray<T>(array: T[]): T[]
 {
     const raw = toRaw(array);
@@ -333,12 +362,35 @@ function reactiveReadArray<T>(array: T[]): T[]
     return raw.map(toReactive);
 }
 
-// in the codebase we enforce es2016, but user code may run in environments
-// higher than that
+/**
+ * 数组方法类型。
+ * 
+ * 包括所有需要增强的数组方法。
+ * 注意：在代码库中我们强制使用 es2016，但用户代码可能在更高版本的环境中运行。
+ */
 type ArrayMethods = keyof Array<any> | 'findLast' | 'findLastIndex';
 
-// instrument functions that read (potentially) all items
-// to take ARRAY_ITERATE dependency
+/**
+ * 应用数组方法。
+ * 
+ * 实现了以下功能：
+ * 1. 调用数组方法
+ * 2. 自动追踪数组的访问
+ * 3. 处理回调函数的执行
+ * 4. 处理返回值的转换
+ * 
+ * 注意：如果调用的方法来自用户扩展的 Array，参数将是未知的
+ * （未知顺序和未知参数类型）。在这种情况下，我们跳过 shallowReadArray
+ * 处理，直接使用 self 调用 apply。
+ * 
+ * @param self 目标数组
+ * @param method 方法名
+ * @param fn 回调函数
+ * @param thisArg 回调函数的 this 值
+ * @param wrappedRetFn 返回值包装函数
+ * @param args 方法参数
+ * @returns 方法的执行结果
+ */
 function apply(
     self: unknown[],
     method: ArrayMethods,
@@ -386,7 +438,20 @@ function apply(
     return needsWrap && wrappedRetFn ? wrappedRetFn(result) : result;
 }
 
-// instrument reduce and reduceRight to take ARRAY_ITERATE dependency
+/**
+ * 应用数组的归约方法。
+ * 
+ * 实现了以下功能：
+ * 1. 调用数组的归约方法
+ * 2. 自动追踪数组的访问
+ * 3. 处理回调函数的执行
+ * 
+ * @param self 目标数组
+ * @param method 方法名
+ * @param fn 归约函数
+ * @param args 方法参数
+ * @returns 归约的结果
+ */
 function reduce(
     self: unknown[],
     method: keyof Array<any>,
@@ -407,7 +472,22 @@ function reduce(
     return (arr[method] as any)(wrappedFn, ...args);
 }
 
-// instrument identity-sensitive methods to account for reactive proxies
+/**
+ * 在数组中搜索元素。
+ * 
+ * 实现了以下功能：
+ * 1. 处理响应式值的搜索
+ * 2. 自动追踪数组的访问
+ * 3. 处理代理对象的搜索
+ * 
+ * 注意：我们首先使用原始参数（可能是响应式的）运行方法。
+ * 如果那不起作用，我们再次使用原始值运行。
+ * 
+ * @param self 目标数组
+ * @param method 方法名
+ * @param args 搜索参数
+ * @returns 搜索的结果
+ */
 function searchProxy(
     self: unknown[],
     method: keyof Array<any>,
@@ -430,8 +510,20 @@ function searchProxy(
     return res;
 }
 
-// instrument length-altering mutation methods to avoid length being tracked
-// which leads to infinite loops in some cases (#2137)
+/**
+ * 执行不跟踪的数组操作。
+ * 
+ * 实现了以下功能：
+ * 1. 执行数组操作
+ * 2. 避免跟踪长度变化
+ * 
+ * 注意：这用于避免在某些情况下（#2137）由于跟踪长度变化而导致的无限循环。
+ * 
+ * @param self 目标数组
+ * @param method 方法名
+ * @param args 方法参数
+ * @returns 操作的执行结果
+ */
 function noTracking(
     self: unknown[],
     method: keyof Array<any>,
