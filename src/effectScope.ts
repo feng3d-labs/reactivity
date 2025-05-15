@@ -1,45 +1,63 @@
 import type { Effect as ReactiveEffect } from './effect'
 
+/**
+ * 当前活动的效果作用域
+ */
 export let activeEffectScope: EffectScope | undefined
 
+/**
+ * 效果作用域类
+ * 
+ * 用于管理一组相关的响应式效果，可以统一控制它们的生命周期。
+ */
 export class EffectScope
 {
     /**
+     * 作用域是否处于活动状态
      * @internal
      */
     private _active = true
     /**
-     * @internal track `on` calls, allow `on` call multiple times
+     * 跟踪 on 方法的调用次数，允许多次调用 on 方法
+     * @internal
      */
     private _on = 0
     /**
+     * 存储当前作用域中的所有效果
      * @internal
      */
     effects: ReactiveEffect[] = []
     /**
+     * 存储清理函数
      * @internal
      */
     cleanups: (() => void)[] = []
 
+    /**
+     * 作用域是否被暂停
+     */
     private _isPaused = false
 
     /**
-     * only assigned by undetached scope
+     * 父作用域，仅由非分离的作用域分配
      * @internal
      */
     parent: EffectScope | undefined
     /**
-     * record undetached scopes
+     * 记录未分离的子作用域
      * @internal
      */
     scopes: EffectScope[] | undefined
     /**
-     * track a child scope's index in its parent's scopes array for optimized
-     * removal
+     * 在父作用域的 scopes 数组中记录子作用域的索引，用于优化移除操作
      * @internal
      */
     private index: number | undefined
 
+    /**
+     * 构造函数
+     * @param detached 是否创建分离的作用域
+     */
     constructor(public detached = false)
     {
         this.parent = activeEffectScope
@@ -52,17 +70,25 @@ export class EffectScope
         }
     }
 
+    /**
+     * 获取作用域是否处于活动状态
+     */
     get active(): boolean
     {
         return this._active
     }
 
+    /**
+     * 暂停作用域
+     * 
+     * 暂停当前作用域及其所有子作用域和效果
+     */
     pause(): void
     {
         if (this._active)
         {
             this._isPaused = true
-            let i, l
+            let i: number, l: number
             if (this.scopes)
             {
                 for (i = 0, l = this.scopes.length; i < l; i++)
@@ -78,7 +104,9 @@ export class EffectScope
     }
 
     /**
-     * Resumes the effect scope, including all child scopes and effects.
+     * 恢复作用域
+     * 
+     * 恢复当前作用域及其所有子作用域和效果
      */
     resume(): void
     {
@@ -87,7 +115,7 @@ export class EffectScope
             if (this._isPaused)
             {
                 this._isPaused = false
-                let i, l
+                let i: number, l: number
                 if (this.scopes)
                 {
                     for (i = 0, l = this.scopes.length; i < l; i++)
@@ -103,6 +131,11 @@ export class EffectScope
         }
     }
 
+    /**
+     * 在作用域中运行函数
+     * @param fn 要运行的函数
+     * @returns 函数的返回值
+     */
     run<T>(fn: () => T): T | undefined
     {
         if (this._active)
@@ -122,9 +155,13 @@ export class EffectScope
         }
     }
 
+    /**
+     * 前一个作用域
+     */
     prevScope: EffectScope | undefined
     /**
-     * This should only be called on non-detached scopes
+     * 激活作用域
+     * 仅应在非分离的作用域上调用
      * @internal
      */
     on(): void
@@ -137,7 +174,8 @@ export class EffectScope
     }
 
     /**
-     * This should only be called on non-detached scopes
+     * 停用作用域
+     * 仅应在非分离的作用域上调用
      * @internal
      */
     off(): void
@@ -149,12 +187,18 @@ export class EffectScope
         }
     }
 
+    /**
+     * 停止作用域
+     * 
+     * 停止当前作用域及其所有子作用域和效果，并执行清理函数
+     * @param fromParent 是否由父作用域调用
+     */
     stop(fromParent?: boolean): void
     {
         if (this._active)
         {
             this._active = false
-            let i, l
+            let i: number, l: number
             for (i = 0, l = this.effects.length; i < l; i++)
             {
                 this.effects[i].stop()
@@ -176,10 +220,10 @@ export class EffectScope
                 this.scopes.length = 0
             }
 
-            // nested scope, dereference from parent to avoid memory leaks
+            // 嵌套作用域，从父作用域中解除引用以避免内存泄漏
             if (!this.detached && this.parent && !fromParent)
             {
-                // optimized O(1) removal
+                // 优化的 O(1) 移除
                 const last = this.parent.scopes!.pop()
                 if (last && last !== this)
                 {
@@ -193,12 +237,11 @@ export class EffectScope
 }
 
 /**
- * Creates an effect scope object which can capture the reactive effects (i.e.
- * computed and watchers) created within it so that these effects can be
- * disposed together. For detailed use cases of this API, please consult its
- * corresponding {@link https://github.com/vuejs/rfcs/blob/master/active-rfcs/0041-reactivity-effect-scope.md | RFC}.
- *
- * @param detached - Can be used to create a "detached" effect scope.
+ * 创建效果作用域对象
+ * 
+ * 可以捕获在其中创建的响应式效果（即计算属性和观察者），以便这些效果可以一起处理。
+ * 
+ * @param detached 是否创建分离的作用域
  * @see {@link https://vuejs.org/api/reactivity-advanced.html#effectscope}
  */
 export function effectScope(detached?: boolean): EffectScope
@@ -207,8 +250,9 @@ export function effectScope(detached?: boolean): EffectScope
 }
 
 /**
- * Returns the current active effect scope if there is one.
- *
+ * 获取当前活动的效果作用域
+ * 
+ * @returns 当前活动的效果作用域，如果没有则返回 undefined
  * @see {@link https://vuejs.org/api/reactivity-advanced.html#getcurrentscope}
  */
 export function getCurrentScope(): EffectScope | undefined
@@ -217,10 +261,12 @@ export function getCurrentScope(): EffectScope | undefined
 }
 
 /**
- * Registers a dispose callback on the current active effect scope. The
- * callback will be invoked when the associated effect scope is stopped.
- *
- * @param fn - The callback function to attach to the scope's cleanup.
+ * 在当前活动的效果作用域上注册清理回调
+ * 
+ * 当关联的效果作用域停止时，将调用此回调函数。
+ * 
+ * @param fn 要附加到作用域清理的回调函数
+ * @param failSilently 是否静默失败
  * @see {@link https://vuejs.org/api/reactivity-advanced.html#onscopedispose}
  */
 export function onScopeDispose(fn: () => void, failSilently = false): void
