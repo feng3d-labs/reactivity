@@ -5,4 +5,5 @@ export { EffectReactivity as EffectDep, effect, type Effect } from './effect';
 export { isProxy, isReactive, reactive, type Reactive } from './reactive';
 export { RefReactivity, isRef, ref, type Ref } from './ref';
 export { toRaw } from './shared/general';
+export { effectScope, getCurrentScope, onScopeDispose, type EffectScope } from './effectScope';
 

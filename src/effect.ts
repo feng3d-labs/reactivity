@@ -33,6 +33,13 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
      */
     private _isEnable = true;
 
+    /**
+     * 是否为暂停, 默认为 false。
+     *
+     * 暂停时，不会执行函数。
+     */
+    private _isPaused = false;
+
     constructor(func: (oldValue?: T) => T)
     {
         super(func);
@@ -42,6 +49,7 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
     pause()
     {
         this._isEnable = false;
+        this._isPaused = true;
     }
 
     resume()
@@ -53,6 +61,7 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
             EffectReactivity.pausedQueueEffects.delete(this);
             this.trigger();
         }
+        this._isPaused = false;
     }
 
     trigger()
