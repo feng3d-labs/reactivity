@@ -536,7 +536,7 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
  * 
  * @param self 目标数组
  * @param method 迭代器方法名
- * @param wrapValue 值包装函数
+ * @param wrapValue 值包装函数，用于将值转换为响应式
  * @returns 数组的迭代器
  */
 function iterator(
@@ -574,6 +574,9 @@ function iterator(
  * 1. 跟踪数组的迭代操作
  * 2. 返回原始数组的引用
  * 
+ * 注意：此函数只跟踪数组的迭代操作，不会递归转换数组中的值。
+ * 主要用于优化性能，避免不必要的响应式转换。
+ * 
  * @param arr 目标数组
  * @returns 数组的浅层响应式副本
  */
@@ -590,6 +593,10 @@ function shallowReadArray<T>(arr: T[]): T[]
  * 实现了以下功能：
  * 1. 跟踪数组的迭代操作
  * 2. 递归转换所有值为响应式
+ * 
+ * 注意：此函数会递归转换数组中的所有值为响应式，
+ * 包括嵌套的数组和对象。这可能会导致性能开销，
+ * 但确保了所有值都是响应式的。
  * 
  * @param array 目标数组
  * @returns 数组的深层响应式副本
@@ -628,7 +635,7 @@ type ArrayMethods = keyof Array<any> | 'findLast' | 'findLastIndex';
  * @param method 方法名
  * @param fn 回调函数
  * @param thisArg 回调函数的 this 值
- * @param wrappedRetFn 返回值包装函数
+ * @param wrappedRetFn 返回值包装函数，用于将返回值转换为响应式
  * @param args 方法参数
  * @returns 方法的执行结果
  */
@@ -686,11 +693,15 @@ function apply(
  * 1. 调用数组的归约方法
  * 2. 自动追踪数组的访问
  * 3. 处理回调函数的执行
+ * 4. 处理响应式值的归约
+ * 
+ * 注意：此函数用于处理 reduce 和 reduceRight 方法，
+ * 确保在归约过程中正确处理响应式值。
  * 
  * @param self 目标数组
- * @param method 方法名
+ * @param method 方法名（'reduce' 或 'reduceRight'）
  * @param fn 归约函数
- * @param args 方法参数
+ * @param args 方法参数，包括初始值（可选）
  * @returns 归约的结果
  */
 function reduce(
@@ -723,11 +734,12 @@ function reduce(
  * 
  * 注意：我们首先使用原始参数（可能是响应式的）运行方法。
  * 如果那不起作用，我们再次使用原始值运行。
+ * 这确保了在搜索响应式值时能够正确处理。
  * 
  * @param self 目标数组
- * @param method 方法名
+ * @param method 方法名（'includes'、'indexOf' 或 'lastIndexOf'）
  * @param args 搜索参数
- * @returns 搜索的结果
+ * @returns 搜索的结果（布尔值或索引）
  */
 function searchProxy(
     self: unknown[],
@@ -757,11 +769,13 @@ function searchProxy(
  * 实现了以下功能：
  * 1. 执行数组操作
  * 2. 避免跟踪长度变化
+ * 3. 在批处理中执行操作
  * 
  * 注意：这用于避免在某些情况下（#2137）由于跟踪长度变化而导致的无限循环。
+ * 通过使用批处理和禁用跟踪，我们可以安全地执行这些操作。
  * 
  * @param self 目标数组
- * @param method 方法名
+ * @param method 方法名（'push'、'pop'、'shift'、'unshift' 或 'splice'）
  * @param args 方法参数
  * @returns 操作的执行结果
  */

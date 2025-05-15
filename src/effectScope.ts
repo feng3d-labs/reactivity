@@ -1,4 +1,5 @@
 import type { Effect as ReactiveEffect } from './effect'
+import { warn } from './shared/general'
 
 /**
  * 当前活动的效果作用域
@@ -151,7 +152,7 @@ export class EffectScope
             }
         } else if (__DEV__)
         {
-            console.warn(`cannot run an inactive effect scope.`)
+            warn(`cannot run an inactive effect scope.`)
         }
     }
 
@@ -276,7 +277,7 @@ export function onScopeDispose(fn: () => void, failSilently = false): void
         activeEffectScope.cleanups.push(fn)
     } else if (__DEV__ && !failSilently)
     {
-        console.warn(
+        warn(
             `onScopeDispose() is called when there is no active effect scope` +
             ` to be associated with.`,
         )
