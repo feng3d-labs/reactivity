@@ -1,9 +1,9 @@
 export { batchRun } from './batch';
-export { computed, ComputedReactivity as ComputedDep, type Computed } from './computed';
-export { effect, EffectReactivity as EffectDep, type Effect } from './effect';
+export { computed, type Computed, type ComputedReactivity } from './computed';
+export { effect, EffectReactivity, type Effect } from './effect';
 export { effectScope, EffectScope, getCurrentScope, onScopeDispose } from './effectScope';
-export { isProxy, isReactive, reactive, type Reactive } from './reactive';
-export { Reactivity as Dep, forceTrack, noTrack } from './Reactivity';
+export { isProxy, isReactive, reactive, UnReadonly, type Reactive } from './reactive';
+export { forceTrack, noTrack, Reactivity } from './Reactivity';
 export { isRef, ref, RefReactivity, type Ref } from './ref';
 export { toRaw } from './shared/general';
 

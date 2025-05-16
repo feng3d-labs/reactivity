@@ -10,7 +10,7 @@ import { getTargetType, isObject, Target } from './shared/general';
  *
  * 用于将只读类型转换为可写类型。
  */
-type UnReadonly<T> = {
+export type UnReadonly<T> = {
     -readonly [P in keyof T]: T[P];
 };
 
@@ -34,7 +34,7 @@ type UnReadonly<T> = {
  * @param target 要转换为响应式的对象
  * @returns 响应式代理对象
  */
-export function reactive<T extends object>(target: T): UnReadonly<Reactive<T>>
+export function reactive<T extends object>(target: T): Reactive<T>
 {
     if (!isObject(target))
     {
@@ -130,7 +130,7 @@ export function isProxy(value: any): boolean
  *
  * 表示一个对象的所有属性都是响应式的。
  */
-export type Reactive<T> = UnwrapRefSimple<T>;
+export type Reactive<T> = UnReadonly<UnwrapRefSimple<T>>;
 
 /**
  * 原始类型。
