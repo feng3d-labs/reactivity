@@ -227,7 +227,7 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
      */
     includes(...args: unknown[])
     {
-        return searchProxy(this, 'includes', args);
+        return searchProxy(this, 'includes' as any, args);
     },
 
     /**
