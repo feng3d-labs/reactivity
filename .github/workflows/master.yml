@@ -1,13 +1,11 @@
-name: Node.js CI
+name: Master Branch CI
 
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
