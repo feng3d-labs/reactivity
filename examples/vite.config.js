@@ -4,6 +4,10 @@ import { resolve } from 'path';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+    // 允许导入 package.json 文件
+    json: {
+        stringify: true,
+    },
     define: {
         __DEV__: process.env.NODE_ENV === 'development' ? true : false,
     },
