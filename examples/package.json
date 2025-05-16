@@ -22,7 +22,7 @@
     "vite": "^6.3.5"
   },
   "dependencies": {
-    "@feng3d/reactivity": "1.0.5",
+    "@feng3d/reactivity": "1.0.6",
     "@vue/reactivity": "^3.5.14"
   }
 }

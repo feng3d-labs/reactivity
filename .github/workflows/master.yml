@@ -22,35 +22,17 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: Install pnpm
-      uses: pnpm/action-setup@v2
-      with:
-        version: 8
-
-    - name: Get pnpm store directory
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-    - name: Setup pnpm cache
-      uses: actions/cache@v3
-      with:
-        path: ${{ env.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
-
     - name: Install dependencies
-      run: pnpm install
+      run: npm install
 
     - name: Run unit tests
-      run: pnpm test
+      run: npm test
 
     - name: Build project
-      run: pnpm run build
+      run: npm run build
 
     - name: docs
-      run: pnpm run docs
+      run: npm run docs
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
@@ -73,7 +55,7 @@ jobs:
       if: steps.check-npm-version.outputs.publish == 'true'
       run: |
         echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-        pnpm run release
+        npm run release
 
     - name: Create git tag
       if: steps.check-npm-version.outputs.publish == 'true'
