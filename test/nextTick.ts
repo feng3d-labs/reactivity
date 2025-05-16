@@ -8,4 +8,4 @@ export function nextTick<T = void, R = void>(
 }
 
 const resolvedPromise = /*@__PURE__*/ Promise.resolve() as Promise<any>
-let currentFlushPromise: Promise<void> | null = null
+const currentFlushPromise: Promise<void> | null = null
