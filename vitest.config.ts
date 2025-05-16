@@ -8,6 +8,6 @@ export default defineConfig({
     // 设置测试环境
     test: {
         globals: true,
-        include: ['test/**/*.spec.ts']
+        include: ['test/**/*.spec.ts'],
     },
 });
