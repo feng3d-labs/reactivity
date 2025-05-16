@@ -6,13 +6,9 @@ import tseslint from 'typescript-eslint';
 import globals from 'globals';
 
 // 导出 ESLint 配置
-export default tseslint.config(
-    // 使用 ESLint 推荐配置
-    eslint.configs.recommended,
-    // 使用 TypeScript ESLint 推荐配置
-    ...tseslint.configs.recommended,
+export default [
+    // 忽略检查的文件和目录
     {
-        // 忽略检查的文件和目录
         ignores: [
             '**/node_modules/**',    // 忽略所有 node_modules 目录
             '**/dist/**',            // 忽略所有 dist 目录
@@ -24,6 +20,12 @@ export default tseslint.config(
             '**/examples/dist/**',          // 忽略 examples 下的 dist
             '**/examples/public/**',        // 忽略 examples 下的 public
         ],
+    },
+    // 使用 ESLint 推荐配置
+    eslint.configs.recommended,
+    // 使用 TypeScript ESLint 推荐配置
+    ...tseslint.configs.recommended,
+    {
         // 语言选项配置
         languageOptions: {
             // 全局变量配置
@@ -154,4 +156,4 @@ export default tseslint.config(
             }],
         },
     },
-);
+];
