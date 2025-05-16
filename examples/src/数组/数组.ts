@@ -1,4 +1,4 @@
-export function 数组取值(ref: <T>(value?: T) => { value: T }, computed: <T>(func: (oldValue?: T) => T) => { readonly value: T },count: number)
+export function 数组取值(ref: <T>(value?: T) => { value: T }, computed: <T>(func: (oldValue?: T) => T) => { readonly value: T }, count: number)
 {
     const result = { time: undefined, values: [] };
 
@@ -12,6 +12,7 @@ export function 数组取值(ref: <T>(value?: T) => { value: T }, computed: <T>(
     });
 
     const start = performance.now();
+
     for (let i = 0; i < count; i++)
     {
         // arr[0].value++; // 修改第一个元素

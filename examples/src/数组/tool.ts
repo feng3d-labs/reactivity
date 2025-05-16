@@ -1,5 +1,3 @@
-
-
 // 更新结果展示
 export function updateResults(result: {
     code: string;
@@ -19,6 +17,7 @@ export function updateResults(result: {
     code = unescapeUnicode(code);
 
     const testCodeElement = document.getElementById('test-code');
+
     testCodeElement.textContent = code;
 
     document.getElementById('feng3d-time').textContent = feng3dResult.time;
@@ -31,6 +30,7 @@ export function updateResults(result: {
 function unescapeUnicode(escapedStr)
 {
     const regex = /\\u([0-9a-fA-F]{4})/g;
+
     return escapedStr.replace(regex, (match, p1) =>
     {
         return String.fromCodePoint(parseInt(p1, 16));

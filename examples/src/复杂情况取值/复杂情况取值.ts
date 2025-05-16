@@ -8,7 +8,7 @@ export function 复杂情况取值(ref: <T>(value?: T) => { value: T }, computed
     {
         if (depth <= 0) return computed(() =>
         {
-            return b.value
+            return b.value;
         }).value;
 
         return computed(() =>
@@ -26,6 +26,7 @@ export function 复杂情况取值(ref: <T>(value?: T) => { value: T }, computed
     cb.value;
 
     const start = performance.now();
+
     for (let i = 0; i < count; i++)
     {
         ref(1).value++; // 添加此行代码将会导致 @vue/reactivity 版本的性能下降，而 @feng3d/reactivity 版本的性能保持不变

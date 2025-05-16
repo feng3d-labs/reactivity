@@ -10,7 +10,7 @@ const globals = () => namespace;
 
 export default defineConfig({
     define: {
-        __DEV__: process.env.NODE_ENV === 'development' ? true : false
+        __DEV__: process.env.NODE_ENV === 'development' ? true : false,
     },
     build: {
         lib: {
@@ -33,7 +33,7 @@ export default defineConfig({
     },
     plugins: [
         shaderToString(),
-    ]
+    ],
 });
 
 function shaderToString()
