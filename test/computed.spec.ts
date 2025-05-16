@@ -7,6 +7,7 @@ describe('reactivity/computed', () =>
     {
         const value = reactive<{ foo?: number }>({});
         const cValue = computed(() => value.foo);
+
         expect(cValue.value).toBe(undefined);
         value.foo = 1;
         expect(cValue.value).toBe(1);
@@ -22,6 +23,7 @@ describe('reactivity/computed', () =>
 
             return count.value;
         });
+
         expect(curValue.value).toBe(0);
         expect(oldValue.value).toBe(undefined);
         count.value++;
@@ -63,6 +65,7 @@ describe('reactivity/computed', () =>
         const value = reactive<{ foo?: number }>({});
         const cValue = computed(() => value.foo);
         let dummy;
+
         effect(() =>
         {
             dummy = cValue.value;
@@ -77,6 +80,7 @@ describe('reactivity/computed', () =>
         const value = reactive({ foo: 0 });
         const c1 = computed(() => value.foo);
         const c2 = computed(() => c1.value + 1);
+
         expect(c2.value).toBe(1);
         expect(c1.value).toBe(0);
         value.foo++;
@@ -94,6 +98,7 @@ describe('reactivity/computed', () =>
         const c2 = computed(getter2);
 
         let dummy;
+
         effect(() =>
         {
             dummy = c2.value;
@@ -118,6 +123,7 @@ describe('reactivity/computed', () =>
         const c2 = computed(getter2);
 
         let dummy;
+
         effect(() =>
         {
             dummy = c1.value + c2.value;
@@ -139,6 +145,7 @@ describe('reactivity/computed', () =>
         const plusOneValues: number[] = [];
         const n = ref(0);
         const plusOne = computed(() => n.value + 1);
+
         effect(() =>
         {
             n.value;
@@ -382,6 +389,7 @@ describe('reactivity/computed', () =>
             return 'foo';
         });
         const c2 = computed(() => v.value + c1.value);
+
         expect(c2.value).toBe('0foo');
         expect(c2.value).toBe('1foo');
     });
@@ -419,6 +427,7 @@ describe('reactivity/computed', () =>
         const src = ref(0);
         const c = computed(() => src.value % 2);
         const spy = vi.fn();
+
         effect(() =>
         {
             spy(c.value);
@@ -600,6 +609,7 @@ describe('reactivity/computed', () =>
         const spy2 = vi.fn();
 
         let c: Computed;
+
         effect(() =>
         {
             spy1();
@@ -636,6 +646,7 @@ describe('reactivity/computed', () =>
 
             return b.value;
         });
+
         effect(() =>
         {
             if (a.value)
@@ -661,6 +672,7 @@ describe('reactivity/computed', () =>
         d.value;
 
         let dummy;
+
         effect(() =>
         {
             spy();
@@ -696,6 +708,7 @@ describe('reactivity/computed', () =>
         const state = reactive({ a: 1 });
         const p = computed(() => state.a + 1);
         const e = effect(() => p.value);
+
         e.pause();
 
         expect(p.value).toBe(2);
@@ -711,6 +724,7 @@ describe('reactivity/computed', () =>
         const p = computed(() =>
             (toggle.value ? state.a : 111));
         const pp = computed(() => state.a);
+
         effect(() => p.value);
 
         expect(pp.value).toBe(1);
@@ -726,6 +740,7 @@ describe('reactivity/computed', () =>
         const c1 = computed(() => obj.foo);
 
         let foo;
+
         effect(() =>
         {
             foo = obj.flag ? (obj.foo, c1.value) : 0;
@@ -763,6 +778,7 @@ describe('reactivity/computed', () =>
                 prop3: computed(() => m.prop2.value + m.prop4.value),
                 prop4: computed(() => m.prop3.value),
             };
+
             effect(() => s.prop1.value);
             effect(() => s.prop2.value);
             effect(() => s.prop3.value);
@@ -777,6 +793,7 @@ describe('reactivity/computed', () =>
         }
 
         const t = performance.now();
+
         start.prop1.value = 4;
         start.prop2.value = 3;
         start.prop3.value = 2;
@@ -784,6 +801,7 @@ describe('reactivity/computed', () =>
         expect(performance.now() - t).toBeLessThan(process.env.CI ? 100 : 30);
 
         const end = layer;
+
         expect([
             end.prop1.value,
             end.prop2.value,
@@ -815,13 +833,16 @@ describe('reactivity/computed', () =>
         );
 
         const t0 = performance.now();
+
         expect(tail.value).toBe(2 ** (LAYERS - 1));
         const t1 = performance.now();
+
         expect(t1 - t0).toBeLessThan(process.env.CI ? 100 : 30);
 
         trigger.value = false;
         expect(tail.value).toBe(0);
         const t2 = performance.now();
+
         expect(t2 - t1).toBeLessThan(process.env.CI ? 100 : 30);
     });
 });

@@ -9,7 +9,7 @@ import { hasChanged, toRaw } from './shared/general';
  *
  * ref 是响应式系统中最基本的响应式对象。
  * 它可以包装任何类型的值，使其成为响应式的。
- * 
+ *
  * 特点：
  * 1. 可以包装任何类型的值
  * 2. 通过 .value 访问和修改值
@@ -31,9 +31,9 @@ export function ref<T>(value?: T): Ref<T>
 
 /**
  * 判断一个对象是否为引用。
- * 
+ *
  * 通过检查对象是否具有 IS_REF 标志来判断。
- * 
+ *
  * @param r 要检查的对象
  * @returns 如果是引用则返回 true，否则返回 false
  */
@@ -45,7 +45,7 @@ export function isRef(r: any): r is Ref
 
 /**
  * 引用反应式节点接口。
- * 
+ *
  * 继承自 Ref 接口，表示这是一个引用反应式节点。
  */
 export interface RefReactivity<T = any> extends Ref<T> { }
@@ -64,14 +64,14 @@ export class RefReactivity<T = any> extends Reactivity<T> implements Ref<T>
 {
     /**
      * 标识这是一个 ref 对象。
-     * 
+     *
      * 用于 isRef 函数判断对象是否为引用。
      */
     public readonly [ReactiveFlags.IS_REF] = true;
 
     /**
      * 获取引用的值。
-     * 
+     *
      * 取值时会：
      * 1. 建立依赖关系
      * 2. 返回当前值
@@ -85,14 +85,14 @@ export class RefReactivity<T = any> extends Reactivity<T> implements Ref<T>
 
     /**
      * 设置引用的值。
-     * 
+     *
      * 设置值时会：
      * 1. 比较新旧值是否发生变化
      * 2. 如果值发生变化，则：
      *    - 触发更新通知
      *    - 更新原始值
      *    - 更新响应式值
-     * 
+     *
      * @param v 要设置的新值
      */
     set value(v: T)
@@ -116,14 +116,14 @@ export class RefReactivity<T = any> extends Reactivity<T> implements Ref<T>
      *
      * 存储未经响应式处理的原始值。
      * 用于比较值是否发生变化。
-     * 
+     *
      * @private
      */
     private _rawValue: T;
 
     /**
      * 创建引用反应式节点。
-     * 
+     *
      * @param value 要包装的值
      */
     constructor(value: T)
@@ -136,7 +136,7 @@ export class RefReactivity<T = any> extends Reactivity<T> implements Ref<T>
 
 /**
  * 引用接口。
- * 
+ *
  * 定义了引用的基本结构：
  * 1. value: 引用的值，可读可写
  * 2. RefSymbol: 用于标识这是一个引用

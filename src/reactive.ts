@@ -7,7 +7,7 @@ import { getTargetType, isObject, Target } from './shared/general';
 
 /**
  * 移除对象属性中的 readonly 关键字。
- * 
+ *
  * 用于将只读类型转换为可写类型。
  */
 type UnReadonly<T> = {
@@ -18,7 +18,7 @@ type UnReadonly<T> = {
  * 创建或者获取响应式对象的代理对象。
  *
  * 将普通对象转换为响应式对象，使其属性可以被追踪和更新。
- * 
+ *
  * 特点：
  * 1. 支持对象和集合类型的响应式转换
  * 2. 自动处理嵌套对象的响应式转换
@@ -48,6 +48,7 @@ export function reactive<T extends object>(target: T): UnReadonly<Reactive<T>>
 
     // 只有特定类型的值可以被观察
     const targetType = getTargetType(target);
+
     if (targetType === TargetType.INVALID)
     {
         return target as any;
@@ -55,6 +56,7 @@ export function reactive<T extends object>(target: T): UnReadonly<Reactive<T>>
 
     // 如果目标已经有对应的代理对象，直接返回
     const existingProxy = reactiveMap.get(target);
+
     if (existingProxy)
     {
         return existingProxy;
@@ -65,6 +67,7 @@ export function reactive<T extends object>(target: T): UnReadonly<Reactive<T>>
         target,
         targetType === TargetType.COLLECTION ? mutableCollectionHandlers : mutableHandlers as any,
     ) as T;
+
     reactiveMap.set(target, proxy);
 
     return proxy as any;
@@ -72,7 +75,7 @@ export function reactive<T extends object>(target: T): UnReadonly<Reactive<T>>
 
 /**
  * 响应式对象缓存映射。
- * 
+ *
  * 用于缓存已创建的响应式代理对象，避免重复创建。
  */
 export const reactiveMap = new WeakMap<Target, any>();
@@ -81,7 +84,7 @@ export const reactiveMap = new WeakMap<Target, any>();
  * 判断一个对象是否为响应式对象。
  *
  * 通过检查对象是否具有 IS_REACTIVE 标志来判断。
- * 
+ *
  * @param value 要检查的对象
  * @returns 如果是响应式对象则返回 true，否则返回 false
  */
@@ -95,7 +98,7 @@ export function isReactive(value: unknown): boolean
  *
  * 如果输入是对象，则将其转换为响应式对象。
  * 如果输入不是对象，则直接返回。
- * 
+ *
  * @param value 要转换的值
  * @returns 转换后的响应式对象或原值
  */
@@ -113,7 +116,7 @@ export const toReactive = <T>(value: T): T =>
  * 判断一个对象是否为代理对象。
  *
  * 通过检查对象是否具有 RAW 标志来判断。
- * 
+ *
  * @param value 要检查的对象
  * @returns 如果是代理对象则返回 true，否则返回 false
  */
@@ -124,21 +127,21 @@ export function isProxy(value: any): boolean
 
 /**
  * 响应式类型。
- * 
+ *
  * 表示一个对象的所有属性都是响应式的。
  */
 export type Reactive<T> = UnwrapRefSimple<T>;
 
 /**
  * 原始类型。
- * 
+ *
  * 包括：字符串、数字、布尔值、大整数、符号、undefined、null。
  */
 type Primitive = string | number | boolean | bigint | symbol | undefined | null;
 
 /**
  * 内置类型。
- * 
+ *
  * 包括：原始类型、函数、日期、错误、正则表达式。
  */
 export type Builtin = Primitive | Function | Date | Error | RegExp;
@@ -147,7 +150,7 @@ export type Builtin = Primitive | Function | Date | Error | RegExp;
  * 用于扩展不被解包的类型。
  *
  * 可以通过声明合并来扩展此接口，添加不需要被解包的类型。
- * 
+ *
  * 示例：
  * ```ts
  * declare module '@vue/reactivity' {
@@ -161,7 +164,7 @@ export interface RefUnwrapBailTypes { }
 
 /**
  * 解包类型。
- * 
+ *
  * 递归地解包响应式对象的类型，包括：
  * 1. 内置类型直接返回
  * 2. Ref 类型解包为内部类型

@@ -39,7 +39,7 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
         super(func);
         if (activeEffectScope && activeEffectScope.active)
         {
-            activeEffectScope.effects.push(this)
+            activeEffectScope.effects.push(this);
         }
         this.runIfDirty();
     }
@@ -103,6 +103,7 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
             }
         });
     }
+
     private static pausedQueueEffects = new WeakSet<EffectReactivity>();
 
     /**

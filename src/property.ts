@@ -13,6 +13,7 @@ import { isArray, isIntegerKey, isMap, isSymbol } from './shared/general';
 function property<T, K extends keyof T>(target: T, key: K)
 {
     let depsMap = PropertyReactivity._targetMap.get(target);
+
     if (!depsMap)
     {
         depsMap = new Map();
@@ -21,6 +22,7 @@ function property<T, K extends keyof T>(target: T, key: K)
 
     //
     let dep = depsMap.get(key);
+
     if (!dep)
     {
         dep = new PropertyReactivity(target, key);
@@ -46,6 +48,7 @@ export class PropertyReactivity<T, K extends keyof T> extends Reactivity<T>
 
         return this._value;
     }
+
     set value(v)
     {
         // 处理特殊字段，这些字段
@@ -112,6 +115,7 @@ export class PropertyReactivity<T, K extends keyof T> extends Reactivity<T>
         // 取值，建立依赖关系。
         dep.track();
     }
+
     /**
      * @private
      */
@@ -130,6 +134,7 @@ export class PropertyReactivity<T, K extends keyof T> extends Reactivity<T>
     static trigger(target: object, type: TriggerOpTypes, key?: unknown, newValue?: unknown, oldValue?: unknown): void
     {
         const depsMap = this._targetMap.get(target);
+
         if (!depsMap) return;
 
         const run = (dep: PropertyReactivity<any, any> | undefined) =>
@@ -157,6 +162,7 @@ export class PropertyReactivity<T, K extends keyof T> extends Reactivity<T>
                 if (targetIsArray && key === 'length')
                 {
                     const newLength = Number(newValue);
+
                     depsMap.forEach((dep, key) =>
                     {
                         if (

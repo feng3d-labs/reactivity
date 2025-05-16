@@ -1,7 +1,7 @@
-import { computed, ref } from "@feng3d/reactivity";
-import { computed as vueComputed, ref as vueRef } from "@vue/reactivity";
-import { updateResults } from "./tool";
-import { 数组取值 } from "./数组";
+import { computed, ref } from '@feng3d/reactivity';
+import { computed as vueComputed, ref as vueRef } from '@vue/reactivity';
+import { updateResults } from './tool';
+import { 数组取值 } from './数组';
 
 vueComputed;
 vueRef;

@@ -80,6 +80,7 @@ export function batchRun<T>(fn: () => T): T
         {
             // 独立执行回调，避免影响其他依赖
             const pre = Reactivity.activeReactivity;
+
             Reactivity.activeReactivity = null;
 
             dep.runIfDirty();
@@ -94,7 +95,7 @@ export function batchRun<T>(fn: () => T): T
 
 /**
  * 批次深度。
- * 
+ *
  * 用于跟踪嵌套的批次执行。
  * 当深度大于 0 时，表示当前正在批次执行中。
  */
@@ -102,7 +103,7 @@ let _batchDepth = 0;
 
 /**
  * 待运行的依赖队列。
- * 
+ *
  * 存储需要执行但尚未执行的依赖。
  * 在批次执行结束后，会统一处理这些依赖。
  */
@@ -110,7 +111,7 @@ const _needEffectDeps: ComputedReactivity[] = [];
 
 /**
  * 已运行的依赖队列。
- * 
+ *
  * 存储已经执行过的依赖。
  * 这些依赖只需要修复与子节点的关系，不需要重新执行。
  */

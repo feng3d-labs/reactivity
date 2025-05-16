@@ -7,7 +7,7 @@ import { PropertyReactivity } from './property';
 
 /**
  * 基础响应式处理器。
- * 
+ *
  * 实现了 Proxy 的 get 拦截器，用于：
  * 1. 响应式对象的标识和原始对象获取
  * 2. 数组方法的特殊处理
@@ -51,6 +51,7 @@ class BaseReactiveHandler implements ProxyHandler<Target>
             {
                 return target;
             }
+
             // 提前返回 undefined
             return;
         }
@@ -59,6 +60,7 @@ class BaseReactiveHandler implements ProxyHandler<Target>
 
         // 处理数组方法
         let fn: Function | undefined;
+
         if (targetIsArray && (fn = arrayInstrumentations[key]))
         {
             return fn;
@@ -103,7 +105,7 @@ class BaseReactiveHandler implements ProxyHandler<Target>
 
 /**
  * 可变响应式处理器。
- * 
+ *
  * 继承自基础响应式处理器，增加了：
  * 1. 属性设置拦截
  * 2. 属性删除拦截
@@ -114,7 +116,7 @@ class MutableReactiveHandler extends BaseReactiveHandler
 {
     /**
      * 设置对象的属性值。
-     * 
+     *
      * 实现了以下功能：
      * 1. 值的原始化处理
      * 2. ref 值的特殊处理
@@ -144,6 +146,7 @@ class MutableReactiveHandler extends BaseReactiveHandler
         if (!isArray(target) && isRef(oldValue) && !isRef(value))
         {
             oldValue.value = value;
+
             return true;
         }
 
@@ -199,6 +202,7 @@ class MutableReactiveHandler extends BaseReactiveHandler
         const hadKey = hasOwn(target, key);
         const oldValue = target[key];
         const result = Reflect.deleteProperty(target, key);
+
         if (result && hadKey)
         {
             // 触发删除通知
@@ -222,6 +226,7 @@ class MutableReactiveHandler extends BaseReactiveHandler
     has(target: Record<string | symbol, unknown>, key: string | symbol): boolean
     {
         const result = Reflect.has(target, key);
+
         if (!isSymbol(key) || !builtInSymbols.has(key))
         {
             // 追踪属性访问
@@ -256,14 +261,14 @@ class MutableReactiveHandler extends BaseReactiveHandler
 
 /**
  * 可变响应式处理器实例。
- * 
+ *
  * 用于创建可变的响应式对象。
  */
 export const mutableHandlers: ProxyHandler<object> = new MutableReactiveHandler();
 
 /**
  * 自定义 hasOwnProperty 方法。
- * 
+ *
  * 实现了以下功能：
  * 1. 属性存在性检查
  * 2. 属性访问依赖追踪
@@ -277,6 +282,7 @@ function hasOwnProperty(this: object, key: unknown)
     // #10455 hasOwnProperty 可能被非字符串值调用
     if (!isSymbol(key)) key = String(key);
     const obj = toRaw(this);
+
     // 追踪属性访问
     PropertyReactivity.track(obj, TrackOpTypes.HAS, key);
 
@@ -285,11 +291,11 @@ function hasOwnProperty(this: object, key: unknown)
 
 /**
  * 内置 Symbol 集合。
- * 
+ *
  * 用于过滤不需要追踪的 Symbol 属性。
  */
 const builtInSymbols = new Set(
-    /* @__PURE__*/
+    /* @__PURE__ */
     Object.getOwnPropertyNames(Symbol)
         // ios10.x Object.getOwnPropertyNames(Symbol) 可以枚举 'arguments' 和 'caller'
         // 但在 Symbol 上访问它们会导致 TypeError，因为 Symbol 是严格模式函数
@@ -300,7 +306,7 @@ const builtInSymbols = new Set(
 
 /**
  * 非追踪键集合。
- * 
+ *
  * 用于过滤不需要追踪的属性名。
  */
-const isNonTrackableKeys = /* @__PURE__*/ makeMap(`__proto__,__v_isRef,__isVue`);
+const isNonTrackableKeys = /* @__PURE__ */ makeMap(`__proto__,__v_isRef,__isVue`);

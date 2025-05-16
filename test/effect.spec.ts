@@ -4,7 +4,9 @@ describe('reactivity/effect', () =>
 {
     it('should run the passed function once (wrapped by a effect)', () =>
     {
-        const fnSpy = vi.fn(() => { });
+        const fnSpy = vi.fn(() =>
+        { });
+
         effect(fnSpy);
         expect(fnSpy).toHaveBeenCalledTimes(1);
     });
@@ -13,6 +15,7 @@ describe('reactivity/effect', () =>
     {
         let dummy;
         const counter = reactive({ num: 0 });
+
         effect(() => (dummy = counter.num));
 
         expect(dummy).toBe(0);
@@ -24,6 +27,7 @@ describe('reactivity/effect', () =>
     {
         let dummy;
         const counter = reactive({ num1: 0, num2: 0 });
+
         effect(() => (dummy = counter.num1 + counter.num1 + counter.num2));
 
         expect(dummy).toBe(0);
@@ -36,6 +40,7 @@ describe('reactivity/effect', () =>
         let dummy1; let
             dummy2;
         const counter = reactive({ num: 0 });
+
         effect(() => (dummy1 = counter.num));
         effect(() => (dummy2 = counter.num));
 
@@ -50,6 +55,7 @@ describe('reactivity/effect', () =>
     {
         let dummy;
         const counter = reactive({ nested: { num: 0 } });
+
         effect(() => (dummy = counter.nested.num));
 
         expect(dummy).toBe(0);
@@ -63,6 +69,7 @@ describe('reactivity/effect', () =>
         const obj = reactive<{
             prop?: string
         }>({ prop: 'value' });
+
         effect(() => (dummy = obj.prop));
 
         expect(dummy).toBe('value');
@@ -74,6 +81,7 @@ describe('reactivity/effect', () =>
     {
         let dummy;
         const obj = reactive<{ prop?: string | number }>({ prop: 'value' });
+
         effect(() => (dummy = 'prop' in obj));
 
         expect(dummy).toBe(true);
@@ -88,6 +96,7 @@ describe('reactivity/effect', () =>
         let dummy;
         const counter = reactive<{ num?: number }>({ num: 0 });
         const parentCounter = reactive({ num: 2 });
+
         Object.setPrototypeOf(counter, parentCounter);
         effect(() => (dummy = counter.num));
 
@@ -105,6 +114,7 @@ describe('reactivity/effect', () =>
         let dummy;
         const counter = reactive<{ num?: number }>({ num: 0 });
         const parentCounter = reactive<{ num?: number }>({ num: 2 });
+
         Object.setPrototypeOf(counter, parentCounter);
         effect(() => (dummy = 'num' in counter));
 
@@ -132,6 +142,7 @@ describe('reactivity/effect', () =>
                 return hiddenValue;
             },
         });
+
         Object.setPrototypeOf(obj, parent);
         effect(() => (dummy = obj.prop));
         effect(() => (parentDummy = parent.prop));
@@ -151,6 +162,7 @@ describe('reactivity/effect', () =>
     {
         let dummy;
         const counter = reactive({ num: 0 });
+
         effect(() => (dummy = getNum()));
 
         function getNum()
@@ -167,6 +179,7 @@ describe('reactivity/effect', () =>
     {
         let dummy;
         const list = reactive(['Hello']);
+
         effect(() => (dummy = list.join(' ')));
 
         expect(dummy).toBe('Hello');
@@ -180,6 +193,7 @@ describe('reactivity/effect', () =>
     {
         let dummy;
         const list = reactive(['Hello']);
+
         effect(() => (dummy = list.join(' ')));
 
         expect(dummy).toBe('Hello');
@@ -193,6 +207,7 @@ describe('reactivity/effect', () =>
     {
         let dummy;
         const list = reactive<string[]>([]);
+
         list[1] = 'World!';
         effect(() => (dummy = list.join(' ')));
 
@@ -207,6 +222,7 @@ describe('reactivity/effect', () =>
     {
         let dummy = 0;
         const numbers = reactive<Record<string, number>>({ num1: 3 });
+
         effect(() =>
         {
             dummy = 0;
@@ -228,6 +244,7 @@ describe('reactivity/effect', () =>
         let dummy; let
             hasDummy;
         const obj = reactive<{ [key]?: string }>({ [key]: 'value' });
+
         effect(() => (dummy = obj[key]));
         effect(() => (hasDummy = key in obj));
 
@@ -245,6 +262,7 @@ describe('reactivity/effect', () =>
         const key = Symbol.isConcatSpreadable;
         let dummy;
         const array: any = reactive([]);
+
         effect(() => (dummy = array[key]));
 
         expect(array[key]).toBe(undefined);
@@ -265,6 +283,7 @@ describe('reactivity/effect', () =>
         {
             key in obj;
         });
+
         effect(spy);
         expect(spy).toHaveBeenCalledTimes(1);
 
@@ -277,6 +296,7 @@ describe('reactivity/effect', () =>
         const key = Symbol();
         let dummy;
         const array: any = reactive([1, 2, 3]);
+
         effect(() => (dummy = array[key]));
 
         expect(dummy).toBe(undefined);
@@ -291,11 +311,14 @@ describe('reactivity/effect', () =>
 
     it('should observe function valued properties', () =>
     {
-        const oldFunc = () => { };
-        const newFunc = () => { };
+        const oldFunc = () =>
+        { };
+        const newFunc = () =>
+        { };
 
         let dummy;
         const obj = reactive({ func: oldFunc });
+
         effect(() => (dummy = obj.func));
 
         expect(dummy).toBe(oldFunc);
@@ -314,6 +337,7 @@ describe('reactivity/effect', () =>
         });
 
         let dummy;
+
         effect(() => (dummy = obj.b));
         expect(dummy).toBe(1);
         obj.a++;
@@ -331,6 +355,7 @@ describe('reactivity/effect', () =>
         });
 
         let dummy;
+
         effect(() => (dummy = obj.b()));
         expect(dummy).toBe(1);
         obj.a++;
@@ -345,6 +370,7 @@ describe('reactivity/effect', () =>
 
         const getSpy = vi.fn(() => (getDummy = obj.prop));
         const hasSpy = vi.fn(() => (hasDummy = 'prop' in obj));
+
         effect(getSpy);
         effect(hasSpy);
 
@@ -361,6 +387,7 @@ describe('reactivity/effect', () =>
     {
         let dummy;
         const obj = reactive<{ prop?: string }>({});
+
         effect(() => (dummy = toRaw(obj).prop));
 
         expect(dummy).toBe(undefined);
@@ -372,6 +399,7 @@ describe('reactivity/effect', () =>
     {
         let dummy;
         const obj = reactive<{ prop?: string }>({});
+
         effect(() => (dummy = obj.prop));
 
         expect(dummy).toBe(undefined);
@@ -394,6 +422,7 @@ describe('reactivity/effect', () =>
                 return hiddenValue;
             },
         });
+
         Object.setPrototypeOf(obj, parent);
         effect(() => (dummy = obj.prop));
         effect(() => (parentDummy = parent.prop));
@@ -410,6 +439,7 @@ describe('reactivity/effect', () =>
         const counter = reactive({ num: 0 });
 
         const counterSpy = vi.fn(() => counter.num++);
+
         effect(counterSpy);
         expect(counter.num).toBe(1);
         expect(counterSpy).toHaveBeenCalledTimes(1);
@@ -425,6 +455,7 @@ describe('reactivity/effect', () =>
             const arr = reactive<number[]>([]);
             const counterSpy1 = vi.fn(() => (arr[key] as any)(1));
             const counterSpy2 = vi.fn(() => (arr[key] as any)(2));
+
             effect(counterSpy1);
             effect(counterSpy2);
             expect(arr.length).toBe(2);
@@ -436,6 +467,7 @@ describe('reactivity/effect', () =>
             const arr = reactive<number[]>([1, 2, 3, 4]);
             const counterSpy1 = vi.fn(() => (arr[key] as any)());
             const counterSpy2 = vi.fn(() => (arr[key] as any)());
+
             effect(counterSpy1);
             effect(counterSpy2);
             expect(arr.length).toBe(2);
@@ -455,6 +487,7 @@ describe('reactivity/effect', () =>
                 numSpy();
             }
         });
+
         effect(numSpy);
         expect(counter.num).toEqual(10);
         expect(numSpy).toHaveBeenCalledTimes(10);
@@ -466,6 +499,7 @@ describe('reactivity/effect', () =>
 
         const spy1 = vi.fn(() => (nums.num1 = nums.num2));
         const spy2 = vi.fn(() => (nums.num2 = nums.num1));
+
         effect(spy1);
         effect(spy2);
         expect(nums.num1).toBe(1);
@@ -492,6 +526,7 @@ describe('reactivity/effect', () =>
         }
         const effect1 = effect(greet);
         const effect2 = effect(greet); // 与 @vue/reactivity 不同，这里不会返回一个函数，而是返回一个 effect 实例。
+
         // expect(typeof effect1).toBe('function')
         // expect(typeof effect2).toBe('function')
         expect(effect1).not.toBe(greet);
@@ -507,6 +542,7 @@ describe('reactivity/effect', () =>
         {
             dummy = obj.run ? obj.prop : 'other';
         });
+
         effect(conditionalSpy);
 
         expect(dummy).toBe('other');
@@ -531,6 +567,7 @@ describe('reactivity/effect', () =>
         {
             dummy = obj.run ? obj.prop : 'other';
         });
+
         effect(conditionalSpy);
 
         expect(dummy).toBe('value');
@@ -547,6 +584,7 @@ describe('reactivity/effect', () =>
     {
         const results = reactive([0]);
         const effects: { fx: Effect; index: number }[] = [];
+
         for (let i = 1; i < 40; i++)
         {
             ((index) =>
@@ -555,6 +593,7 @@ describe('reactivity/effect', () =>
                 {
                     results[index] = results[index - 1] * 2;
                 });
+
                 effects.push({ fx, index });
             })(i);
         }
@@ -572,6 +611,7 @@ describe('reactivity/effect', () =>
         const fx1Spy = vi.fn(() =>
         {
             let result = 0;
+
             if (input.c < 2) result += input.a;
             if (input.c > 1) result += input.b;
             output.fx1 = result;
@@ -582,6 +622,7 @@ describe('reactivity/effect', () =>
         const fx2Spy = vi.fn(() =>
         {
             let result = 0;
+
             if (input.c > 1) result += input.a;
             if (input.c < 3) result += input.b;
             output.fx2 = result + output.fx1;
@@ -652,6 +693,7 @@ describe('reactivity/effect', () =>
             }
             dummy = obj.prop;
         });
+
         effect(fnSpy);
 
         expect(fnSpy).toHaveBeenCalledTimes(1);
@@ -674,6 +716,7 @@ describe('reactivity/effect', () =>
             childeffect.run(); // 使用 effect(func).run(true) 来代替 @vue/reactivity 中的 effect(func)() 。
             dummy.num3 = nums.num3;
         });
+
         effect(parentSpy);
 
         expect(dummy).toEqual({ num1: 0, num2: 1, num3: 2 });
@@ -700,6 +743,7 @@ describe('reactivity/effect', () =>
     {
         let dummy = <Record<string, number>>{};
         const obj = reactive<Record<string, number>>({});
+
         effect(() =>
         {
             dummy = JSON.parse(JSON.stringify(obj));
@@ -717,6 +761,7 @@ describe('reactivity/effect', () =>
             {
                 this.count = 0;
             }
+
             inc()
             {
                 this.count++;
@@ -724,6 +769,7 @@ describe('reactivity/effect', () =>
         }
         const model = reactive(new Model());
         let dummy;
+
         effect(() =>
         {
             dummy = model.count;
@@ -741,6 +787,7 @@ describe('reactivity/effect', () =>
         {
             dummy = obj.prop;
         }) as EffectDep;
+
         obj.prop = 2;
         expect(dummy).toBe(2);
         // stop(runner)
@@ -762,6 +809,7 @@ describe('reactivity/effect', () =>
         {
             dummy = obj.prop;
         }) as EffectDep;
+
         // stop(runner)
         runner.pause(); // 使用 effect(func).pause() 代替 @vue/reactivity 中的 stop(effect(func)) 。
         obj.prop = 2;
@@ -787,6 +835,7 @@ describe('reactivity/effect', () =>
             foo: NaN,
         });
         const fnSpy = vi.fn(() => obj.foo);
+
         effect(fnSpy);
         obj.foo = NaN;
         expect(fnSpy).toHaveBeenCalledTimes(1);
@@ -797,6 +846,7 @@ describe('reactivity/effect', () =>
         const observed: any = reactive([1]);
         let dummy; let
             record;
+
         effect(() =>
         {
             dummy = observed.length;
@@ -849,6 +899,7 @@ describe('reactivity/effect', () =>
         let ret2 = 'idle';
         const arr1 = reactive(new Array(11).fill(0));
         const arr2 = reactive(new Array(11).fill(0));
+
         effect(() =>
         {
             ret1 = arr1[10] === undefined ? 'arr[10] is set to empty' : 'idle';
@@ -895,6 +946,7 @@ describe('reactivity/effect', () =>
         const counter = reactive({ num: 0 });
 
         const counterSpy = vi.fn(() => counter.num);
+
         effect(counterSpy);
 
         counterSpy.mockClear();

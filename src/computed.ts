@@ -16,7 +16,7 @@ export function computed<T>(func: (oldValue?: T) => T): Computed<T>
 
 /**
  * 计算属性接口。
- * 
+ *
  * 定义了计算属性的基本结构：
  * 1. value: 计算属性的当前值
  * 2. ComputedSymbol: 用于标识这是一个计算属性
@@ -30,7 +30,7 @@ declare const ComputedSymbol: unique symbol;
 
 /**
  * 计算反应式节点接口。
- * 
+ *
  * 继承自 Computed 接口，表示这是一个计算反应式节点。
  */
 export interface ComputedReactivity<T = any> extends Computed<T> { }
@@ -49,14 +49,14 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
 {
     /**
      * 标识这是一个 ref 对象。
-     * 
+     *
      * @internal
      */
     readonly __v_isRef = true;
 
     /**
      * 计算函数。
-     * 
+     *
      * 用于计算属性值的函数，可以访问其他响应式数据。
      * 当依赖发生变化时，会重新执行此函数。
      */
@@ -67,7 +67,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      *
      * 记录所有依赖此计算属性的子节点。
      * 当计算属性重新计算时，会通知这些子节点。
-     * 
+     *
      * @private
      */
     _children = new Map<Reactivity, any>();
@@ -78,7 +78,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      * 表示计算属性是否需要重新计算。
      * 当依赖发生变化时，会设置此标记。
      * 重新计算后会清除此标记。
-     * 
+     *
      * @private
      */
     _isDirty = true;
@@ -89,7 +89,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      * 每次重新计算后自动递增。
      * 用于判断子节点中的父节点引用是否过期。
      * 当子节点发现父节点的版本号不匹配时，会重新建立依赖关系。
-     * 
+     *
      * @private
      */
     _version = -1;
@@ -106,12 +106,13 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
     {
         this.runIfDirty();
         this.track();
+
         return this._value;
     }
 
     /**
      * 创建计算反应式节点。
-     * 
+     *
      * @param func 计算函数，可以访问其他响应式数据，并返回计算结果
      */
     constructor(func: (oldValue?: T) => T)
@@ -155,6 +156,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
         {
             // 保存当前节点作为父节点
             const parentReactiveNode = Reactivity.activeReactivity;
+
             // 设置当前节点为活跃节点
             Reactivity.activeReactivity = this as any;
 
@@ -172,7 +174,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      * 检查当前节点是否需要重新计算：
      * 1. 如果脏标记为 true，需要重新计算
      * 2. 如果子节点发生变化，需要重新计算
-     * 
+     *
      * 重新计算后会清除脏标记。
      */
     runIfDirty()
@@ -196,13 +198,13 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      *
      * 遍历所有子节点，检查它们的值是否发生变化。
      * 如果发生变化，返回 true，否则返回 false。
-     * 
+     *
      * 在检查过程中会：
      * 1. 临时禁用依赖跟踪
      * 2. 检查每个子节点的值
      * 3. 如果子节点没有变化，重新建立依赖关系
      * 4. 清空子节点集合
-     * 
+     *
      * @returns 是否有子节点发生变化
      */
     protected isChildrenChanged()
@@ -214,6 +216,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
 
         // 避免在检查过程建立依赖关系
         const preReactiveNode = Reactivity.activeReactivity;
+
         Reactivity.activeReactivity = null;
 
         // 检查子节点是否发生变化
@@ -224,6 +227,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
             {
                 // 子节点变化，需要重新计算
                 isChanged = true;
+
                 return;
             }
         });
