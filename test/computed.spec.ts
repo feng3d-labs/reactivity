@@ -1,5 +1,8 @@
 import { describe, expect, it, test, vi } from 'vitest';
-import { Computed, computed, ComputedDep, effect, noTrack, reactive, ref, RefReactivity } from '../src';
+import { Computed, computed, effect, noTrack, reactive, ref } from '../src';
+
+import { ComputedReactivity } from '../src/computed';
+import { RefReactivity } from '../src/ref';
 
 describe('reactivity/computed', () =>
 {
@@ -256,7 +259,7 @@ describe('reactivity/computed', () =>
 
         const a = ref(0) as RefReactivity;
         const b = computed(() =>
-            a.value % 3 !== 0) as ComputedDep;
+            a.value % 3 !== 0) as ComputedReactivity;
         const c = computed(() =>
         {
             cSpy();
@@ -266,9 +269,9 @@ describe('reactivity/computed', () =>
             }
 
             return 'cheap';
-        }) as ComputedDep;
+        }) as ComputedReactivity;
         const d = computed(() =>
-            a.value % 3 === 2) as ComputedDep;
+            a.value % 3 === 2) as ComputedReactivity;
         const e = computed(() =>
         {
             if (b.value)
@@ -280,7 +283,7 @@ describe('reactivity/computed', () =>
             }
 
             return c.value;
-        }) as ComputedDep;
+        }) as ComputedReactivity;
 
         e.value;
         a.value++;

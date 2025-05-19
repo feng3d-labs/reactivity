@@ -1,5 +1,7 @@
 import { describe, expect, it, test, vi } from 'vitest';
-import { batchRun, Effect, effect, EffectDep, reactive, toRaw } from '../src';
+import { batchRun, Effect, effect, reactive, toRaw } from '../src';
+import { EffectReactivity } from '../src/effect';
+
 describe('reactivity/effect', () =>
 {
     it('should run the passed function once (wrapped by a effect)', () =>
@@ -708,7 +710,7 @@ describe('reactivity/effect', () =>
         const dummy: any = {};
 
         const childSpy = vi.fn(() => (dummy.num1 = nums.num1));
-        const childeffect = effect(childSpy) as EffectDep;
+        const childeffect = effect(childSpy) as EffectReactivity;
         const parentSpy = vi.fn(() =>
         {
             dummy.num2 = nums.num2;
@@ -786,7 +788,7 @@ describe('reactivity/effect', () =>
         const runner = effect(() =>
         {
             dummy = obj.prop;
-        }) as EffectDep;
+        }) as EffectReactivity;
 
         obj.prop = 2;
         expect(dummy).toBe(2);
@@ -808,7 +810,7 @@ describe('reactivity/effect', () =>
         const runner = effect(() =>
         {
             dummy = obj.prop;
-        }) as EffectDep;
+        }) as EffectReactivity;
 
         // stop(runner)
         runner.pause(); // 使用 effect(func).pause() 代替 @vue/reactivity 中的 stop(effect(func)) 。
