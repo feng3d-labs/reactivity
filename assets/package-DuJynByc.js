@@ -283,7 +283,7 @@ function makeMap$1(str) {
   for (const key of str.split(",")) map[key] = 1;
   return (val) => val in map;
 }
-const _EffectReactivity = class _EffectReactivity extends ComputedReactivity {
+const _EffectReactivity = class _EffectReactivity2 extends ComputedReactivity {
   constructor(func) {
     super(func);
     this._isEnable = true;
@@ -305,8 +305,8 @@ const _EffectReactivity = class _EffectReactivity extends ComputedReactivity {
   resume() {
     if (this._isEnable) return;
     this._isEnable = true;
-    if (_EffectReactivity.pausedQueueEffects.has(this)) {
-      _EffectReactivity.pausedQueueEffects.delete(this);
+    if (_EffectReactivity2.pausedQueueEffects.has(this)) {
+      _EffectReactivity2.pausedQueueEffects.delete(this);
       this.trigger();
     }
   }
@@ -317,7 +317,7 @@ const _EffectReactivity = class _EffectReactivity extends ComputedReactivity {
    */
   stop() {
     this._isEnable = false;
-    _EffectReactivity.pausedQueueEffects.delete(this);
+    _EffectReactivity2.pausedQueueEffects.delete(this);
   }
   /**
    * 触发效果执行。
@@ -330,7 +330,7 @@ const _EffectReactivity = class _EffectReactivity extends ComputedReactivity {
       if (this._isEnable) {
         batch$1(this, Reactivity.activeReactivity === this);
       } else {
-        _EffectReactivity.pausedQueueEffects.add(this);
+        _EffectReactivity2.pausedQueueEffects.add(this);
       }
     });
   }
@@ -348,7 +348,6 @@ const _EffectReactivity = class _EffectReactivity extends ComputedReactivity {
   }
 };
 _EffectReactivity.pausedQueueEffects = /* @__PURE__ */ new WeakSet();
-let EffectReactivity = _EffectReactivity;
 function property(target, key) {
   let depsMap = PropertyReactivity._targetMap.get(target);
   if (!depsMap) {
@@ -362,7 +361,7 @@ function property(target, key) {
   }
   return dep;
 }
-const _PropertyReactivity = class _PropertyReactivity extends Reactivity {
+const _PropertyReactivity = class _PropertyReactivity2 extends Reactivity {
   /**
    * 获取当前节点值。
    *
