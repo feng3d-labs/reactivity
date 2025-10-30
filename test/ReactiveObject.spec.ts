@@ -4,7 +4,7 @@ import { ReactiveObject } from './ReactiveObject';
 
 describe('ReactiveObject', () =>
 {
-    it('ReactiveObject 处理树形依赖问题，并且存在依赖时序问题', () =>
+    it('嵌套effect会创建新的副作用，将会执行多次', () =>
     {
         const object = { a: 1, b: 2, c: 0, d: 0 };
         const r_object = reactive(object);
@@ -49,6 +49,156 @@ describe('ReactiveObject', () =>
 
         assert.strictEqual(times, 1);
         assert.strictEqual(times1, 3); // 前两次副作用执行完成后，会创建一个新的副作用，因此会执行三次
+        assert.strictEqual(r_object.d, 8);
+    });
+
+    it('嵌套effect即使缓存也会发生时序问题，导致重复执行', () =>
+    {
+        const object = { a: 1, b: 2, c: 0, d: 0 };
+        const r_object = reactive(object);
+
+        let times = 0;
+        let times1 = 0;
+        let init = false;
+
+        effect(() =>
+        {
+            times++;
+
+            r_object.a;
+
+            // 缓存副作用，避免重复创建副作用
+            if (!init)
+            {
+                init = true;
+
+                // 存在时序问题
+                effect(() =>
+                {
+                    r_object.c = r_object.a + r_object.b;
+
+                    times1++;
+                });
+            }
+
+            r_object.d = r_object.c + object.a;
+        });
+
+        assert.strictEqual(times, 1);
+        assert.strictEqual(times1, 1);
+        assert.strictEqual(r_object.d, 4);
+
+        times = 0;
+        times1 = 0;
+
+        r_object.a++;
+        assert.strictEqual(r_object.d, 6);
+        assert.strictEqual(times, 2); // 存在时序问题，r_object.a触发执行一次，此时r_object.c还未计算。然后触发r_object.c的计算，r_object.c改变后再次触发执行一次
+        assert.strictEqual(times1, 1);
+
+        times = 0;
+        times1 = 0;
+
+        r_object.a++;
+
+        assert.strictEqual(times, 2); // 存在时序问题，r_object.a触发执行一次，此时r_object.c还未计算。然后触发r_object.c的计算，r_object.c改变后再次触发执行一次
+        assert.strictEqual(times1, 1);
+        assert.strictEqual(r_object.d, 8);
+    });
+
+    it('effect 存在时序问题，导致重复执行', () =>
+    {
+        const object = { a: 1, b: 2, c: 0, d: 0 };
+        const r_object = reactive(object);
+
+        let times = 0;
+        let times1 = 0;
+
+        // 此处使用了 r_object.c ，但是 r_object.c 还未计算，因此会重复执行
+        effect(() =>
+        {
+            times++;
+
+            r_object.a;
+
+            r_object.d = r_object.c + object.a;
+        });
+
+        //
+        effect(() =>
+        {
+            r_object.c = r_object.a + r_object.b;
+
+            times1++;
+        });
+
+        assert.strictEqual(times, 2); // 存在时序问题，r_object.a触发执行一次，此时r_object.c还未计算。然后触发r_object.c的计算，r_object.c改变后再次触发执行一次
+        assert.strictEqual(times1, 1);
+        assert.strictEqual(r_object.d, 4);
+
+        times = 0;
+        times1 = 0;
+
+        r_object.a++;
+        assert.strictEqual(r_object.d, 6);
+        assert.strictEqual(times, 2); // 存在时序问题，r_object.a触发执行一次，此时r_object.c还未计算。然后触发r_object.c的计算，r_object.c改变后再次触发执行一次
+        assert.strictEqual(times1, 1);
+
+        times = 0;
+        times1 = 0;
+
+        r_object.a++;
+
+        assert.strictEqual(times, 2); // 存在时序问题，r_object.a触发执行一次，此时r_object.c还未计算。然后触发r_object.c的计算，r_object.c改变后再次触发执行一次
+        assert.strictEqual(times1, 1);
+        assert.strictEqual(r_object.d, 8);
+    });
+
+    it('effect 存在时序问题，导致重复执行', () =>
+    {
+        const object = { a: 1, b: 2, c: 0, d: 0 };
+        const r_object = reactive(object);
+
+        let times = 0;
+        let times1 = 0;
+
+        // 此处使用了 r_object.c ，但是 r_object.c 还未计算，因此会重复执行
+        effect(() =>
+        {
+            times++;
+
+            r_object.a;
+
+            // 在effect中嵌套computed也不会重复执行，同样使用 getInstance 进行缓存也不会出现重复执行与时序问题。
+            const r_c = computed(() =>
+            {
+                times1++;
+
+                return r_object.a + r_object.b;
+            });
+
+            r_object.d = r_c.value + object.a;
+        });
+
+        assert.strictEqual(times, 1);
+        assert.strictEqual(times1, 1);
+        assert.strictEqual(r_object.d, 4);
+
+        times = 0;
+        times1 = 0;
+
+        r_object.a++;
+        assert.strictEqual(r_object.d, 6);
+        assert.strictEqual(times, 1);
+        assert.strictEqual(times1, 1);
+
+        times = 0;
+        times1 = 0;
+
+        r_object.a++;
+
+        assert.strictEqual(times, 1);
+        assert.strictEqual(times1, 1);
         assert.strictEqual(r_object.d, 8);
     });
 
