@@ -15,10 +15,26 @@ export function batch(dep: ComputedReactivity, isRunning: boolean): void
 {
     if (isRunning)
     {
+        const index = _isRunedDeps.indexOf(dep);
+
+        if (index !== -1)
+        {
+            console.warn('dep already in _isRunedDeps');
+            // _isRunedDeps.splice(index, 1);
+        }
+
         _isRunedDeps.push(dep);
     }
     else
     {
+        const index = _needEffectDeps.indexOf(dep);
+
+        if (index !== -1)
+        {
+            console.warn('dep already in _needEffectDeps，存在多重依赖问题。可能是由于副作用中多次修改了同一个响应式对象。');
+            // _needEffectDeps.splice(index, 1);
+        }
+
         _needEffectDeps.push(dep);
     }
 }

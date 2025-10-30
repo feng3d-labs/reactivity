@@ -2,9 +2,9 @@ import { Computed, computed, effect, reactive } from '@feng3d/reactivity';
 import { assert, describe, it } from 'vitest';
 import { ReactiveObject } from './ReactiveObject';
 
-describe('test', () =>
+describe('ReactiveObject', () =>
 {
-    it('ReactiveObject', () =>
+    it('ReactiveObject 处理树形依赖问题，并且存在依赖时序问题', () =>
     {
         const object = { a: 1, b: 2, d: 0 };
         const r_object = reactive(object);
@@ -53,7 +53,7 @@ describe('test', () =>
         {
             r_object.a;
 
-            const c = getInstance(object);
+            const c = getInstance(object); // 同样存在多重依赖，且存在时序问题，但使用 computed 缓存实例后不会重复执行该函数
 
             r_object.d = c + object.a;
 
