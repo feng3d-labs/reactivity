@@ -25,7 +25,6 @@ export class ReactiveObject
 {
     constructor()
     {
-        console.log(this.constructor.name, map[this.constructor.name] = (map[this.constructor.name] || 0) + 1);
     }
 
     /**
@@ -130,5 +129,3 @@ export class ReactiveObject
         this._effectScope = null;
     }
 }
-
-const map: { [key: string]: number } = {};

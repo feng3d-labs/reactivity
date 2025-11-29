@@ -27,7 +27,7 @@
     "lintfix": "npm run lint -- --fix",
     "docs": "typedoc && cd examples && vite build --outDir ../public",
     "upload_oss": "npm run docs && feng3d-cli oss_upload_dir",
-    "release": "npm run clean && npm run lint && npm run build && npm run docs && npm run types && npm publish",
+    "release": "npm version patch && npm run clean && npm run lint && npm run build && npm run docs && npm run types && npm publish",
     "prepublishOnly": "node scripts/prepublish.js",
     "postpublish": "node scripts/postpublish.js"
   },
