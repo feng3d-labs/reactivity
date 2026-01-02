@@ -1,6 +1,6 @@
 {
   "name": "@feng3d/reactivity",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "反应式，主要用于feng3d中的数据驱动。",
   "homepage": "https://feng3d.com/reactivity",
   "author": "feng",
