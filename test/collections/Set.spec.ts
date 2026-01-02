@@ -1,7 +1,7 @@
 import { describe, vi, it, expect } from 'vitest';
 import { effect, isReactive, reactive, toRaw } from '../../src';
 
-describe('reactivity/collections', () =>
+describe('响应式/集合', () =>
 {
     function coverCollectionFn(collection: Set<any>, fnName: string)
     {
@@ -25,7 +25,7 @@ describe('reactivity/collections', () =>
             expect(observed).toBeInstanceOf(Set);
         });
 
-        it('should observe mutations', () =>
+        it('应观察变更', () =>
         {
             let dummy;
             const set = reactive(new Set());
@@ -39,7 +39,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(false);
         });
 
-        it('should observe mutations with observed value', () =>
+        it('应观察以观察值的变更', () =>
         {
             let dummy;
             const value = reactive({});
@@ -54,7 +54,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(false);
         });
 
-        it('should observe for of iteration', () =>
+        it('应观察 for of 迭代', () =>
         {
             let dummy;
             const set = reactive(new Set() as Set<number>);
@@ -78,7 +78,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(0);
         });
 
-        it('should observe forEach iteration', () =>
+        it('应观察 forEach 迭代', () =>
         {
             let dummy: any;
             const set = reactive(new Set());
@@ -99,7 +99,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(0);
         });
 
-        it('should observe values iteration', () =>
+        it('应观察 values 迭代', () =>
         {
             let dummy;
             const set = reactive(new Set() as Set<number>);
@@ -123,7 +123,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(0);
         });
 
-        it('should observe keys iteration', () =>
+        it('应观察 keys 迭代', () =>
         {
             let dummy;
             const set = reactive(new Set() as Set<number>);
@@ -147,7 +147,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(0);
         });
 
-        it('should observe entries iteration', () =>
+        it('应观察 entries 迭代', () =>
         {
             let dummy;
             const set = reactive(new Set<number>());
@@ -172,7 +172,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(0);
         });
 
-        it('should be triggered by clearing', () =>
+        it('应被 clear 触发', () =>
         {
             let dummy;
             const set = reactive(new Set());
@@ -186,7 +186,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(false);
         });
 
-        it('should not observe custom property mutations', () =>
+        it('不应观察自定义属性变更', () =>
         {
             let dummy;
             const set: any = reactive(new Set());
@@ -198,7 +198,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(undefined);
         });
 
-        it('should observe size mutations', () =>
+        it('应观察 size 变更', () =>
         {
             let dummy;
             const set = reactive(new Set());
@@ -215,7 +215,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(0);
         });
 
-        it('should not observe non value changing mutations', () =>
+        it('不应观察非值变化的变更', () =>
         {
             let dummy;
             const set = reactive(new Set());
@@ -242,7 +242,7 @@ describe('reactivity/collections', () =>
             expect(setSpy).toHaveBeenCalledTimes(3);
         });
 
-        it('should not observe raw data', () =>
+        it('不应观察原始数据', () =>
         {
             let dummy;
             const set = reactive(new Set());
@@ -254,7 +254,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(false);
         });
 
-        it('should not observe raw iterations', () =>
+        it('不应观察原始迭代', () =>
         {
             let dummy = 0;
             const set = reactive(new Set<number>());
@@ -292,7 +292,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(0);
         });
 
-        it('should not be triggered by raw mutations', () =>
+        it('不应被原始变更触发', () =>
         {
             let dummy;
             const set = reactive(new Set());
@@ -309,7 +309,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(true);
         });
 
-        it('should not observe raw size mutations', () =>
+        it('不应观察原始 size 变更', () =>
         {
             let dummy;
             const set = reactive(new Set());
@@ -321,7 +321,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(0);
         });
 
-        it('should not be triggered by raw size mutations', () =>
+        it('不应被原始 size 变更触发', () =>
         {
             let dummy;
             const set = reactive(new Set());
@@ -333,7 +333,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(0);
         });
 
-        it('should support objects as key', () =>
+        it('应支持对象作为键', () =>
         {
             let dummy;
             const key = {};
@@ -354,7 +354,7 @@ describe('reactivity/collections', () =>
             expect(setSpy).toHaveBeenCalledTimes(2);
         });
 
-        it('should not pollute original Set with Proxies', () =>
+        it('不应用 Proxy 污染原始 Set', () =>
         {
             const set = new Set();
             const observed = reactive(set);
@@ -365,7 +365,7 @@ describe('reactivity/collections', () =>
             expect(set.has(value)).toBe(false);
         });
 
-        it('should observe nested values in iterations (forEach)', () =>
+        it('应在迭代中观察嵌套值（forEach）', () =>
         {
             const set = reactive(new Set([{ foo: 1 }]));
             let dummy: any;
@@ -387,7 +387,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(2);
         });
 
-        it('should observe nested values in iterations (values)', () =>
+        it('应在迭代中观察嵌套值（values）', () =>
         {
             const set = reactive(new Set([{ foo: 1 }]));
             let dummy: any;
@@ -409,7 +409,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(2);
         });
 
-        it('should observe nested values in iterations (entries)', () =>
+        it('应在迭代中观察嵌套值（entries）', () =>
         {
             const set = reactive(new Set([{ foo: 1 }]));
             let dummy: any;
@@ -432,7 +432,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(2);
         });
 
-        it('should observe nested values in iterations (for...of)', () =>
+        it('应在迭代中观察嵌套值（for...of）', () =>
         {
             const set = reactive(new Set([{ foo: 1 }]));
             let dummy: any;
@@ -454,7 +454,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(2);
         });
 
-        it('should work with reactive entries in raw set', () =>
+        it('原始 set 中的响应式条目应工作', () =>
         {
             const raw = new Set();
             const entry = reactive({});
@@ -468,7 +468,7 @@ describe('reactivity/collections', () =>
             expect(set.has(entry)).toBe(false);
         });
 
-        it('should track deletion of reactive entries in raw set', () =>
+        it('原始 set 中的响应式条目删除应跟踪', () =>
         {
             const raw = new Set();
             const entry = reactive({});
@@ -488,7 +488,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(false);
         });
 
-        it('should warn when set contains both raw and reactive versions of the same object', () =>
+        it('set 同时包含同一对象的原始版本和响应式版本时应警告', () =>
         {
             const raw = new Set();
             const rawKey = {};
@@ -518,7 +518,7 @@ describe('reactivity/collections', () =>
             expect(count).toBe(1);
         });
 
-        it('should trigger Set.has only once for non-reactive keys', () =>
+        it('非响应式键只应触发 Set.has 一次', () =>
         {
             const [proxy, spy] = coverCollectionFn(new Set(), 'has');
 
@@ -526,7 +526,7 @@ describe('reactivity/collections', () =>
             expect(spy).toBeCalledTimes(1);
         });
 
-        it('should trigger Set.add only once for non-reactive keys', () =>
+        it('非响应式键只应触发 Set.add 一次', () =>
         {
             const [proxy, spy] = coverCollectionFn(new Set(), 'add');
 
@@ -534,7 +534,7 @@ describe('reactivity/collections', () =>
             expect(spy).toBeCalledTimes(1);
         });
 
-        it('should trigger Set.delete only once for non-reactive keys', () =>
+        it('非响应式键只应触发 Set.delete 一次', () =>
         {
             const [proxy, spy] = coverCollectionFn(new Set(), 'delete');
 
@@ -542,7 +542,7 @@ describe('reactivity/collections', () =>
             expect(spy).toBeCalledTimes(1);
         });
 
-        it('should trigger Set.clear only once for non-reactive keys', () =>
+        it('非响应式键只应触发 Set.clear 一次', () =>
         {
             const [proxy, spy] = coverCollectionFn(new Set(), 'clear');
 
@@ -550,7 +550,7 @@ describe('reactivity/collections', () =>
             expect(spy).toBeCalledTimes(1);
         });
 
-        it('should return proxy from Set.add call', () =>
+        it('Set.add 调用应返回代理', () =>
         {
             const set = reactive(new Set());
             const result = set.add('a');

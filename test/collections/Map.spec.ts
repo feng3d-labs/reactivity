@@ -1,7 +1,7 @@
 import { describe, expect, it, test, vi } from 'vitest';
 import { effect, isReactive, reactive, toRaw } from '../../src';
 
-describe('reactivity/collections', () =>
+describe('响应式/集合', () =>
 {
     function coverCollectionFn(collection: Map<any, any>, fnName: string)
     {
@@ -25,7 +25,7 @@ describe('reactivity/collections', () =>
             expect(observed).toBeInstanceOf(Map);
         });
 
-        it('should observe mutations', () =>
+        it('应观察变更', () =>
         {
             let dummy;
             const map = reactive(new Map());
@@ -44,7 +44,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(undefined);
         });
 
-        it('should observe mutations with observed value as key', () =>
+        it('应观察以观察值作为键的变更', () =>
         {
             let dummy;
             const key = reactive({});
@@ -63,7 +63,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(undefined);
         });
 
-        it('should observe size mutations', () =>
+        it('应观察 size 变更', () =>
         {
             let dummy;
             const map = reactive(new Map());
@@ -80,7 +80,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(0);
         });
 
-        it('should observe for of iteration', () =>
+        it('应观察 for of 迭代', () =>
         {
             let dummy;
             const map = reactive(new Map());
@@ -100,7 +100,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(3);
             map.set('key2', 2);
             expect(dummy).toBe(5);
-            // iteration should track mutation of existing entries (#709)
+            // 迭代应跟踪现有条目的变更（#709）
             map.set('key1', 4);
             expect(dummy).toBe(6);
             map.delete('key1');
@@ -109,7 +109,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(0);
         });
 
-        it('should observe forEach iteration', () =>
+        it('应观察 forEach 迭代', () =>
         {
             let dummy: any;
             const map = reactive(new Map());
@@ -125,7 +125,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(3);
             map.set('key2', 2);
             expect(dummy).toBe(5);
-            // iteration should track mutation of existing entries (#709)
+            // 迭代应跟踪现有条目的变更（#709）
             map.set('key1', 4);
             expect(dummy).toBe(6);
             map.delete('key1');
@@ -134,7 +134,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(0);
         });
 
-        it('should observe keys iteration', () =>
+        it('应观察 keys 迭代', () =>
         {
             let dummy;
             const map = reactive(new Map());
@@ -159,7 +159,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(0);
         });
 
-        it('should observe values iteration', () =>
+        it('应观察 values 迭代', () =>
         {
             let dummy;
             const map = reactive(new Map());
@@ -178,7 +178,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(3);
             map.set('key2', 2);
             expect(dummy).toBe(5);
-            // iteration should track mutation of existing entries (#709)
+            // 迭代应跟踪现有条目的变更（#709）
             map.set('key1', 4);
             expect(dummy).toBe(6);
             map.delete('key1');
@@ -187,7 +187,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(0);
         });
 
-        it('should observe entries iteration', () =>
+        it('应观察 entries 迭代', () =>
         {
             let dummy;
             let dummy2;
@@ -212,7 +212,7 @@ describe('reactivity/collections', () =>
             map.set('key2', 2);
             expect(dummy).toBe('key1key2');
             expect(dummy2).toBe(5);
-            // iteration should track mutation of existing entries (#709)
+            // 迭代应跟踪现有条目的变更（#709）
             map.set('key1', 4);
             expect(dummy).toBe('key1key2');
             expect(dummy2).toBe(6);
@@ -224,7 +224,7 @@ describe('reactivity/collections', () =>
             expect(dummy2).toBe(0);
         });
 
-        it('should be triggered by clearing', () =>
+        it('应被 clear 触发', () =>
         {
             let dummy;
             const map = reactive(new Map());
@@ -238,7 +238,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(undefined);
         });
 
-        it('should not observe custom property mutations', () =>
+        it('不应观察自定义属性变更', () =>
         {
             let dummy;
             const map: any = reactive(new Map());
@@ -250,7 +250,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(undefined);
         });
 
-        it('should not observe non value changing mutations', () =>
+        it('不应观察非值变化的变更', () =>
         {
             let dummy;
             const map = reactive(new Map());
@@ -260,9 +260,10 @@ describe('reactivity/collections', () =>
 
             expect(dummy).toBe(undefined);
             expect(mapSpy).toHaveBeenCalledTimes(1);
-            map.set('key', undefined); // map.get('key') 没有发生变化，不用触发 (此处与@vue/reactivity 不同，值没有发生变化，不用触发)
+            // map.get('key') 没有发生变化，不用触发（此处与 @vue/reactivity 不同，值没有发生变化，不用触发）
+            map.set('key', undefined);
             expect(dummy).toBe(undefined);
-            expect(mapSpy).toHaveBeenCalledTimes(1); //
+            expect(mapSpy).toHaveBeenCalledTimes(1);
             map.set('key', 'value');
             expect(dummy).toBe('value');
             expect(mapSpy).toHaveBeenCalledTimes(2);
@@ -280,7 +281,7 @@ describe('reactivity/collections', () =>
             expect(mapSpy).toHaveBeenCalledTimes(3);
         });
 
-        it('should not observe raw data', () =>
+        it('不应观察原始数据', () =>
         {
             let dummy;
             const map = reactive(new Map());
@@ -294,7 +295,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(undefined);
         });
 
-        it('should not pollute original Map with Proxies', () =>
+        it('不应用 Proxy 污染原始 Map', () =>
         {
             const map = new Map();
             const observed = reactive(map);
@@ -305,7 +306,7 @@ describe('reactivity/collections', () =>
             expect(map.get('key')).toBe(toRaw(value));
         });
 
-        it('should return observable versions of contained values', () =>
+        it('应返回包含值的可观察版本', () =>
         {
             const observed = reactive(new Map());
             const value = {};
@@ -317,7 +318,7 @@ describe('reactivity/collections', () =>
             expect(toRaw(wrapped)).toBe(value);
         });
 
-        it('should observed nested data', () =>
+        it('应观察嵌套数据', () =>
         {
             const observed = reactive(new Map());
 
@@ -332,7 +333,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(2);
         });
 
-        it('should observe nested values in iterations (forEach)', () =>
+        it('应在迭代中观察嵌套值（forEach）', () =>
         {
             const map = reactive(new Map([[1, { foo: 1 }]]));
             let dummy: any;
@@ -351,7 +352,7 @@ describe('reactivity/collections', () =>
       expect(dummy).toBe(2);
         });
 
-        it('should observe nested values in iterations (values)', () =>
+        it('应在迭代中观察嵌套值（values）', () =>
         {
             const map = reactive(new Map([[1, { foo: 1 }]]));
             let dummy: any;
@@ -370,7 +371,7 @@ describe('reactivity/collections', () =>
       expect(dummy).toBe(2);
         });
 
-        it('should observe nested values in iterations (entries)', () =>
+        it('应在迭代中观察嵌套值（entries）', () =>
         {
             const key = {};
             const map = reactive(new Map([[key, { foo: 1 }]]));
@@ -392,7 +393,7 @@ describe('reactivity/collections', () =>
       expect(dummy).toBe(2);
         });
 
-        it('should observe nested values in iterations (for...of)', () =>
+        it('应在迭代中观察嵌套值（for...of）', () =>
         {
             const key = {};
             const map = reactive(new Map([[key, { foo: 1 }]]));
@@ -414,7 +415,7 @@ describe('reactivity/collections', () =>
       expect(dummy).toBe(2);
         });
 
-        it('should not be trigger when the value and the old value both are NaN', () =>
+        it('新旧值都是 NaN 时不应触发', () =>
         {
             const map = reactive(new Map([['foo', NaN]]));
             const mapSpy = vi.fn(() => map.get('foo'));
@@ -424,7 +425,7 @@ describe('reactivity/collections', () =>
             expect(mapSpy).toHaveBeenCalledTimes(1);
         });
 
-        it('should work with reactive keys in raw map', () =>
+        it('原始 map 中的响应式键应工作', () =>
         {
             const raw = new Map();
             const key = reactive({});
@@ -440,7 +441,7 @@ describe('reactivity/collections', () =>
             expect(map.get(key)).toBeUndefined();
         });
 
-        it('should track set of reactive keys in raw map', () =>
+        it('原始 map 中的响应式键 set 应跟踪', () =>
         {
             const raw = new Map();
             const key = reactive({});
@@ -460,7 +461,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(2);
         });
 
-        it('should track deletion of reactive keys in raw map', () =>
+        it('原始 map 中的响应式键删除应跟踪', () =>
         {
             const raw = new Map();
             const key = reactive({});
@@ -481,7 +482,7 @@ describe('reactivity/collections', () =>
         });
 
         // #877
-        it('should not trigger key iteration when setting existing keys', () =>
+        it('设置现有键时不应触发键迭代', () =>
         {
             const map = reactive(new Map());
             const spy = vi.fn();
@@ -508,12 +509,12 @@ describe('reactivity/collections', () =>
             expect(spy).toHaveBeenCalledTimes(3);
             expect(spy.mock.calls[2][0]).toMatchObject(['a', 'b']);
 
-            // keys didn't change, should not trigger
+            // 键没有改变，不应触发
             map.set('b', 1);
             expect(spy).toHaveBeenCalledTimes(3);
         });
 
-        it('should trigger Map.has only once for non-reactive keys', () =>
+        it('非响应式键只应触发 Map.has 一次', () =>
         {
             const [proxy, spy] = coverCollectionFn(new Map(), 'has');
 
@@ -521,7 +522,7 @@ describe('reactivity/collections', () =>
             expect(spy).toBeCalledTimes(1);
         });
 
-        it('should trigger Map.set only once for non-reactive keys', () =>
+        it('非响应式键只应触发 Map.set 一次', () =>
         {
             const [proxy, spy] = coverCollectionFn(new Map(), 'set');
 
@@ -529,7 +530,7 @@ describe('reactivity/collections', () =>
             expect(spy).toBeCalledTimes(1);
         });
 
-        it('should trigger Map.delete only once for non-reactive keys', () =>
+        it('非响应式键只应触发 Map.delete 一次', () =>
         {
             const [proxy, spy] = coverCollectionFn(new Map(), 'delete');
 
@@ -537,7 +538,7 @@ describe('reactivity/collections', () =>
             expect(spy).toBeCalledTimes(1);
         });
 
-        it('should trigger Map.clear only once for non-reactive keys', () =>
+        it('非响应式键只应触发 Map.clear 一次', () =>
         {
             const [proxy, spy] = coverCollectionFn(new Map(), 'clear');
 
@@ -545,7 +546,7 @@ describe('reactivity/collections', () =>
             expect(spy).toBeCalledTimes(1);
         });
 
-        it('should return proxy from Map.set call', () =>
+        it('Map.set 调用应返回代理', () =>
         {
             const map = reactive(new Map());
             const result = map.set('a', 'a');

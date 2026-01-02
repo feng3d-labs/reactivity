@@ -40,7 +40,8 @@ describe('ReactiveObject', () =>
         r_object.a++;
         assert.strictEqual(r_object.d, 6);
         assert.strictEqual(times, 1);
-        assert.strictEqual(times1, 2); // 上一次的副作用执行完成后，会创建一个新的副作用，因此会执行两次
+        // 上一次的副作用执行完成后，会创建一个新的副作用，因此会执行两次
+        assert.strictEqual(times1, 2);
 
         times = 0;
         times1 = 0;
@@ -48,7 +49,8 @@ describe('ReactiveObject', () =>
         r_object.a++;
 
         assert.strictEqual(times, 1);
-        assert.strictEqual(times1, 3); // 前两次副作用执行完成后，会创建一个新的副作用，因此会执行三次
+        // 前两次副作用执行完成后，会创建一个新的副作用，因此会执行三次
+        assert.strictEqual(times1, 3);
         assert.strictEqual(r_object.d, 8);
     });
 
@@ -93,7 +95,8 @@ describe('ReactiveObject', () =>
 
         r_object.a++;
         assert.strictEqual(r_object.d, 6);
-        assert.strictEqual(times, 2); // 存在时序问题，r_object.a触发执行一次，此时r_object.c还未计算。然后触发r_object.c的计算，r_object.c改变后再次触发执行一次
+        // 存在时序问题，r_object.a触发执行一次，此时r_object.c还未计算。然后触发r_object.c的计算，r_object.c改变后再次触发执行一次
+        assert.strictEqual(times, 2);
         assert.strictEqual(times1, 1);
 
         times = 0;
@@ -101,7 +104,8 @@ describe('ReactiveObject', () =>
 
         r_object.a++;
 
-        assert.strictEqual(times, 2); // 存在时序问题，r_object.a触发执行一次，此时r_object.c还未计算。然后触发r_object.c的计算，r_object.c改变后再次触发执行一次
+        // 存在时序问题，r_object.a触发执行一次，此时r_object.c还未计算。然后触发r_object.c的计算，r_object.c改变后再次触发执行一次
+        assert.strictEqual(times, 2);
         assert.strictEqual(times1, 1);
         assert.strictEqual(r_object.d, 8);
     });
@@ -132,7 +136,8 @@ describe('ReactiveObject', () =>
             times1++;
         });
 
-        assert.strictEqual(times, 2); // 存在时序问题，r_object.a触发执行一次，此时r_object.c还未计算。然后触发r_object.c的计算，r_object.c改变后再次触发执行一次
+        // 存在时序问题，r_object.a触发执行一次，此时r_object.c还未计算。然后触发r_object.c的计算，r_object.c改变后再次触发执行一次
+        assert.strictEqual(times, 2);
         assert.strictEqual(times1, 1);
         assert.strictEqual(r_object.d, 4);
 
@@ -141,7 +146,8 @@ describe('ReactiveObject', () =>
 
         r_object.a++;
         assert.strictEqual(r_object.d, 6);
-        assert.strictEqual(times, 2); // 存在时序问题，r_object.a触发执行一次，此时r_object.c还未计算。然后触发r_object.c的计算，r_object.c改变后再次触发执行一次
+        // 存在时序问题，r_object.a触发执行一次，此时r_object.c还未计算。然后触发r_object.c的计算，r_object.c改变后再次触发执行一次
+        assert.strictEqual(times, 2);
         assert.strictEqual(times1, 1);
 
         times = 0;
@@ -149,7 +155,8 @@ describe('ReactiveObject', () =>
 
         r_object.a++;
 
-        assert.strictEqual(times, 2); // 存在时序问题，r_object.a触发执行一次，此时r_object.c还未计算。然后触发r_object.c的计算，r_object.c改变后再次触发执行一次
+        // 存在时序问题，r_object.a触发执行一次，此时r_object.c还未计算。然后触发r_object.c的计算，r_object.c改变后再次触发执行一次
+        assert.strictEqual(times, 2);
         assert.strictEqual(times1, 1);
         assert.strictEqual(r_object.d, 8);
     });
@@ -213,7 +220,8 @@ describe('ReactiveObject', () =>
         {
             r_object.a;
 
-            TestClass.getInstance(object); // 放在 r_object.a 之后会出现时序问题
+            // 放在 r_object.a 之后会出现时序问题
+            TestClass.getInstance(object);
 
             r_object.d = r_object.c + object.a;
 
@@ -227,13 +235,15 @@ describe('ReactiveObject', () =>
 
         r_object.a++;
         assert.strictEqual(r_object.d, 6);
-        assert.strictEqual(times, 2); // 存在时序问题，r_object.a触发执行一次，此时testClass.c还未计算。然后触发testClass.c的计算，testClass.c改变后再次触发执行一次
+        // 存在时序问题，r_object.a触发执行一次，此时testClass.c还未计算。然后触发testClass.c的计算，testClass.c改变后再次触发执行一次
+        assert.strictEqual(times, 2);
 
         times = 0;
 
         r_object.a++;
 
-        assert.strictEqual(times, 2); // 存在时序问题，r_object.a触发执行一次，此时testClass.c还未计算。然后触发testClass.c的计算，testClass.c改变后再次触发执行一次
+        // 存在时序问题，r_object.a触发执行一次，此时testClass.c还未计算。然后触发testClass.c的计算，testClass.c改变后再次触发执行一次
+        assert.strictEqual(times, 2);
         assert.strictEqual(r_object.d, 8);
     });
 
@@ -248,7 +258,8 @@ describe('ReactiveObject', () =>
         {
             r_object.a;
 
-            const c = getInstance(object); // 同样存在多重依赖，且存在时序问题，但使用 computed 缓存实例后不会重复执行该函数
+            // 同样存在多重依赖，且存在时序问题，但使用 computed 缓存实例后不会重复执行该函数
+            const c = getInstance(object);
 
             r_object.d = c + object.a;
 

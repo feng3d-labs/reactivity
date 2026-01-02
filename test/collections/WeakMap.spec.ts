@@ -1,7 +1,7 @@
 import { describe, expect, it, test, vi } from 'vitest';
 import { effect, isReactive, reactive, toRaw } from '../../src';
 
-describe('reactivity/collections', () =>
+describe('响应式/集合', () =>
 {
     describe('WeakMap', () =>
     {
@@ -15,7 +15,7 @@ describe('reactivity/collections', () =>
             expect(observed).toBeInstanceOf(WeakMap);
         });
 
-        it('should observe mutations', () =>
+        it('应观察变更', () =>
         {
             let dummy;
             const key = {};
@@ -35,7 +35,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(undefined);
         });
 
-        it('should observe mutations with observed value as key', () =>
+        it('应观察以观察值作为键的变更', () =>
         {
             let dummy;
             const key = reactive({});
@@ -54,7 +54,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(undefined);
         });
 
-        it('should not observe custom property mutations', () =>
+        it('不应观察自定义属性变更', () =>
         {
             let dummy;
             const map: any = reactive(new WeakMap());
@@ -66,7 +66,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(undefined);
         });
 
-        it('should not observe non value changing mutations', () =>
+        it('不应观察非值变化的变更', () =>
         {
             let dummy;
             const key = {};
@@ -77,7 +77,8 @@ describe('reactivity/collections', () =>
 
             expect(dummy).toBe(undefined);
             expect(mapSpy).toHaveBeenCalledTimes(1);
-            map.set(key, undefined); // 与 @vue/reactivity 不同 map.get(key) 没有发生变化不会触发。
+            // 与 @vue/reactivity 不同，map.get(key) 没有发生变化不会触发
+            map.set(key, undefined);
             expect(dummy).toBe(undefined);
             expect(mapSpy).toHaveBeenCalledTimes(1);
             map.set(key, 'value');
@@ -94,7 +95,7 @@ describe('reactivity/collections', () =>
             expect(mapSpy).toHaveBeenCalledTimes(3);
         });
 
-        it('should not observe raw data', () =>
+        it('不应观察原始数据', () =>
         {
             let dummy;
             const key = {};
@@ -109,7 +110,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(undefined);
         });
 
-        it('should not pollute original Map with Proxies', () =>
+        it('不应用 Proxy 污染原始 Map', () =>
         {
             const map = new WeakMap();
             const observed = reactive(map);
@@ -121,7 +122,7 @@ describe('reactivity/collections', () =>
             expect(map.get(key)).toBe(toRaw(value));
         });
 
-        it('should return observable versions of contained values', () =>
+        it('应返回包含值的可观察版本', () =>
         {
             const observed = reactive(new WeakMap());
             const key = {};
@@ -134,7 +135,7 @@ describe('reactivity/collections', () =>
             expect(toRaw(wrapped)).toBe(value);
         });
 
-        it('should observed nested data', () =>
+        it('应观察嵌套数据', () =>
         {
             const observed = reactive(new WeakMap());
             const key = {};
@@ -150,7 +151,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(2);
         });
 
-        it('should not be trigger when the value and the old value both are NaN', () =>
+        it('新旧值都是 NaN 时不应触发', () =>
         {
             const map = new WeakMap();
             const key = {};
@@ -162,7 +163,8 @@ describe('reactivity/collections', () =>
             map.set(key, NaN);
             expect(mapSpy).toHaveBeenCalledTimes(1);
         });
-        it('should return proxy from WeakMap.set call', () =>
+
+        it('WeakMap.set 调用应返回代理', () =>
         {
             const map = reactive(new WeakMap());
             const result = map.set({}, 'a');

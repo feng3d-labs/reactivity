@@ -3,9 +3,9 @@ import { describe, expect, it, test, vi } from 'vitest';
 import { effect, effectScope, EffectScope, getCurrentScope, onScopeDispose, reactive, ref } from '../src';
 import { nextTick } from './nextTick';
 
-describe('reactivity/effect/scope', () =>
+describe('响应式/effect/作用域', () =>
 {
-    it('should run', () =>
+    it('应运行', () =>
     {
         const fnSpy = vi.fn(() =>
         { });
@@ -14,19 +14,19 @@ describe('reactivity/effect/scope', () =>
         expect(fnSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('should accept zero argument', () =>
+    it('应接受零参数', () =>
     {
         const scope = effectScope();
 
         expect(scope.effects.length).toBe(0);
     });
 
-    it('should return run value', () =>
+    it('应返回运行值', () =>
     {
         expect(effectScope().run(() => 1)).toBe(1);
     });
 
-    it('should work w/ active property', () =>
+    it('应与 active 属性一起工作', () =>
     {
         const scope = effectScope();
 
@@ -36,7 +36,7 @@ describe('reactivity/effect/scope', () =>
         expect(scope.active).toBe(false);
     });
 
-    it('should collect the effects', () =>
+    it('应收集 effect', () =>
     {
         const scope = effectScope();
 
@@ -55,7 +55,7 @@ describe('reactivity/effect/scope', () =>
         expect(scope.effects.length).toBe(1);
     });
 
-    it('stop', () =>
+    it('停止', () =>
     {
         let dummy, doubled;
         const counter = reactive({ num: 0 });
@@ -82,7 +82,7 @@ describe('reactivity/effect/scope', () =>
         expect(doubled).toBe(14);
     });
 
-    it('should collect nested scope', () =>
+    it('应收集嵌套作用域', () =>
     {
         let dummy, doubled;
         const counter = reactive({ num: 0 });
@@ -92,7 +92,7 @@ describe('reactivity/effect/scope', () =>
         scope.run(() =>
         {
             effect(() => (dummy = counter.num));
-            // nested scope
+            // 嵌套作用域
             effectScope().run(() =>
             {
                 effect(() => (doubled = counter.num * 2));
@@ -108,7 +108,7 @@ describe('reactivity/effect/scope', () =>
         expect(dummy).toBe(7);
         expect(doubled).toBe(14);
 
-        // stop the nested scope as well
+        // 同时停止嵌套作用域
         scope.stop();
 
         counter.num = 6;
@@ -116,7 +116,7 @@ describe('reactivity/effect/scope', () =>
         expect(doubled).toBe(14);
     });
 
-    it('nested scope can be escaped', () =>
+    it('嵌套作用域可以逃逸', () =>
     {
         let dummy, doubled;
         const counter = reactive({ num: 0 });
@@ -126,7 +126,7 @@ describe('reactivity/effect/scope', () =>
         scope.run(() =>
         {
             effect(() => (dummy = counter.num));
-            // nested scope
+            // 嵌套作用域
             effectScope(true).run(() =>
             {
                 effect(() => (doubled = counter.num * 2));
@@ -145,11 +145,11 @@ describe('reactivity/effect/scope', () =>
         counter.num = 6;
         expect(dummy).toBe(7);
 
-        // nested scope should not be stopped
+        // 嵌套作用域不应被停止
         expect(doubled).toBe(12);
     });
 
-    it('able to run the scope', () =>
+    it('能够运行作用域', () =>
     {
         let dummy, doubled;
         const counter = reactive({ num: 0 });
@@ -177,7 +177,7 @@ describe('reactivity/effect/scope', () =>
         scope.stop();
     });
 
-    it('can not run an inactive scope', () =>
+    it('无法运行非活动作用域', () =>
     {
         let dummy, doubled;
         const counter = reactive({ num: 0 });
@@ -198,7 +198,7 @@ describe('reactivity/effect/scope', () =>
             effect(() => (doubled = counter.num * 2));
         });
 
-        // expect('[Vue warn] cannot run an inactive effect scope.').toHaveBeenWarned()
+        // expect('[警告] 无法运行已停用的 effect 作用域。').toHaveBeenWarned()
 
         expect(scope.effects.length).toBe(0);
 
@@ -207,7 +207,7 @@ describe('reactivity/effect/scope', () =>
         expect(doubled).toBe(undefined);
     });
 
-    it('should fire onScopeDispose hook', () =>
+    it('应触发 onScopeDispose 钩子', () =>
     {
         let dummy = 0;
 
@@ -230,7 +230,7 @@ describe('reactivity/effect/scope', () =>
         expect(dummy).toBe(7);
     });
 
-    it('should warn onScopeDispose() is called when there is no active effect scope', () =>
+    it('没有活动 effect 作用域时调用 onScopeDispose() 应警告', () =>
     {
         const spy = vi.fn();
         const scope = effectScope();
@@ -245,14 +245,14 @@ describe('reactivity/effect/scope', () =>
         onScopeDispose(spy);
 
         // expect(
-        //     '[Vue warn] onScopeDispose() is called when there is no active effect scope to be associated with.',
+        //     '[警告] onScopeDispose() 在没有活动的 effect 作用域时被调用，无法关联。',
         // ).toHaveBeenWarned()
 
         scope.stop();
         expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    it('should dereference child scope from parent scope after stopping child scope (no memleaks)', () =>
+    it('停止子作用域后应从父作用域解引用（无内存泄漏）', () =>
     {
         const parent = effectScope();
         const child = parent.run(() => effectScope())!;
@@ -262,7 +262,7 @@ describe('reactivity/effect/scope', () =>
         expect(parent.scopes!.includes(child)).toBe(false);
     });
 
-    it('getCurrentScope() stays valid when running a detached nested EffectScope', () =>
+    it('运行分离的嵌套 EffectScope 时 getCurrentScope() 应保持有效', () =>
     {
         const parentScope = effectScope();
 
@@ -280,7 +280,7 @@ describe('reactivity/effect/scope', () =>
         });
     });
 
-    it('calling .off() of a detached scope inside an active scope should not break currentScope', () =>
+    it('在活动作用域内调用分离作用域的 .off() 不应破坏 currentScope', () =>
     {
         const parentScope = effectScope();
 
@@ -294,7 +294,7 @@ describe('reactivity/effect/scope', () =>
         });
     });
 
-    it('should pause/resume EffectScope', async () =>
+    it('应暂停/恢复 EffectScope', async () =>
     {
         const counter = reactive({ num: 0 });
         const fnSpy = vi.fn(() => counter.num);

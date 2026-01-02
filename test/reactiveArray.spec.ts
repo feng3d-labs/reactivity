@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { computed, effect, isReactive, isRef, reactive, ref, toRaw } from '../src';
 
-describe('reactivity/reactive/Array', () =>
+describe('响应式/reactive/数组', () =>
 {
-    test('should make Array reactive', () =>
+    test('应使数组变为响应式', () =>
     {
         const original = [{ foo: 1 }];
         const observed = reactive(original);
@@ -20,7 +20,7 @@ describe('reactivity/reactive/Array', () =>
         expect(Object.keys(observed)).toEqual(['0']);
     });
 
-    test('cloned reactive Array should point to observed values', () =>
+    test('克隆的响应式数组应指向观察值', () =>
     {
         const original = [{ foo: 1 }];
         const observed = reactive(original);
@@ -31,7 +31,7 @@ describe('reactivity/reactive/Array', () =>
         expect(clone[0]).toBe(observed[0]);
     });
 
-    test('observed value should proxy mutations to original (Array)', () =>
+    test('观察值应将变更代理到原始值（数组）', () =>
     {
         const original: any[] = [{ foo: 1 }, { bar: 2 }];
         const observed = reactive(original);
@@ -46,13 +46,13 @@ describe('reactivity/reactive/Array', () =>
         delete observed[0];
         expect(observed[0]).toBeUndefined();
         expect(original[0]).toBeUndefined();
-        // mutating methods
+        // 变更方法
         observed.push(value);
         expect(observed[2]).toBe(reactiveValue);
         expect(original[2]).toBe(value);
     });
 
-    test('Array identity methods should work with raw values', () =>
+    test('数组标识方法应与原始值一起工作', () =>
     {
         const raw = {};
         const arr = reactive([{}, {}]);
@@ -66,7 +66,7 @@ describe('reactivity/reactive/Array', () =>
         expect(arr.lastIndexOf(raw)).toBe(2);
         expect(arr.lastIndexOf(raw, 1)).toBe(-1);
 
-        // should work also for the observed version
+        // 对于观察版本也应工作
         const observed = arr[2];
 
         expect(arr.indexOf(observed)).toBe(2);
@@ -77,7 +77,7 @@ describe('reactivity/reactive/Array', () =>
         expect(arr.lastIndexOf(observed, 1)).toBe(-1);
     });
 
-    test('Array identity methods should work if raw value contains reactive objects', () =>
+    test('原始值包含响应式对象时数组标识方法应工作', () =>
     {
         const raw: any[] = [];
         const obj = reactive({});
@@ -88,7 +88,7 @@ describe('reactivity/reactive/Array', () =>
         expect(arr.includes(obj)).toBe(true);
     });
 
-    test('Array identity methods should be reactive', () =>
+    test('数组标识方法应是响应式的', () =>
     {
         const obj = {};
         const arr = reactive([obj, {}]);
@@ -104,8 +104,8 @@ describe('reactivity/reactive/Array', () =>
         expect(index).toBe(1);
     });
 
-    // only non-existent reactive will try to search by using its raw value
-    describe('Array identity methods should not be called more than necessary', () =>
+    // 只有不存在的响应式才会尝试使用其原始值搜索
+    describe('数组标识方法不应调用超过必要次数', () =>
     {
         const identityMethods = ['includes', 'indexOf', 'lastIndexOf'] as const;
 
@@ -129,7 +129,7 @@ describe('reactivity/reactive/Array', () =>
             identityMethods.forEach((key) =>
             {
                 (rawTarget[key] as any).mockClear();
-                // relink to prototype method
+                // 重新链接到原型方法
                 rawTarget[key] = Array.prototype[key] as any;
             });
         }
@@ -142,7 +142,7 @@ describe('reactivity/reactive/Array', () =>
             });
         }
 
-        test('should be called once with a non-existent raw value', () =>
+        test('不存在的原始值应调用一次', () =>
         {
             const reactiveArr = reactive([]);
 
@@ -155,7 +155,7 @@ describe('reactivity/reactive/Array', () =>
             unInstrumentArr(toRaw(reactiveArr));
         });
 
-        test('should be called once with an existent reactive value', () =>
+        test('存在的响应式值应调用一次', () =>
         {
             const existReactiveValue = reactive({});
             const reactiveArr = reactive([existReactiveValue, existReactiveValue]);
@@ -169,7 +169,7 @@ describe('reactivity/reactive/Array', () =>
             unInstrumentArr(toRaw(reactiveArr));
         });
 
-        test('should be called twice with a non-existent reactive value', () =>
+        test('不存在的响应式值应调用两次', () =>
         {
             const reactiveArr = reactive([]);
 
@@ -182,7 +182,7 @@ describe('reactivity/reactive/Array', () =>
             unInstrumentArr(toRaw(reactiveArr));
         });
 
-        test('should be called twice with a non-existent reactive value, but the raw value exists', () =>
+        test('不存在的响应式值但原始值存在应调用两次', () =>
         {
             const existRaw = {};
             const reactiveArr = reactive([existRaw, existRaw]);
@@ -197,7 +197,7 @@ describe('reactivity/reactive/Array', () =>
         });
     });
 
-    test('delete on Array should not trigger length dependency', () =>
+    test('数组上的 delete 不应触发长度依赖', () =>
     {
         const arr = reactive([1, 2, 3]);
         const fn = vi.fn();
@@ -211,7 +211,7 @@ describe('reactivity/reactive/Array', () =>
         expect(fn).toHaveBeenCalledTimes(1);
     });
 
-    test('should track hasOwnProperty call with index', () =>
+    test('应跟踪带索引的 hasOwnProperty 调用', () =>
     {
         const original = [1, 2, 3];
         const observed = reactive(original);
@@ -229,7 +229,7 @@ describe('reactivity/reactive/Array', () =>
         expect(dummy).toBe(false);
     });
 
-    test('shift on Array should trigger dependency once', () =>
+    test('数组上的 shift 应只触发一次依赖', () =>
     {
         const arr = reactive([1, 2, 3]);
         const fn = vi.fn();
@@ -248,7 +248,7 @@ describe('reactivity/reactive/Array', () =>
     });
 
     // #6018
-    test('edge case: avoid trigger effect in deleteProperty when array length-decrease mutation methods called', () =>
+    test('边缘情况：调用数组长度减少的变更方法时避免在 deleteProperty 中触发 effect', () =>
     {
         const arr = ref([1]);
         const fn1 = vi.fn();
@@ -270,7 +270,7 @@ describe('reactivity/reactive/Array', () =>
         expect(fn2).toHaveBeenCalledTimes(1);
     });
 
-    test('add existing index on Array should not trigger length dependency', () =>
+    test('在数组上添加现有索引不应触发长度依赖', () =>
     {
         const array = new Array(3);
         const observed = reactive(array);
@@ -285,7 +285,7 @@ describe('reactivity/reactive/Array', () =>
         expect(fn).toHaveBeenCalledTimes(1);
     });
 
-    test('add non-integer prop on Array should not trigger length dependency', () =>
+    test('在数组上添加非整数属性不应触发长度依赖', () =>
     {
         const array: any[] & { x?: string } = new Array(3);
         const observed = reactive(array);
@@ -305,7 +305,7 @@ describe('reactivity/reactive/Array', () =>
     });
 
     // #2427
-    test('track length on for ... in iteration', () =>
+    test('for ... in 迭代中跟踪长度', () =>
     {
         const array = reactive([1]);
         let length = '';
@@ -324,7 +324,7 @@ describe('reactivity/reactive/Array', () =>
     });
 
     // #9742
-    test('mutation on user proxy of reactive Array', () =>
+    test('响应式数组的用户代理上的变更', () =>
     {
         const array = reactive<number[]>([]);
         const proxy = new Proxy(array, {});
@@ -334,7 +334,7 @@ describe('reactivity/reactive/Array', () =>
         expect(proxy).toHaveLength(1);
     });
 
-    describe('Array methods w/ refs', () =>
+    describe('带 refs 的数组方法', () =>
     {
         let original: any[];
 
@@ -343,8 +343,8 @@ describe('reactivity/reactive/Array', () =>
             original = reactive([1, ref(2)]);
         });
 
-        // read + copy
-        test('read only copy methods', () =>
+        // 读取 + 复制
+        test('只读复制方法', () =>
         {
             const raw = original.concat([3, ref(4)]);
 
@@ -352,8 +352,8 @@ describe('reactivity/reactive/Array', () =>
             expect(isRef(raw[3])).toBe(true);
         });
 
-        // read + write
-        test('read + write mutating methods', () =>
+        // 读取 + 写入
+        test('读取 + 写入变更方法', () =>
         {
             const res = original.copyWithin(0, 1, 2);
             const raw = toRaw(res);
@@ -362,7 +362,7 @@ describe('reactivity/reactive/Array', () =>
             expect(isRef(raw[1])).toBe(true);
         });
 
-        test('read + identity', () =>
+        test('读取 + 标识', () =>
         {
             const ref = original[1];
 
@@ -371,7 +371,7 @@ describe('reactivity/reactive/Array', () =>
         });
     });
 
-    describe('Array subclasses', () =>
+    describe('数组子类', () =>
     {
         class SubArray<T> extends Array<T>
         {
@@ -393,7 +393,7 @@ describe('reactivity/reactive/Array', () =>
             }
         }
 
-        test('calls correct mutation method on Array subclass', () =>
+        test('在数组子类上调用正确的变更方法', () =>
         {
             const subArray = new SubArray(4, 5, 6);
             const observed = reactive(subArray);
@@ -404,7 +404,7 @@ describe('reactivity/reactive/Array', () =>
             expect(observed.lastPushed).toBe(9);
         });
 
-        test('calls correct identity-sensitive method on Array subclass', () =>
+        test('在数组子类上调用正确的标识敏感方法', () =>
         {
             const subArray = new SubArray(4, 5, 6);
             const observed = reactive(subArray);
@@ -420,9 +420,9 @@ describe('reactivity/reactive/Array', () =>
         });
     });
 
-    describe('Optimized array methods:', () =>
+    describe('优化的数组方法：', () =>
     {
-        test('iterator', () =>
+        test('迭代器', () =>
         {
             const shallow = reactive([1, 2, 3, 4]);
             let result = computed(() =>
@@ -628,7 +628,7 @@ describe('reactivity/reactive/Array', () =>
             expect(result.value).toStrictEqual([0, -2, 3]);
         });
 
-        test('extend methods', () =>
+        test('扩展方法', () =>
         {
             class Collection extends Array
             {

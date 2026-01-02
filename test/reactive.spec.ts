@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import { computed, effect, isProxy, isReactive, isRef, reactive, ref, toRaw } from '../src';
 
-describe('reactivity/reactive', () =>
+describe('响应式/reactive', () =>
 {
-    test('Object', () =>
+    test('对象', () =>
     {
         const original = { foo: 1 };
         const observed = reactive(original);
@@ -19,13 +19,13 @@ describe('reactivity/reactive', () =>
         expect(Object.keys(observed)).toEqual(['foo']);
     });
 
-    test('proto', () =>
+    test('原型', () =>
     {
         const obj = {};
         const reactiveObj = reactive(obj);
 
         expect(isReactive(reactiveObj)).toBe(true);
-        // read prop of reactiveObject will cause reactiveObj[prop] to be reactive
+        // 读取 reactiveObject 的属性会使 reactiveObj[prop] 变为响应式
         const prototype = reactiveObj['__proto__'];
         const otherObj = { data: ['a'] };
 
@@ -36,7 +36,7 @@ describe('reactivity/reactive', () =>
         expect(reactiveOther.data[0]).toBe('a');
     });
 
-    test('nested reactives', () =>
+    test('嵌套响应式', () =>
     {
         const original = {
             nested: {
@@ -51,9 +51,9 @@ describe('reactivity/reactive', () =>
         expect(isReactive(observed.array[0])).toBe(true);
     });
 
-    test('observing subtypes of IterableCollections(Map, Set)', () =>
+    test('观察可迭代集合子类型（Map, Set）', () =>
     {
-    // subtypes of Map
+        // Map 的子类型
         class CustomMap extends Map
         { }
         const cmap = reactive(new CustomMap());
@@ -64,7 +64,7 @@ describe('reactivity/reactive', () =>
         cmap.set('key', {});
         expect(isReactive(cmap.get('key'))).toBe(true);
 
-        // subtypes of Set
+        // Set 的子类型
         class CustomSet extends Set
         { }
         const cset = reactive(new CustomSet());
@@ -82,9 +82,9 @@ describe('reactivity/reactive', () =>
         expect(dummy).toBe(false);
     });
 
-    test('observing subtypes of WeakCollections(WeakMap, WeakSet)', () =>
+    test('观察弱集合子类型（WeakMap, WeakSet）', () =>
     {
-    // subtypes of WeakMap
+        // WeakMap 的子类型
         class CustomMap extends WeakMap
         { }
         const cmap = reactive(new CustomMap());
@@ -97,7 +97,7 @@ describe('reactivity/reactive', () =>
         cmap.set(key, {});
         expect(isReactive(cmap.get(key))).toBe(true);
 
-        // subtypes of WeakSet
+        // WeakSet 的子类型
         class CustomSet extends WeakSet
         { }
         const cset = reactive(new CustomSet());
@@ -115,7 +115,7 @@ describe('reactivity/reactive', () =>
         expect(dummy).toBe(false);
     });
 
-    test('observed value should proxy mutations to original (Object)', () =>
+    test('观察值应将变更代理到原始对象（对象）', () =>
     {
         const original: any = { foo: 1 };
         const observed = reactive(original);
@@ -130,7 +130,7 @@ describe('reactivity/reactive', () =>
         expect('foo' in original).toBe(false);
     });
 
-    test('original value change should reflect in observed value (Object)', () =>
+    test('原始值变更应反映在观察值中（对象）', () =>
     {
         const original: any = { foo: 1 };
         const observed = reactive(original);
@@ -145,7 +145,7 @@ describe('reactivity/reactive', () =>
         expect('foo' in observed).toBe(false);
     });
 
-    test('setting a property with an unobserved value should wrap with reactive', () =>
+    test('设置未观察值的属性应用 reactive 包装', () =>
     {
         const observed = reactive<{ foo?: object }>({});
         const raw = {};
@@ -155,7 +155,7 @@ describe('reactivity/reactive', () =>
         expect(isReactive(observed.foo)).toBe(true);
     });
 
-    test('observing already observed value should return same Proxy', () =>
+    test('观察已观察的值应返回相同的 Proxy', () =>
     {
         const original = { foo: 1 };
         const observed = reactive(original);
@@ -164,7 +164,7 @@ describe('reactivity/reactive', () =>
         expect(observed2).toBe(observed);
     });
 
-    test('observing the same value multiple times should return same Proxy', () =>
+    test('多次观察相同值应返回相同的 Proxy', () =>
     {
         const original = { foo: 1 };
         const observed = reactive(original);
@@ -173,7 +173,7 @@ describe('reactivity/reactive', () =>
         expect(observed2).toBe(observed);
     });
 
-    test('observing the same value multiple times should return same Proxy', () =>
+    test('多次观察相同值应返回相同的 Proxy', () =>
     {
         const original = { foo: 1 };
         const observed = reactive(original);
@@ -182,7 +182,7 @@ describe('reactivity/reactive', () =>
         expect(observed2).toBe(observed);
     });
 
-    test('should not pollute original object with Proxies', () =>
+    test('不应用 Proxy 污染原始对象', () =>
     {
         const original: any = { foo: 1 };
         const original2 = { bar: 2 };
@@ -195,7 +195,7 @@ describe('reactivity/reactive', () =>
     });
 
     // #1246
-    test('mutation on objects using reactive as prototype should not trigger', () =>
+    test('使用 reactive 作为原型的对象上的变更不应触发', () =>
     {
         const observed = reactive({ foo: 1 });
         const original = Object.create(observed);
@@ -220,7 +220,7 @@ describe('reactivity/reactive', () =>
         expect(toRaw(original)).toBe(original);
     });
 
-    test('toRaw on object using reactive as prototype', () =>
+    test('使用 reactive 作为原型的对象上的 toRaw', () =>
     {
         const original = { foo: 1 };
         const observed = reactive(original);
@@ -229,7 +229,7 @@ describe('reactivity/reactive', () =>
         expect(toRaw(inherted)).toBe(inherted);
     });
 
-    test('toRaw on user Proxy wrapping reactive', () =>
+    test('用户 Proxy 包装 reactive 上的 toRaw', () =>
     {
         const original = {};
         const re = reactive(original);
@@ -239,7 +239,7 @@ describe('reactivity/reactive', () =>
         expect(raw).toBe(original);
     });
 
-    test('should not unwrap Ref<T>', () =>
+    test('不应解包 Ref<T>', () =>
     {
         const observedNumberRef = reactive(ref(1));
         const observedObjectRef = reactive(ref({ foo: 1 }));
@@ -248,22 +248,22 @@ describe('reactivity/reactive', () =>
         expect(isRef(observedObjectRef)).toBe(true);
     });
 
-    test('should unwrap computed refs', () =>
+    test('应解包 computed refs', () =>
     {
-    // readonly
+        // readonly
         const a = computed(() => 1);
         // writable
         const b = computed(() => 1);
         const obj = reactive({ a, b });
 
-        // check type
+        // 检查类型
         obj.a + 1;
         obj.b + 1;
         expect(typeof obj.a).toBe(`number`);
         expect(typeof obj.b).toBe(`number`);
     });
 
-    test('should allow setting property from a ref to another ref', () =>
+    test('应允许将属性从一个 ref 设置为另一个 ref', () =>
     {
         const foo = ref(0);
         const bar = ref(1);
@@ -279,11 +279,11 @@ describe('reactivity/reactive', () =>
         expect(dummy.value).toBe(2);
     });
 
-    test('should not observe non-extensible objects', () =>
+    test('不应观察不可扩展对象', () =>
     {
         const obj = reactive({
             foo: Object.preventExtensions({ a: 1 }),
-            // sealed or frozen objects are considered non-extensible as well
+            // 密封或冻结的对象也被认为是不可扩展的
             bar: Object.freeze({ a: 1 }),
             baz: Object.seal({ a: 1 }),
         });
@@ -293,7 +293,7 @@ describe('reactivity/reactive', () =>
         expect(isReactive(obj.baz)).toBe(false);
     });
 
-    test('hasOwnProperty edge case: Symbol values', () =>
+    test('hasOwnProperty 边缘情况：Symbol 值', () =>
     {
         const key = Symbol();
         const obj = reactive({ [key]: 1 }) as { [key]?: 1 };
@@ -309,7 +309,7 @@ describe('reactivity/reactive', () =>
         expect(dummy).toBe(false);
     });
 
-    test('hasOwnProperty edge case: non-string values', () =>
+    test('hasOwnProperty 边缘情况：非字符串值', () =>
     {
         const key = {};
         const obj = reactive({ '[object Object]': 1 }) as { '[object Object]'?: 1 };
@@ -344,7 +344,7 @@ describe('reactivity/reactive', () =>
     });
 
     // #11696
-    test('should use correct receiver on set handler for refs', () =>
+    test('refs 的 set handler 应使用正确的 receiver', () =>
     {
         const a = reactive(ref(1));
 
@@ -355,7 +355,7 @@ describe('reactivity/reactive', () =>
         }).not.toThrow();
     });
 
-    test('should trigger reactivity when Map key is undefined', () =>
+    test('Map 键为 undefined 时应触发响应式', () =>
     {
         const map = reactive(new Map());
         const c = computed(() => map.get(undefined));

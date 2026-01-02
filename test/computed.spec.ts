@@ -4,9 +4,9 @@ import { Computed, computed, effect, noTrack, reactive, ref } from '../src';
 import { ComputedReactivity } from '../src/computed';
 import { RefReactivity } from '../src/ref';
 
-describe('reactivity/computed', () =>
+describe('响应式/computed', () =>
 {
-    it('should return updated value', () =>
+    it('应返回更新后的值', () =>
     {
         const value = reactive<{ foo?: number }>({});
         const cValue = computed(() => value.foo);
@@ -16,7 +16,7 @@ describe('reactivity/computed', () =>
         expect(cValue.value).toBe(1);
     });
 
-    it('pass oldValue to computed getter', () =>
+    it('将旧值传递给 computed getter', () =>
     {
         const count = ref(0);
         const oldValue = ref();
@@ -34,36 +34,36 @@ describe('reactivity/computed', () =>
         expect(oldValue.value).toBe(0);
     });
 
-    it('should compute lazily', () =>
+    it('应惰性计算', () =>
     {
         const value = reactive<{ foo?: number }>({});
         const getter = vi.fn(() => value.foo);
         const cValue = computed(getter);
 
-        // lazy
+        // 惰性
         expect(getter).not.toHaveBeenCalled();
 
         expect(cValue.value).toBe(undefined);
         expect(getter).toHaveBeenCalledTimes(1);
 
-        // should not compute again
+        // 不应再次计算
         cValue.value;
         expect(getter).toHaveBeenCalledTimes(1);
 
-        // should not compute until needed
+        // 在需要之前不应计算
         value.foo = 1;
         expect(getter).toHaveBeenCalledTimes(1);
 
-        // now it should compute
+        // 现在应该计算
         expect(cValue.value).toBe(1);
         expect(getter).toHaveBeenCalledTimes(2);
 
-        // should not compute again
+        // 不应再次计算
         cValue.value;
         expect(getter).toHaveBeenCalledTimes(2);
     });
 
-    it('should trigger effect', () =>
+    it('应触发 effect', () =>
     {
         const value = reactive<{ foo?: number }>({});
         const cValue = computed(() => value.foo);
@@ -78,7 +78,7 @@ describe('reactivity/computed', () =>
         expect(dummy).toBe(1);
     });
 
-    it('should work when chained', () =>
+    it('链式调用时应工作', () =>
     {
         const value = reactive({ foo: 0 });
         const c1 = computed(() => value.foo);
@@ -91,7 +91,7 @@ describe('reactivity/computed', () =>
         expect(c1.value).toBe(1);
     });
 
-    it('should trigger effect when chained', () =>
+    it('链式调用时应触发 effect', () =>
     {
         const value = reactive({ foo: 0 });
         const getter1 = vi.fn(() => value.foo);
@@ -111,12 +111,12 @@ describe('reactivity/computed', () =>
         expect(getter2).toHaveBeenCalledTimes(1);
         value.foo++;
         expect(dummy).toBe(2);
-        // should not result in duplicate calls
+        // 不应导致重复调用
         expect(getter1).toHaveBeenCalledTimes(2);
         expect(getter2).toHaveBeenCalledTimes(2);
     });
 
-    it('should trigger effect when chained (mixed invocations)', () =>
+    it('链式调用时应触发 effect（混合调用）', () =>
     {
         const value = reactive({ foo: 0 });
         const getter1 = vi.fn(() => value.foo);
@@ -137,13 +137,13 @@ describe('reactivity/computed', () =>
         expect(getter2).toHaveBeenCalledTimes(1);
         value.foo++;
         expect(dummy).toBe(3);
-        // should not result in duplicate calls
+        // 不应导致重复调用
         expect(getter1).toHaveBeenCalledTimes(2);
         expect(getter2).toHaveBeenCalledTimes(2);
     });
 
     // #5720
-    it('should invalidate before non-computed effects', () =>
+    it('应在非 computed effect 之前失效', () =>
     {
         const plusOneValues: number[] = [];
         const n = ref(0);
@@ -154,16 +154,16 @@ describe('reactivity/computed', () =>
             n.value;
             plusOneValues.push(plusOne.value);
         });
-        // access plusOne, causing it to be non-dirty
+        // 访问 plusOne，使其变为非脏
         plusOne.value;
-        // mutate n
+        // 修改 n
         n.value++;
-        // on the 2nd run, plusOne.value should have already updated.
+        // 第二次运行时，plusOne.value 应该已经更新
         expect(plusOneValues).toMatchObject([1, 2]);
     });
 
     // https://github.com/vuejs/core/pull/5912#issuecomment-1497596875
-    it('should query deps dirty sequentially', () =>
+    it('应按顺序查询依赖脏状态', () =>
     {
         const cSpy = vi.fn();
 
@@ -192,11 +192,12 @@ describe('reactivity/computed', () =>
         a.value!.v = 2;
         a.value = null as any;
         d.value;
-        expect(cSpy).toHaveBeenCalledTimes(2); // 采用了失效子节点的方式，此处结果不再是1，而为2。
+        // 采用了失效子节点的方式，此处结果不再是 1，而为 2
+        expect(cSpy).toHaveBeenCalledTimes(2);
     });
 
     // https://github.com/vuejs/core/pull/5912#issuecomment-1738257692
-    it('chained computed dirty reallocation after querying dirty', () =>
+    it('查询脏状态后链式 computed 脏重新分配', () =>
     {
         let _msg: string | undefined;
 
@@ -225,7 +226,7 @@ describe('reactivity/computed', () =>
         expect(_msg).toBe('The items are not loaded');
     });
 
-    it('chained computed dirty reallocation after trigger computed getter', () =>
+    it('触发 computed getter 后链式 computed 脏重新分配', () =>
     {
         let _msg: string | undefined;
 
@@ -244,7 +245,8 @@ describe('reactivity/computed', () =>
 
         _msg = msg.value;
         items.value = [1, 2, 3];
-        isLoaded.value; // <- trigger computed getter
+        // 触发 computed getter
+        isLoaded.value;
         _msg = msg.value;
         items.value = undefined as any;
         _msg = msg.value;
@@ -253,7 +255,7 @@ describe('reactivity/computed', () =>
     });
 
     // https://github.com/vuejs/core/pull/5912#issuecomment-1739159832
-    it('deps order should be consistent with the last time get value', () =>
+    it('依赖顺序应与上次获取值时一致', () =>
     {
         const cSpy = vi.fn();
 
@@ -305,7 +307,7 @@ describe('reactivity/computed', () =>
         expect(cSpy).toHaveBeenCalledTimes(2);
     });
 
-    it('should trigger by the second computed that maybe dirty', () =>
+    it('应被可能脏的第二个 computed 触发', () =>
     {
         const cSpy = vi.fn();
 
@@ -329,7 +331,7 @@ describe('reactivity/computed', () =>
         expect(cSpy).toHaveBeenCalledTimes(3);
     });
 
-    it('should trigger the second effect', () =>
+    it('应触发第二个 effect', () =>
     {
         const fnSpy = vi.fn();
         const v = ref(1);
@@ -350,7 +352,7 @@ describe('reactivity/computed', () =>
         expect(fnSpy).toBeCalledTimes(2);
     });
 
-    it('should chained recursive effects clear dirty after trigger', () =>
+    it('链式递归 effect 应在触发后清除脏状态', () =>
     {
         const v = ref(1);
         const c1 = computed(() => v.value) as Computed;
@@ -361,7 +363,7 @@ describe('reactivity/computed', () =>
         expect(c2['_isDirty']).toBeFalsy();
     });
 
-    it('should chained computeds dirtyLevel update with first computed effect', () =>
+    it('链式 computed 脏状态应随第一个 computed effect 更新', () =>
     {
         const v = ref(0);
         const c1 = computed(() =>
@@ -379,7 +381,7 @@ describe('reactivity/computed', () =>
         c3.value;
     });
 
-    it('should work when chained(ref+computed)', () =>
+    it('链式（ref+computed）应工作', () =>
     {
         const v = ref(0);
         const c1 = computed(() =>
@@ -397,7 +399,7 @@ describe('reactivity/computed', () =>
         expect(c2.value).toBe('1foo');
     });
 
-    it('should trigger effect even computed already dirty', () =>
+    it('即使 computed 已脏也应触发 effect', () =>
     {
         const fnSpy = vi.fn();
         const v = ref(0);
@@ -425,7 +427,7 @@ describe('reactivity/computed', () =>
         expect(v.value).toBe(2);
     });
 
-    test('should not trigger if value did not change', () =>
+    test('值未改变时不应触发', () =>
     {
         const src = ref(0);
         const c = computed(() => src.value % 2);
@@ -438,16 +440,16 @@ describe('reactivity/computed', () =>
         expect(spy).toHaveBeenCalledTimes(1);
         src.value = 2;
 
-        // should not trigger
+        // 不应触发
         expect(spy).toHaveBeenCalledTimes(1);
 
         src.value = 3;
         src.value = 5;
-        // should trigger because latest value changes
+        // 应触发因为最新值改变了
         expect(spy).toHaveBeenCalledTimes(2);
     });
 
-    test('chained computed trigger', () =>
+    test('链式 computed 触发', () =>
     {
         const effectSpy = vi.fn();
         const c1Spy = vi.fn();
@@ -482,7 +484,7 @@ describe('reactivity/computed', () =>
         expect(effectSpy).toHaveBeenCalledTimes(2);
     });
 
-    it('should be recomputed without being affected by side effects', () =>
+    it('应在不受副作用影响的情况下重新计算', () =>
     {
         const v = ref(0);
         const c1 = computed(() =>
@@ -499,7 +501,7 @@ describe('reactivity/computed', () =>
         expect(c2.value).toBe('1,0');
     });
 
-    test('chained computed avoid re-compute', () =>
+    test('链式 computed 避免重新计算', () =>
     {
         const effectSpy = vi.fn();
         const c1Spy = vi.fn();
@@ -529,13 +531,13 @@ describe('reactivity/computed', () =>
         src.value = 4;
         src.value = 6;
         expect(c1Spy).toHaveBeenCalledTimes(4);
-        // c2 should not have to re-compute because c1 did not change.
+        // c2 不需要重新计算因为 c1 没有改变
         expect(c2Spy).toHaveBeenCalledTimes(1);
-        // effect should not trigger because c2 did not change.
+        // effect 不应触发因为 c2 没有改变
         expect(effectSpy).toHaveBeenCalledTimes(1);
     });
 
-    test('chained computed value invalidation', () =>
+    test('链式 computed 值失效', () =>
     {
         const effectSpy = vi.fn();
         const c1Spy = vi.fn();
@@ -568,12 +570,12 @@ describe('reactivity/computed', () =>
         expect(c2Spy).toHaveBeenCalledTimes(1);
 
         src.value = 1;
-        // value should be available sync
+        // 值应该同步可用
         expect(c2.value).toBe(2);
         expect(c2Spy).toHaveBeenCalledTimes(2);
     });
 
-    test('sync access of invalidated chained computed should not prevent final effect from running', () =>
+    test('同步访问失效的链式 computed 不应阻止最终 effect 运行', () =>
     {
         const effectSpy = vi.fn();
         const c1Spy = vi.fn();
@@ -600,12 +602,12 @@ describe('reactivity/computed', () =>
         expect(effectSpy).toHaveBeenCalledTimes(1);
 
         src.value = 1;
-        // sync access c2
+        // 同步访问 c2
         c2.value;
         expect(effectSpy).toHaveBeenCalledTimes(2);
     });
 
-    it('computed should force track in untracked zone', () =>
+    it('computed 应在 untracked 区域强制追踪', () =>
     {
         const n = ref(0);
         const spy1 = vi.fn();
@@ -620,7 +622,7 @@ describe('reactivity/computed', () =>
             {
                 n.value;
                 c = computed(() => n.value + 1) as Computed;
-                // access computed now to force refresh
+                // 立即访问 computed 强制刷新
                 c.value;
                 effect(() => spy2(c.value));
                 n.value;
@@ -631,15 +633,15 @@ describe('reactivity/computed', () =>
         expect(spy2).toHaveBeenCalledTimes(1);
 
         n.value++;
-        // outer effect should not trigger
+        // 外部 effect 不应触发
         expect(spy1).toHaveBeenCalledTimes(1);
-        // inner effect should trigger
+        // 内部 effect 应触发
         expect(spy2).toHaveBeenCalledTimes(2);
     });
 
-    // not recommended behavior, but needed for backwards compatibility
-    // used in VueUse asyncComputed
-    it('computed side effect should be able trigger', () =>
+    // 不推荐的行为，但为了向后兼容需要
+    // 用于 VueUse asyncComputed
+    it('computed 副作用应能触发', () =>
     {
         const a = ref(false);
         const b = ref(false);
@@ -658,20 +660,20 @@ describe('reactivity/computed', () =>
             }
         });
         expect(b.value).toBe(false);
-        // accessing c triggers change
+        // 访问 c 触发变化
         c.value;
         expect(b.value).toBe(true);
         expect(c.value).toBe(true);
     });
 
-    it('chained computed should work when accessed before having subs', () =>
+    it('链式 computed 在有订阅者之前访问时应工作', () =>
     {
         const n = ref(0);
         const c = computed(() => n.value);
         const d = computed(() => c.value + 1);
         const spy = vi.fn();
 
-        // access
+        // 访问
         d.value;
 
         let dummy;
@@ -689,7 +691,7 @@ describe('reactivity/computed', () =>
         expect(dummy).toBe(2);
     });
 
-    it('should be recomputed without being affected by side effects', () =>
+    it('应在不受副作用影响的情况下重新计算', () =>
     {
         const v = ref(0);
         const c1 = computed(() =>
@@ -706,7 +708,7 @@ describe('reactivity/computed', () =>
         expect(c2.value).toBe('1,0');
     });
 
-    test('computed should remain live after losing all subscribers', () =>
+    test('computed 失去所有订阅者后应保持活跃', () =>
     {
         const state = reactive({ a: 1 });
         const p = computed(() => state.a + 1);
@@ -720,7 +722,7 @@ describe('reactivity/computed', () =>
     });
 
     // #11995
-    test('computed dep cleanup should not cause property dep to be deleted', () =>
+    test('computed 依赖清理不应导致属性依赖被删除', () =>
     {
         const toggle = ref(true);
         const state = reactive({ a: 1 });
@@ -737,7 +739,7 @@ describe('reactivity/computed', () =>
     });
 
     // #12020
-    test('computed value updates correctly after dep cleanup', () =>
+    test('依赖清理后 computed 值应正确更新', () =>
     {
         const obj = reactive({ foo: 1, flag: 1 });
         const c1 = computed(() => obj.foo);
@@ -759,7 +761,7 @@ describe('reactivity/computed', () =>
     });
 
     // #11928
-    test('should not lead to exponential perf cost with deeply chained computed', () =>
+    test('深度链式 computed 不应导致指数级性能开销', () =>
     {
         const start = {
             prop1: ref(1),
@@ -813,7 +815,7 @@ describe('reactivity/computed', () =>
         ]).toMatchObject([-2, -4, 2, 3]);
     });
 
-    test('performance when removing dependencies from deeply nested computeds', () =>
+    test('从深度嵌套 computed 移除依赖时的性能', () =>
     {
         const base = ref(1);
         const trigger = ref(true);

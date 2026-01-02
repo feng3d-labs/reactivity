@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { effect, isReactive, reactive, toRaw } from '../../src';
 
-describe('reactivity/collections', () =>
+describe('响应式/集合', () =>
 {
     describe('WeakSet', () =>
     {
@@ -15,7 +15,7 @@ describe('reactivity/collections', () =>
             expect(observed).toBeInstanceOf(WeakSet);
         });
 
-        it('should observe mutations', () =>
+        it('应观察变更', () =>
         {
             let dummy;
             const value = {};
@@ -30,7 +30,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(false);
         });
 
-        it('should observe mutations with observed value', () =>
+        it('应观察以观察值的变更', () =>
         {
             let dummy;
             const value = reactive({});
@@ -45,7 +45,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(false);
         });
 
-        it('should not observe custom property mutations', () =>
+        it('不应观察自定义属性变更', () =>
         {
             let dummy;
             const set: any = reactive(new WeakSet());
@@ -57,7 +57,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(undefined);
         });
 
-        it('should not observe non value changing mutations', () =>
+        it('不应观察非值变化的变更', () =>
         {
             let dummy;
             const value = {};
@@ -82,7 +82,7 @@ describe('reactivity/collections', () =>
             expect(setSpy).toHaveBeenCalledTimes(3);
         });
 
-        it('should not observe raw data', () =>
+        it('不应观察原始数据', () =>
         {
             const value = {};
             let dummy;
@@ -95,7 +95,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(false);
         });
 
-        it('should not be triggered by raw mutations', () =>
+        it('不应被原始变更触发', () =>
         {
             const value = {};
             let dummy;
@@ -108,7 +108,7 @@ describe('reactivity/collections', () =>
             expect(dummy).toBe(false);
         });
 
-        it('should not pollute original Set with Proxies', () =>
+        it('不应用 Proxy 污染原始 Set', () =>
         {
             const set = new WeakSet();
             const observed = reactive(set);
@@ -119,7 +119,7 @@ describe('reactivity/collections', () =>
             expect(set.has(value)).toBe(false);
         });
 
-        it('should return proxy from WeakSet.add call', () =>
+        it('WeakSet.add 调用应返回代理', () =>
         {
             const set = reactive(new WeakSet());
             const result = set.add({});
