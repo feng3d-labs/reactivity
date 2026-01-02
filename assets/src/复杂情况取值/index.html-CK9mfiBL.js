@@ -1,5 +1,5 @@
 import "../../modulepreload-polyfill-DaKOjhqt.js";
-import { p as pkg, c as computed, r as ref, a as computed$1, b as ref$1 } from "../../package-DuJynByc.js";
+import { p as pkg, c as computed, r as ref, a as computed$1, b as ref$1 } from "../../package-CBGZaZSn.js";
 function updateResults(result) {
   let { code, feng3dResult, vueResult, 结论 } = result;
   code = unescapeUnicode(code);

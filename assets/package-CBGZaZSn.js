@@ -1461,11 +1461,10 @@ function isProxy$1(value) {
   return value ? !!value[ReactiveFlags.RAW] : false;
 }
 /**
-* @vue/shared v3.5.14
+* @vue/shared v3.5.26
 * (c) 2018-present Yuxi (Evan) You and Vue contributors
 * @license MIT
 **/
-/*! #__NO_SIDE_EFFECTS__ */
 // @__NO_SIDE_EFFECTS__
 function makeMap(str) {
   const map = /* @__PURE__ */ Object.create(null);
@@ -1489,7 +1488,7 @@ const toRawType = (value) => {
 const isIntegerKey = (key) => isString(key) && key !== "NaN" && key[0] !== "-" && "" + parseInt(key, 10) === key;
 const hasChanged = (value, oldValue) => !Object.is(value, oldValue);
 /**
-* @vue/reactivity v3.5.14
+* @vue/reactivity v3.5.26
 * (c) 2018-present Yuxi (Evan) You and Vue contributors
 * @license MIT
 **/
@@ -1673,6 +1672,7 @@ class Link {
   }
 }
 class Dep {
+  // TODO isolatedDeclarations "__v_skip"
   constructor(computed2) {
     this.computed = computed2;
     this.version = 0;
@@ -1681,6 +1681,7 @@ class Dep {
     this.map = void 0;
     this.key = void 0;
     this.sc = 0;
+    this.__v_skip = true;
   }
   track(debugInfo) {
     if (!activeSub || !shouldTrack || activeSub === this.computed) {
@@ -1755,13 +1756,13 @@ function addSub(link) {
   }
 }
 const targetMap = /* @__PURE__ */ new WeakMap();
-const ITERATE_KEY = Symbol(
+const ITERATE_KEY = /* @__PURE__ */ Symbol(
   ""
 );
-const MAP_KEY_ITERATE_KEY = Symbol(
+const MAP_KEY_ITERATE_KEY = /* @__PURE__ */ Symbol(
   ""
 );
-const ARRAY_ITERATE_KEY = Symbol(
+const ARRAY_ITERATE_KEY = /* @__PURE__ */ Symbol(
   ""
 );
 function track(target, type, key) {
@@ -1853,10 +1854,16 @@ function shallowReadArray(arr) {
   track(arr = toRaw(arr), "iterate", ARRAY_ITERATE_KEY);
   return arr;
 }
+function toWrapped(target, item) {
+  if (isReadonly(target)) {
+    return isReactive(target) ? toReadonly(toReactive(item)) : toReadonly(item);
+  }
+  return toReactive(item);
+}
 const arrayInstrumentations = {
   __proto__: null,
   [Symbol.iterator]() {
-    return iterator(this, Symbol.iterator, toReactive);
+    return iterator(this, Symbol.iterator, (item) => toWrapped(this, item));
   },
   concat(...args) {
     return reactiveReadArray(this).concat(
@@ -1865,7 +1872,7 @@ const arrayInstrumentations = {
   },
   entries() {
     return iterator(this, "entries", (value) => {
-      value[1] = toReactive(value[1]);
+      value[1] = toWrapped(this, value[1]);
       return value;
     });
   },
@@ -1873,16 +1880,37 @@ const arrayInstrumentations = {
     return apply(this, "every", fn, thisArg, void 0, arguments);
   },
   filter(fn, thisArg) {
-    return apply(this, "filter", fn, thisArg, (v) => v.map(toReactive), arguments);
+    return apply(
+      this,
+      "filter",
+      fn,
+      thisArg,
+      (v) => v.map((item) => toWrapped(this, item)),
+      arguments
+    );
   },
   find(fn, thisArg) {
-    return apply(this, "find", fn, thisArg, toReactive, arguments);
+    return apply(
+      this,
+      "find",
+      fn,
+      thisArg,
+      (item) => toWrapped(this, item),
+      arguments
+    );
   },
   findIndex(fn, thisArg) {
     return apply(this, "findIndex", fn, thisArg, void 0, arguments);
   },
   findLast(fn, thisArg) {
-    return apply(this, "findLast", fn, thisArg, toReactive, arguments);
+    return apply(
+      this,
+      "findLast",
+      fn,
+      thisArg,
+      (item) => toWrapped(this, item),
+      arguments
+    );
   },
   findLastIndex(fn, thisArg) {
     return apply(this, "findLastIndex", fn, thisArg, void 0, arguments);
@@ -1900,7 +1928,7 @@ const arrayInstrumentations = {
   join(separator) {
     return reactiveReadArray(this).join(separator);
   },
-  // keys() iterator only reads `length`, no optimisation required
+  // keys() iterator only reads `length`, no optimization required
   lastIndexOf(...args) {
     return searchProxy(this, "lastIndexOf", args);
   },
@@ -1942,7 +1970,7 @@ const arrayInstrumentations = {
     return noTracking(this, "unshift", args);
   },
   values() {
-    return iterator(this, "values", toReactive);
+    return iterator(this, "values", (item) => toWrapped(this, item));
   }
 };
 function iterator(self, method, wrapValue) {
@@ -1952,7 +1980,7 @@ function iterator(self, method, wrapValue) {
     iter._next = iter.next;
     iter.next = () => {
       const result = iter._next();
-      if (result.value) {
+      if (!result.done) {
         result.value = wrapValue(result.value);
       }
       return result;
@@ -1973,7 +2001,7 @@ function apply(self, method, fn, thisArg, wrappedRetFn, args) {
   if (arr !== self) {
     if (needsWrap) {
       wrappedFn = function(item, index) {
-        return fn.call(this, toReactive(item), index, self);
+        return fn.call(this, toWrapped(self, item), index, self);
       };
     } else if (fn.length > 2) {
       wrappedFn = function(item, index) {
@@ -1990,7 +2018,7 @@ function reduce(self, method, fn, args) {
   if (arr !== self) {
     if (!isShallow(self)) {
       wrappedFn = function(acc, item, index) {
-        return fn.call(this, acc, toReactive(item), index, self);
+        return fn.call(this, acc, toWrapped(self, item), index, self);
       };
     } else if (fn.length > 3) {
       wrappedFn = function(acc, item, index) {
@@ -2078,7 +2106,8 @@ class BaseReactiveHandler2 {
       return res;
     }
     if (isRef(res)) {
-      return targetIsArray && isIntegerKey(key) ? res : res.value;
+      const value = targetIsArray && isIntegerKey(key) ? res : res.value;
+      return isReadonly2 && isObject(value) ? readonly(value) : value;
     }
     if (isObject(res)) {
       return isReadonly2 ? readonly(res) : reactive(res);
@@ -2092,22 +2121,23 @@ class MutableReactiveHandler2 extends BaseReactiveHandler2 {
   }
   set(target, key, value, receiver) {
     let oldValue = target[key];
+    const isArrayWithIntegerKey = isArray(target) && isIntegerKey(key);
     if (!this._isShallow) {
       const isOldValueReadonly = isReadonly(oldValue);
       if (!isShallow(value) && !isReadonly(value)) {
         oldValue = toRaw(oldValue);
         value = toRaw(value);
       }
-      if (!isArray(target) && isRef(oldValue) && !isRef(value)) {
+      if (!isArrayWithIntegerKey && isRef(oldValue) && !isRef(value)) {
         if (isOldValueReadonly) {
-          return false;
+          return true;
         } else {
           oldValue.value = value;
           return true;
         }
       }
     }
-    const hadKey = isArray(target) && isIntegerKey(key) ? Number(key) < target.length : hasOwn(target, key);
+    const hadKey = isArrayWithIntegerKey ? Number(key) < target.length : hasOwn(target, key);
     const result = Reflect.set(
       target,
       key,
@@ -2223,7 +2253,7 @@ function createInstrumentations(readonly2, shallow) {
     get size() {
       const target = this["__v_raw"];
       !readonly2 && track(toRaw(target), "iterate", ITERATE_KEY);
-      return Reflect.get(target, "size", target);
+      return target.size;
     },
     has(key) {
       const target = this["__v_raw"];
@@ -2417,6 +2447,12 @@ function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandl
   );
   proxyMap.set(target, proxy);
   return proxy;
+}
+function isReactive(value) {
+  if (isReadonly(value)) {
+    return isReactive(value["__v_raw"]);
+  }
+  return !!(value && value["__v_isReactive"]);
 }
 function isReadonly(value) {
   return !!(value && value["__v_isReadonly"]);
