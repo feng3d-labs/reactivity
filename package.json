@@ -1,6 +1,6 @@
 {
   "name": "@feng3d/reactivity",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "反应式，主要用于feng3d中的数据驱动。",
   "homepage": "https://feng3d.com/reactivity",
   "author": "feng",
@@ -47,7 +47,6 @@
   ],
   "devDependencies": {
     "@eslint/js": "^9.0.0",
-    "@feng3d/cli": "^0.0.19",
     "@types/node": "^22.15.19",
     "@typescript-eslint/eslint-plugin": "8.32.1",
     "@typescript-eslint/parser": "8.32.1",
