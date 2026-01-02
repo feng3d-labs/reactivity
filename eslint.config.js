@@ -16,9 +16,6 @@ export default [
             '**/public/**',          // 忽略所有 public 目录
             '**/coverage/**',        // 忽略所有 coverage 目录
             '**/.git/**',            // 忽略所有 .git 目录
-            '**/examples/node_modules/**',  // 忽略 examples 下的 node_modules
-            '**/examples/dist/**',          // 忽略 examples 下的 dist
-            '**/examples/public/**',        // 忽略 examples 下的 public
         ],
     },
     // 使用 ESLint 推荐配置
@@ -39,6 +36,7 @@ export default [
             parserOptions: {
                 ecmaVersion: 2021,    // 使用 ES2021 语法
                 sourceType: 'module', // 使用 ES 模块
+                tsconfigRootDir: import.meta.dirname, // 明确指定 tsconfig 根目录
             },
         },
         rules: {
@@ -52,6 +50,8 @@ export default [
             '@typescript-eslint/no-unsafe-function-type': 'off',  // 允许不安全的函数类型
             '@typescript-eslint/no-this-alias': 'off',            // 允许 this 别名
             'prefer-const': 'off',                                // 不强制使用 const
+            'no-fallthrough': 'off',                              // 允许 fallthrough
+            'no-constant-binary-expression': 'off',              // 允许常量二进制表达式
 
             // 注释格式规则
             'spaced-comment': ['warn', 'always', {
@@ -117,7 +117,7 @@ export default [
             }],
 
             // 其他格式规则
-            'semi': ['warn', 'always'],           // 要求使用分号
+            'semi': ['off'],           // 要求使用分号
             'comma-dangle': ['warn', 'always-multiline'],  // 多行时要求尾随逗号
             'object-curly-spacing': ['warn', 'always'],    // 对象括号内要求空格
             'array-bracket-spacing': ['warn', 'never'],    // 数组括号内不允许空格

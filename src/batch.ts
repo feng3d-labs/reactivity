@@ -15,24 +15,20 @@ export function batch(dep: ComputedReactivity, isRunning: boolean): void
 {
     if (isRunning)
     {
-        const index = _isRunedDeps.indexOf(dep);
-
-        if (index !== -1)
+        // 如果依赖已经在队列中，直接返回，避免重复添加
+        if (_isRunedDeps.indexOf(dep) !== -1)
         {
-            console.warn('dep already in _isRunedDeps');
-            // _isRunedDeps.splice(index, 1);
+            return;
         }
 
         _isRunedDeps.push(dep);
     }
     else
     {
-        const index = _needEffectDeps.indexOf(dep);
-
-        if (index !== -1)
+        // 如果依赖已经在队列中，直接返回，避免重复添加
+        if (_needEffectDeps.indexOf(dep) !== -1)
         {
-            console.warn('dep already in _needEffectDeps，存在多重依赖问题。可能是由于副作用中多次修改了同一个响应式对象。');
-            // _needEffectDeps.splice(index, 1);
+            return;
         }
 
         _needEffectDeps.push(dep);

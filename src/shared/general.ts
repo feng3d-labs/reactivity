@@ -86,7 +86,7 @@ export function toRaw<T>(observed: T): T
 
 export function warn(msg: string, ...args: any[]): void
 {
-    console.warn(`[Vue warn] ${msg}`, ...args);
+    console.warn(`[警告] ${msg}`, ...args);
 }
 
 /**

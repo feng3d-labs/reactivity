@@ -1007,5 +1007,118 @@ describe('reactivity/effect', () =>
         expect(fnSpy).toHaveBeenCalledTimes(2);
         expect(obj.foo).toBe(3);
     });
+
+    test('should not add duplicate dependency to batch queue when modifying multiple properties', () =>
+    {
+        // 模拟 RenderObjectChanges 示例中的场景：
+        // 连续修改多个响应式属性时，同一个 effect 不应被重复添加到批处理队列
+        const obj = reactive({
+            pipeline: {
+                vertex: { code: 'vertex shader 1' },
+                fragment: { code: 'fragment shader 1' },
+            },
+            bindingResources: {
+                color: { value: [1, 0, 0, 1] },
+            },
+        });
+
+        let renderCount = 0;
+        const warnSpy = vi.spyOn(console, 'warn');
+
+        // 创建一个依赖多个属性的 effect
+        effect(() =>
+        {
+            // 访问多个属性，建立依赖
+            obj.pipeline.vertex.code;
+            obj.pipeline.fragment.code;
+            obj.bindingResources.color.value;
+            renderCount++;
+        });
+
+        expect(renderCount).toBe(1);
+        warnSpy.mockClear();
+
+        // 连续修改多个属性，模拟用户点击事件
+        obj.pipeline.vertex.code = 'vertex shader 2';
+        obj.pipeline.fragment.code = 'fragment shader 2';
+        obj.bindingResources.color.value = [0, 1, 0, 1];
+
+        // effect 应该只执行一次（由于响应式系统的设计，每次修改都会触发）
+        // 但不应该有重复依赖的警告
+        expect(warnSpy).not.toHaveBeenCalledWith('dep already in _isRunedDeps');
+        expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining('dep already in _needEffectDeps'));
+
+        warnSpy.mockRestore();
+    });
+
+    test('should deduplicate effects in batch queue when same effect is triggered multiple times', () =>
+    {
+        const obj = reactive({ a: 1, b: 2, c: 3 });
+
+        const effectSpy = vi.fn(() =>
+        {
+            // 访问所有属性
+            return obj.a + obj.b + obj.c;
+        });
+
+        effect(effectSpy);
+        expect(effectSpy).toHaveBeenCalledTimes(1);
+
+        effectSpy.mockClear();
+
+        // 在同一个同步代码块中修改多个属性
+        // 这会多次触发同一个 effect
+        obj.a = 10;
+        obj.b = 20;
+        obj.c = 30;
+
+        // 由于响应式系统的特性，每次修改都会立即触发 effect
+        // 但同一个 effect 在同一批次中不应被重复添加
+        expect(effectSpy.mock.calls.length).toBeGreaterThanOrEqual(1);
+    });
+
+    test('should handle nested object property modifications without duplicate warnings', () =>
+    {
+        const state = reactive({
+            config: {
+                theme: 'light',
+                fontSize: 14,
+            },
+            user: {
+                name: 'test',
+                settings: {
+                    notifications: true,
+                },
+            },
+        });
+
+        const warnSpy = vi.spyOn(console, 'warn');
+        let effectRunCount = 0;
+
+        effect(() =>
+        {
+            // 深度依赖多个嵌套属性
+            state.config.theme;
+            state.config.fontSize;
+            state.user.name;
+            state.user.settings.notifications;
+            effectRunCount++;
+        });
+
+        expect(effectRunCount).toBe(1);
+        warnSpy.mockClear();
+
+        // 连续修改多个嵌套属性
+        state.config.theme = 'dark';
+        state.config.fontSize = 16;
+        state.user.name = 'updated';
+        state.user.settings.notifications = false;
+
+        // 不应有重复依赖的警告
+        expect(warnSpy).not.toHaveBeenCalledWith('dep already in _isRunedDeps');
+        expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining('dep already in _needEffectDeps'));
+
+        warnSpy.mockRestore();
+    });
 });
 

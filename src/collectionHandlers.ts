@@ -434,10 +434,10 @@ function checkIdentityKeys(
         const type = toRawType(target);
 
         warn(
-            `Reactive ${type} contains both the raw and reactive ` +
-            `versions of the same object${type === `Map` ? ` as keys` : ``}, ` +
-            `which can lead to inconsistencies. ` +
-            `It is recommended to use only the reactive version.`,
+            `响应式 ${type} 同时包含同一对象的原始版本和响应式版本` +
+            `${type === `Map` ? `作为键` : ``}，` +
+            `这可能导致不一致。` +
+            `建议仅使用响应式版本。`,
         );
     }
 }

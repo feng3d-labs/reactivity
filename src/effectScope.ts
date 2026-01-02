@@ -158,7 +158,7 @@ export class EffectScope
         }
         else if (__DEV__)
         {
-            warn(`cannot run an inactive effect scope.`);
+            warn(`无法运行已停用的 effect 作用域。`);
         }
     }
 
@@ -287,8 +287,7 @@ export function onScopeDispose(fn: () => void, failSilently = false): void
     else if (__DEV__ && !failSilently)
     {
         warn(
-            `onScopeDispose() is called when there is no active effect scope` +
-            ` to be associated with.`,
+            `onScopeDispose() 在没有活动的 effect 作用域时被调用，无法关联。`,
         );
     }
 }

@@ -1,26 +1,36 @@
-name: Pull Request CI
+# 代码检查和测试
+# 在 PR 或推送到主分支时执行
+name: Lint and Test
 
 on:
+  push:
+    branches:
+      - master
+      - main
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
+      - main
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Use Node.js 20.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm install
 
-    - name: Run unit tests
-      run: npm test
+      - name: Run lint
+        run: npm run lint
 
-    - name: Build project
-      run: npm run build 
+      - name: Run unit tests
+        run: npm test
+

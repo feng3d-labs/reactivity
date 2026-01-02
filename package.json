@@ -1,14 +1,14 @@
 {
   "name": "@feng3d/reactivity",
-  "type": "module",
   "version": "1.0.8",
   "description": "反应式，主要用于feng3d中的数据驱动。",
   "homepage": "https://feng3d.com/reactivity",
+  "author": "feng",
+  "license": "MIT",
+  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "module": "./src/index.ts",
-  "author": "feng",
-  "license": "MIT",
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -17,28 +17,24 @@
     }
   },
   "scripts": {
-    "dev": "cd examples && npm run dev",
+    "examples:dev": "cd examples && npm run dev",
+    "postdocs": "node scripts/postdocs.js && cd examples && vite build --outDir ../public",
     "clean": "rimraf \"{lib,dist,public}\"",
     "build": "vite build",
-    "test": "vitest",
-    "types": "tsc",
     "watch": "tsc -w",
+    "test": "vitest",
     "lint": "eslint . --ext .js,.ts --max-warnings 0",
     "lintfix": "npm run lint -- --fix",
     "docs": "typedoc && cd examples && vite build --outDir ../public",
-    "upload_oss": "npm run docs && feng3d-cli oss_upload_dir",
-    "release": "npm version patch && npm run clean && npm run lint && npm run build && npm run docs && npm run types && npm publish",
     "prepublishOnly": "node scripts/prepublish.js",
-    "postpublish": "node scripts/postpublish.js"
+    "release": "npm version patch && npm run clean && npm run lint && npm run build && npm run docs && npm run types && npm publish",
+    "postpublish": "node scripts/postpublish.js",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/feng3d-labs/reactivity.git"
   },
-  "workspaces": [
-    ".",
-    "./examples"
-  ],
   "publishConfig": {
     "access": "public"
   },
@@ -64,6 +60,18 @@
     "typescript": "5.8.3",
     "typescript-eslint": "^8.32.1",
     "vite": "^6.3.5",
-    "vitest": "^3.1.3"
-  }
+    "vitest": "^3.1.3",
+    "concurrently": "^9.1.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.10"
+  },
+  "lint-staged": {
+    "*.{js,ts}": [
+      "eslint --fix --max-warnings 0"
+    ]
+  },
+  "workspaces": [
+    ".",
+    "./examples"
+  ]
 }
