@@ -448,7 +448,6 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
      */
     toReversed()
     {
-        // @ts-expect-error user code may run in es2016+
         return reactiveReadArray(this).toReversed();
     },
 
@@ -465,7 +464,6 @@ export const arrayInstrumentations: Record<string | symbol, Function> = <any>{
      */
     toSorted(comparer?: (a: unknown, b: unknown) => number)
     {
-        // @ts-expect-error user code may run in es2016+
         return reactiveReadArray(this).toSorted(comparer);
     },
 
@@ -653,7 +651,7 @@ function apply(
 {
     const arr = shallowReadArray(self);
     const needsWrap = arr !== self;
-    const methodFn = arr[method];
+    const methodFn = arr[method] as Function;
 
     // #11759
     // If the method being called is from a user-extended Array, the arguments will be unknown

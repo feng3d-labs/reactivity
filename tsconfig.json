@@ -1,20 +1,21 @@
 {
     "compilerOptions": {
-        "target": "ES5",
-        "module": "CommonJS",
-        "noImplicitAny": false,
-        "sourceMap": true,
-        "declarationMap": true,
-        "declaration": true,
-        "experimentalDecorators": true,
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
         "emitDeclarationOnly": true,
-        "lib": [
-            "ES2015",
-            "DOM",
-        ],
-        "outDir": "lib"
+        "declaration": true,
+        "declarationMap": true,
+        "rootDir": "src",
+        "outDir": "lib",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true
     },
-    "include": [
-        "src/**/*.ts"
-    ]
+    "include": ["src/**/*.ts"],
+    "exclude": ["node_modules", "dist", "lib", "public"]
 }

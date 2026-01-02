@@ -16,3 +16,4 @@ pkg = pkg
 ;
 
 fs.writeFileSync(pkgpath, pkg, 'utf8');
+
