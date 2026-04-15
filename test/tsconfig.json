@@ -10,12 +10,10 @@
         "emitDeclarationOnly": true,
         "skipLibCheck": true,
         "esModuleInterop": true,
-		"types": [
-			"@webgpu/types"
-		],
         "lib": [
             "ES2015",
             "ES2017",
+            "ES2023",
             "DOM",
         ],
         "outDir": "lib"

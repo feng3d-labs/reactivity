@@ -64,7 +64,7 @@ export function batchRun<T>(fn: () => T): T
 
     if (--_batchDepth > 0)
     {
-        return;
+        return result;
     }
 
     // 处理已经运行过的依赖
@@ -93,7 +93,7 @@ export function batchRun<T>(fn: () => T): T
             // 独立执行回调，避免影响其他依赖
             const pre = Reactivity.activeReactivity;
 
-            Reactivity.activeReactivity = null;
+            Reactivity.activeReactivity = undefined;
 
             dep.runIfDirty();
 
