@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>数组操作性能对比</title>
+    <link rel="stylesheet" href="../../resources/files/main.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -42,31 +43,77 @@
             font-weight: bold;
             color: #666;
         }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .summary-table th,
+        .summary-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .summary-table th {
+            background-color: var(--secondary-background-color);
+            font-weight: 500;
+        }
+
+        .improved {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .regression {
+            color: #f44336;
+            font-weight: bold;
+        }
+
+        .neutral {
+            color: var(--secondary-text-color);
+        }
     </style>
 </head>
 
 <body>
     <h1>数组操作性能对比</h1>
-    <h2>结果对比</h2>
+
+    <h2>三列对比结果</h2>
+    <div id="three-column-results"></div>
+
+    <h2>详细结果</h2>
     <div class="result-container">
-        <div class="result-title">@feng3d/reactivity<span id="feng3d-version"></span></div>
+        <div class="result-title">@feng3d/reactivity 优化后<span id="feng3d-version"></span></div>
         <div class="result-time">时间: <span id="feng3d-time">未提供</span> 毫秒</div>
         <div class="result-values">值: <span id="feng3d-values">未提供</span></div>
+    </div>
+    <div class="result-container">
+        <div class="result-title">@feng3d/reactivity 优化前<span id="feng3d-before-version"></span></div>
+        <div class="result-time">时间: <span id="feng3d-before-time">未提供</span> 毫秒</div>
+        <div class="result-values">值: <span id="feng3d-before-values">未提供</span></div>
     </div>
     <div class="result-container">
         <div class="result-title">@vue/reactivity<span id="vue-version"></span></div>
         <div class="result-time">时间: <span id="vue-time">未提供</span> 毫秒</div>
         <div class="result-values">值: <span id="vue-values">未提供</span></div>
     </div>
+
     <h2>分析</h2>
     <div class="result-container">
-        <div class="result-time"><span class="analysis-label">@feng3d/reactivity:</span> <span id="feng3d-分析">未提供</span></div>
+        <div class="result-time"><span class="analysis-label">@feng3d/reactivity 优化后:</span> <span id="feng3d-分析">未提供</span></div>
+        <div class="result-time"><span class="analysis-label">@feng3d/reactivity 优化前:</span> <span id="feng3d-before-分析">未提供</span></div>
         <div class="result-time"><span class="analysis-label">@vue/reactivity:</span> <span id="vue-分析">未提供</span></div>
+        <div class="result-time"><span class="analysis-label">优化效果:</span> <span id="optimization-分析">未提供</span></div>
     </div>
+
     <h2>测试代码</h2>
     <pre id="test-code">
         <!-- 测试代码将显示在这里 -->
     </pre>
+
     <script type="module" src="./index.ts"></script>
 </body>
 

@@ -23,7 +23,7 @@ export function updateResults(result: {
         time: any;
         values: any[];
     };
-    结论?: { feng3d: string, vue: string };
+    结论?: { feng3d: string, vue: string, feng3dBefore?: string, 一致性?: string, 一致性before?: string };
 })
 {
     let { code, feng3dResult, vueResult, 结论 } = result;

@@ -1,22 +1,60 @@
 import { computed, ref } from '@feng3d/reactivity';
+import { computed as beforeComputed, ref as beforeRef } from '@feng3d/reactivity-before';
 import { computed as vueComputed, ref as vueRef } from '@vue/reactivity';
 import { updateResults } from './tool';
 import { 数组Computed } from './数组操作';
+import { generateThreeColumnResult, updateThreeColumnResults } from '../tool';
 import pkg from '../../package.json';
 
 const count = 10000;
 
 // 显示版本号
-document.getElementById('feng3d-version')!.textContent = `@${pkg.dependencies['@feng3d/reactivity']}`;
+document.getElementById('feng3d-version')!.textContent = ` (当前版本)`;
+document.getElementById('feng3d-before-version')!.textContent = ' (v1.0.11)';
 document.getElementById('vue-version')!.textContent = `@${pkg.dependencies['@vue/reactivity']}`;
 
-// 运行数组 Computed 测试
+// 运行三版本测试
+const feng3dResult = 数组Computed(ref, computed, count);
+const feng3dBeforeResult = 数组Computed(beforeRef, beforeComputed, count);
+const vueResult = 数组Computed(vueRef, vueComputed, count);
+
+// 更新详细结果
 updateResults({
     code: `数组Computed(ref, computed, ${count});\n\n` + 数组Computed.toString(),
-    feng3dResult: 数组Computed(ref, computed, count),
-    vueResult: 数组Computed(vueRef, vueComputed, count),
+    feng3dResult,
+    vueResult,
     结论: {
         feng3d: '脏标记机制，只有变化的元素触发重算。',
         vue: '版本号检查，每次访问需要遍历所有依赖。',
     },
 });
+
+// 更新优化前的结果
+document.getElementById('feng3d-before-time')!.textContent = feng3dBeforeResult.time.toFixed(2);
+document.getElementById('feng3d-before-values')!.textContent = feng3dBeforeResult.values.join(', ');
+
+// 计算优化效果
+const improvement = ((feng3dBeforeResult.time - feng3dResult.time) / feng3dBeforeResult.time) * 100;
+const improvementText = improvement > 0
+    ? `性能提升 ${improvement.toFixed(1)}% ↓`
+    : improvement < 0
+        ? `性能下降 ${Math.abs(improvement).toFixed(1)}% ↑`
+        : '性能基本持平 →';
+
+document.getElementById('optimization-分析')!.textContent = improvementText;
+
+// 更新优化前的分析
+document.getElementById('feng3d-before-分析')!.textContent =
+    '脏标记机制，只有变化的元素触发重算（v1.0.11）';
+
+// 生成三列对比表格
+const threeColumnResults = [
+    generateThreeColumnResult(
+        '数组 Computed 求和',
+        feng3dBeforeResult.time,
+        feng3dResult.time,
+        vueResult.time,
+    ),
+];
+
+updateThreeColumnResults('three-column-results', threeColumnResults);
