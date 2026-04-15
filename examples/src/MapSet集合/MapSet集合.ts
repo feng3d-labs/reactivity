@@ -20,7 +20,7 @@ export function map操作(reactive: <T extends object>(target: T) => T, count: n
         // 读取
         for (let j = 0; j < 1000; j++)
         {
-            result.values.push(map.get(j));
+            result.values.push(map.get(j) ?? 0);
         }
         // 更新
         map.set(i % 1000, i);

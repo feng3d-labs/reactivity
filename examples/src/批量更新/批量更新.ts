@@ -189,7 +189,7 @@ export function 连续vs批量更新(
 {
     const result = {
         time: { 连续: 0, 批量: 0 },
-        values: [],
+        values: [] as number[],
     };
 
     const refs = new Array(100).fill(0).map((_, i) => ref(i));
@@ -231,7 +231,7 @@ export function 连续vs批量更新(
     }
     result.time.批量 = performance.now() - start;
 
-    result.values.push(refs[0].value);
+    result.values.push(refs[0].value as number);
 
     return result;
 }
