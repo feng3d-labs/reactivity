@@ -18,6 +18,10 @@ const feng3dResult = 数组Computed(ref, computed, count);
 const feng3dBeforeResult = 数组Computed(beforeRef, beforeComputed, count);
 const vueResult = 数组Computed(vueRef, vueComputed, count);
 
+// 验证结果一致性
+const resultsMatch = JSON.stringify(feng3dResult.values) === JSON.stringify(vueResult.values);
+const beforeMatch = JSON.stringify(feng3dBeforeResult.values) === JSON.stringify(vueResult.values);
+
 // 更新详细结果
 updateResults({
     code: `数组Computed(ref, computed, ${count});\n\n` + 数组Computed.toString(),
@@ -29,10 +33,6 @@ updateResults({
     },
 });
 
-// 更新优化前的结果
-document.getElementById('feng3d-before-time')!.textContent = feng3dBeforeResult.time.toFixed(2);
-document.getElementById('feng3d-before-values')!.textContent = feng3dBeforeResult.values.join(', ');
-
 // 计算优化效果
 const improvement = ((feng3dBeforeResult.time - feng3dResult.time) / feng3dBeforeResult.time) * 100;
 const improvementText = improvement > 0
@@ -42,10 +42,20 @@ const improvementText = improvement > 0
         : '性能基本持平 →';
 
 document.getElementById('optimization-分析')!.textContent = improvementText;
+document.getElementById('result-一致性')!.textContent =
+    `@feng3d 与 @vue 结果${resultsMatch ? '一致' : '不一致'} ✅，@feng3d (v1.0.11) 与 @vue 结果${beforeMatch ? '一致' : '不一致'} ✅`;
 
 // 更新优化前的分析
 document.getElementById('feng3d-before-分析')!.textContent =
     '脏标记机制，只有变化的元素触发重算（v1.0.11）';
+
+// 更新 feng3d 分析
+document.getElementById('feng3d-分析')!.textContent =
+    '脏标记机制，只有变化的元素触发重算。';
+
+// 更新 vue 分析
+document.getElementById('vue-分析')!.textContent =
+    '版本号检查，每次访问需要遍历所有依赖。';
 
 // 生成三列对比表格
 const threeColumnResults = [

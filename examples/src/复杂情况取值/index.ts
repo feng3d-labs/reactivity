@@ -28,14 +28,10 @@ updateResults({
     feng3dResult,
     vueResult,
     结论: {
-        feng3d: `自下而上的使用脏标记进行维护状态，当发生变化时只会冒泡一次到父节点。结果与 @vue${resultsMatch ? '一致' : '不一致'} ✅`,
-        feng3dBefore: `自下而上的使用脏标记进行维护状态（v1.0.11）。结果与 @vue${beforeMatch ? '一致' : '不一致'} ✅`,
-        vue: '自上而下的使用版本号进行维护状态，每次取值都会遍历整个树。',
+        feng3d: '自下而上的使用脏标记进行维护状态。',
+        vue: '自上而下的使用版本号进行维护状态。',
     },
 });
-
-// 更新优化前的结果
-document.getElementById('feng3d-before-time')!.textContent = feng3dBeforeResult.time.toFixed(2);
 
 // 计算优化效果
 const improvement = ((feng3dBeforeResult.time - feng3dResult.time) / feng3dBeforeResult.time) * 100;
@@ -46,6 +42,8 @@ const improvementText = improvement > 0
         : '性能基本持平 →';
 
 document.getElementById('optimization-分析')!.textContent = improvementText;
+document.getElementById('result-一致性')!.textContent =
+    `@feng3d 与 @vue 结果${resultsMatch ? '一致' : '不一致'} ✅，@feng3d (v1.0.11) 与 @vue 结果${beforeMatch ? '一致' : '不一致'} ✅`;
 
 // 更新优化前的分析
 document.getElementById('feng3d-before-分析')!.textContent =
@@ -53,11 +51,11 @@ document.getElementById('feng3d-before-分析')!.textContent =
 
 // 更新 feng3d 分析
 document.getElementById('feng3d-分析')!.textContent =
-    `自下而上的使用脏标记进行维护状态。结果与 @vue${resultsMatch ? '一致' : '不一致'} ✅`;
+    '自下而上的使用脏标记进行维护状态。';
 
 // 更新 vue 分析
 document.getElementById('vue-分析')!.textContent =
-    '自上而下的使用版本号进行维护状态，每次取值都会遍历整个树。';
+    '自上而下的使用版本号进行维护状态。';
 
 // 生成三列对比表格
 const threeColumnResults = [

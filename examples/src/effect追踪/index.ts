@@ -29,16 +29,9 @@ updateResults({
     vueResult,
     结论: {
         feng3d: '依赖通知使用 Set，高效去重。',
-        feng3dBefore: '依赖通知使用 Set，高效去重（v1.0.11）。',
         vue: '依赖通知使用 Set，但需要额外的版本管理。',
-        一致性: `@feng3d 与 @vue 结果${resultsMatch ? '一致' : '不一致'} ✅`,
-        一致性before: `@feng3d (v1.0.11) 与 @vue 结果${beforeMatch ? '一致' : '不一致'} ✅`,
     },
 });
-
-// 更新优化前的结果
-document.getElementById('feng3d-before-time')!.textContent = feng3dBeforeResult.time.toFixed(2);
-document.getElementById('feng3d-before-values')!.textContent = '(结果一致)';
 
 // 计算优化效果
 const improvement = ((feng3dBeforeResult.time - feng3dResult.time) / feng3dBeforeResult.time) * 100;
@@ -49,14 +42,20 @@ const improvementText = improvement > 0
         : '性能基本持平 →';
 
 document.getElementById('optimization-分析')!.textContent = improvementText;
+document.getElementById('result-一致性')!.textContent =
+    `@feng3d 与 @vue 结果${resultsMatch ? '一致' : '不一致'} ✅，@feng3d (v1.0.11) 与 @vue 结果${beforeMatch ? '一致' : '不一致'} ✅`;
 
 // 更新优化前的分析
 document.getElementById('feng3d-before-分析')!.textContent =
     '依赖通知使用 Set，高效去重（v1.0.11）';
 
-// 更新 feng3d 分析，添加结果一致性说明
+// 更新 feng3d 分析
 document.getElementById('feng3d-分析')!.textContent =
-    `依赖通知使用 Set，高效去重。结果与 @vue${resultsMatch ? '一致' : '不一致'} ✅`;
+    '依赖通知使用 Set，高效去重。';
+
+// 更新 vue 分析
+document.getElementById('vue-分析')!.textContent =
+    '依赖通知使用 Set，但需要额外的版本管理。';
 
 // 生成三列对比表格
 const threeColumnResults = [
