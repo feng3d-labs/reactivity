@@ -29,7 +29,7 @@ export class Reactivity<T = any>
     /**
      * @private
      */
-    _value: T;
+    _value!: T;
 
     /**
      * 父反应节点集合。
@@ -101,7 +101,7 @@ export class Reactivity<T = any>
      *
      * @internal
      */
-    static activeReactivity: ComputedReactivity;
+    static activeReactivity: ComputedReactivity | undefined;
 }
 
 /**

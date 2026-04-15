@@ -26,7 +26,7 @@ export function ref<T>(value?: T): Ref<T>
         return value as any;
     }
 
-    return new RefReactivity<T>(value) as any;
+    return new RefReactivity<T>(value as T) as any;
 }
 
 /**

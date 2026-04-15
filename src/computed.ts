@@ -217,7 +217,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
         // 避免在检查过程建立依赖关系
         const preReactiveNode = Reactivity.activeReactivity;
 
-        Reactivity.activeReactivity = null;
+        Reactivity.activeReactivity = undefined;
 
         // 检查子节点是否发生变化
         this._children.forEach((value, node) =>

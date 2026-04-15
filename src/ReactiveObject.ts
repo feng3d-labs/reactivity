@@ -23,9 +23,10 @@ import { Effect, effect, EffectScope } from '@feng3d/reactivity';
  */
 export class ReactiveObject
 {
-    constructor()
-    {
-    }
+    /**
+     * 销毁时需要执行的函数
+     */
+    private _destroyCallbacks: (() => void)[] = [];
 
     /**
      * 副作用作用域
@@ -37,12 +38,12 @@ export class ReactiveObject
      *
      * 私有属性，外部无法直接访问，只能通过 effect() 方法使用
      */
-    private _effectScope = new EffectScope();
+    private _effectScope?: EffectScope;
 
-    /**
-     * 销毁时需要执行的函数
-     */
-    private _destroyCallbacks: (() => void)[] = [];
+    constructor()
+    {
+        this._effectScope = new EffectScope();
+    }
 
     /**
      * 创建并运行副作用
@@ -73,14 +74,14 @@ export class ReactiveObject
      */
     effect(fn: () => void)
     {
-        let eff: Effect;
+        let eff: Effect | undefined;
 
-        this._effectScope.run(() =>
+        this._effectScope!.run(() =>
         {
             eff = effect(fn);
         });
 
-        return eff;
+        return eff!;
     }
 
     /**
@@ -122,10 +123,9 @@ export class ReactiveObject
     {
         // 执行所有注册的清理函数
         this._destroyCallbacks?.forEach((item) => item());
-        this._destroyCallbacks = null;
+        this._destroyCallbacks = [];
 
         // 停止副作用作用域，这会自动停止所有通过 effect() 创建的副作用
         this._effectScope?.stop();
-        this._effectScope = null;
     }
 }
