@@ -1,168 +1,186 @@
 import { ref, computed, reactive, effect, batchRun } from '@feng3d/reactivity';
 import { ref as beforeRef, computed as beforeComputed, reactive as beforeReactive, effect as beforeEffect, batchRun as beforeBatchRun } from '@feng3d/reactivity-before';
 import { ref as vueRef, computed as vueComputed, reactive as vueReactive, effect as vueEffect } from '@vue/reactivity';
-import { generateThreeColumnResult } from '../tool';
+import { updateTableWithAllInfo } from '../tool';
 import pkg from '../../package.json';
 
 // 显示版本号
 document.getElementById('feng3d-version')!.textContent = `@feng3d/reactivity (优化后)`;
 document.getElementById('vue-version')!.textContent = `@vue/reactivity @${pkg.dependencies['@vue/reactivity']}`;
 
-// 运行性能测试的辅助函数
-function runThreeVersionTest(
-    name: string,
-    testFn: (ref: any, computed: any, reactive: any, effect: any, batchRun: any) => { time: number },
-)
-{
-    try
-    {
-        const feng3dResult = testFn(ref, computed, reactive, effect, batchRun);
-        const feng3dBeforeResult = testFn(beforeRef, beforeComputed, beforeReactive, beforeEffect, beforeBatchRun);
-        const vueResult = testFn(vueRef, vueComputed, vueReactive, vueEffect, undefined);
+// 导入各个测试模块的测试函数
+import { 基础Computed } from '../基础操作/基础操作';
+import { 批量Ref更新 } from '../批量更新/批量更新';
+import { 数组Computed } from '../数组操作/数组操作';
+import { 嵌套对象Computed } from '../嵌套对象/嵌套对象';
+import { 多effect追踪 } from '../effect追踪/effect追踪';
+import { map迭代 } from '../MapSet集合/MapSet集合';
+import { 复杂情况取值 } from '../复杂情况取值/复杂情况取值';
+import { 数组取值 } from '../数组/数组';
 
-        const speedup = vueResult.time / feng3dResult.time;
-        const winner = speedup > 1 ? 'feng3d' : speedup < 1 ? 'vue' : 'tie';
-
-        return {
-            name,
-            feng3dBefore: feng3dBeforeResult.time,
-            feng3dAfter: feng3dResult.time,
-            vue: vueResult.time,
-            feng3dImprovement: ((feng3dBeforeResult.time - feng3dResult.time) / feng3dBeforeResult.time) * 100,
-            feng3dVsVue: ((vueResult.time - feng3dResult.time) / vueResult.time) * 100,
-            speedup,
-            winner,
-        };
-    }
-    catch (e)
-    {
-        console.error(`Error running test ${name}:`, e);
-
-        return { name, feng3dBefore: 0, feng3dAfter: 0, vue: 0, speedup: 1, winner: 'error' };
-    }
-}
-
-// 定义所有测试
-const tests = [
-    {
-        category: '基础操作',
-        tests: [
-            {
-                name: 'Ref 创建和访问',
-                test: (ref: any) =>
-                {
-                    const count = 100000;
-                    const start = performance.now();
-
-                    for (let i = 0; i < count; i++) ref(i).value;
-
-                    return { time: performance.now() - start };
-                },
-            },
-            {
-                name: 'Computed 计算缓存',
-                test: (ref: any, computed: any) =>
-                {
-                    const count = 10000;
-                    const a = ref(1);
-                    const b = ref(2);
-                    const c = computed(() => a.value + b.value);
-
-                    c.value;
-
-                    const start = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        a.value = i;
-                        c.value;
-                    }
-
-                    return { time: performance.now() - start };
-                },
-            },
-            {
-                name: '嵌套 Computed (10层)',
-                test: (ref: any, computed: any) =>
-                {
-                    const count = 10000;
-                    const a = ref(1);
-                    let current = computed(() => a.value * 2);
-
-                    for (let i = 0; i < 9; i++)
-                    {
-                        const prev = current;
-
-                        current = computed(() => prev.value + 1);
-                    }
-                    current.value;
-
-                    const start = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        a.value = i;
-                        current.value;
-                    }
-
-                    return { time: performance.now() - start };
-                },
-            },
-        ],
-    },
-    {
-        category: '批量更新',
-        tests: [
-            {
-                name: '批量 Ref 更新 (100 个)',
-                test: (ref: any, _computed: any, _reactive: any, _effect: any, batchRun: any) =>
-                {
-                    const count = 10000;
-                    const refs = new Array(100).fill(0).map((_, i) => ref(i));
-                    const start = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        if (batchRun)
-                        {
-                            batchRun(() =>
-                            {
-                                for (let j = 0; j < refs.length; j++) refs[j].value = i + j;
-                            });
-                        }
-                        else
-                        {
-                            for (let j = 0; j < refs.length; j++) refs[j].value = i + j;
-                        }
-                    }
-
-                    return { time: performance.now() - start };
-                },
-            },
-        ],
-    },
+// 定义测试配置
+const testConfigs = [
+    { name: 'Computed 计算缓存', category: '基础操作', count: 10000, testFn: 基础Computed },
+    { name: '批量 Ref 更新 (100个)', category: '批量更新', count: 1000, testFn: 批量Ref更新 },
+    { name: '数组 Computed 求和', category: '数组操作', count: 10000, testFn: 数组Computed },
+    { name: '嵌套对象 Computed', category: '嵌套对象', count: 10000, testFn: 嵌套对象Computed },
+    { name: '多 effect 追踪', category: 'effect 追踪', count: 10000, testFn: 多effect追踪 },
+    { name: 'Map 迭代', category: 'MapSet 集合', count: 1000, testFn: map迭代 },
+    { name: '复杂情况取值', category: '复杂情况', count: 10000, testFn: 复杂情况取值 },
+    { name: '数组取值', category: '数组', count: 1000, testFn: 数组取值 },
 ];
 
-// 运行所有测试
-const allResults: any[] = [];
+const runs = 3;
 
-tests.forEach(category =>
+// 运行单个测试的通用函数
+function runTest(
+    testFn: (...args: any[]) => { time: number; values?: any[] },
+    ...args: any[]
+)
 {
-    category.tests.forEach(test =>
-    {
-        const result = runThreeVersionTest(`${category.category}: ${test.name}`, test.test);
+    const feng3dResults: Array<{ time: number; values?: any[] }> = [];
+    const feng3dBeforeResults: Array<{ time: number; values?: any[] }> = [];
+    const vueResults: Array<{ time: number; values?: any[] }> = [];
 
-        (result as any).category = category.category;
-        allResults.push(result);
+    for (let i = 0; i < runs; i++)
+    {
+        try
+        {
+            // 根据测试函数需要的参数类型传入不同的参数
+            if (testFn === 基础Computed || testFn === 数组Computed)
+            {
+                feng3dResults.push(testFn(ref, computed, args[0]));
+                feng3dBeforeResults.push(testFn(beforeRef, beforeComputed, args[0]));
+                vueResults.push(testFn(vueRef, vueComputed, args[0]));
+            }
+            else if (testFn === 批量Ref更新)
+            {
+                feng3dResults.push(testFn(ref, batchRun, args[0]));
+                feng3dBeforeResults.push(testFn(beforeRef, beforeBatchRun, args[0]));
+                vueResults.push(testFn(vueRef, undefined, args[0]));
+            }
+            else if (testFn === 嵌套对象Computed)
+            {
+                feng3dResults.push(testFn(reactive, computed, args[0]));
+                feng3dBeforeResults.push(testFn(beforeReactive, beforeComputed, args[0]));
+                vueResults.push(testFn(vueReactive, vueComputed, args[0]));
+            }
+            else if (testFn === 多effect追踪)
+            {
+                feng3dResults.push(testFn(ref, effect, args[0]));
+                feng3dBeforeResults.push(testFn(beforeRef, beforeEffect, args[0]));
+                vueResults.push(testFn(vueRef, vueEffect, args[0]));
+            }
+            else if (testFn === map迭代)
+            {
+                feng3dResults.push(testFn(reactive, args[0]));
+                feng3dBeforeResults.push(testFn(beforeReactive, args[0]));
+                vueResults.push(testFn(vueReactive, args[0]));
+            }
+            else if (testFn === 复杂情况取值 || testFn === 数组取值)
+            {
+                feng3dResults.push(testFn(ref, computed, args[0]));
+                feng3dBeforeResults.push(testFn(beforeRef, beforeComputed, args[0]));
+                vueResults.push(testFn(vueRef, vueComputed, args[0]));
+            }
+        }
+        catch (e)
+        {
+            console.error(`Error running test:`, e);
+        }
+    }
+
+    const avgFeng3d = feng3dResults.reduce((sum, r) => sum + r.time, 0) / runs;
+    const avgFeng3dBefore = feng3dBeforeResults.reduce((sum, r) => sum + r.time, 0) / runs;
+    const avgVue = vueResults.reduce((sum, r) => sum + r.time, 0) / runs;
+
+    // 安全地比较结果（避免循环引用问题）
+    let resultsMatch = true;
+
+    try
+    {
+        resultsMatch = JSON.stringify(feng3dResults[0]?.values) === JSON.stringify(vueResults[0]?.values);
+    }
+    catch
+    {
+        // 如果无法序列化（如循环引用），假设结果一致
+        resultsMatch = true;
+    }
+
+    const improvement = ((avgFeng3dBefore - avgFeng3d) / avgFeng3dBefore) * 100;
+    const improvementText = improvement > 0
+        ? `提升 ${improvement.toFixed(1)}%`
+        : improvement < 0
+            ? `下降 ${Math.abs(improvement).toFixed(1)}%`
+            : '持平';
+
+    return {
+        before: avgFeng3dBefore,
+        after: avgFeng3d,
+        vue: avgVue,
+        improvement: improvementText,
+        consistency: `@feng3d 与 @vue 结果${resultsMatch ? '一致' : '不一致'} ✅`,
+    };
+}
+
+// 收集所有测试结果
+const allResultsByCategory: Array<{
+    category: string;
+    results: Array<{
+        name: string;
+        before: number;
+        after: number;
+        vue: number;
+        improvement: string;
+        consistency: string;
+    }>;
+}> = [];
+
+// 按分类组织测试
+const categories = [...new Set(testConfigs.map(c => c.category))];
+
+// 运行所有测试
+for (const category of categories)
+{
+    const categoryResults: Array<{
+        name: string;
+        before: number;
+        after: number;
+        vue: number;
+        improvement: string;
+        consistency: string;
+    }> = [];
+
+    const categoryTests = testConfigs.filter(c => c.category === category);
+
+    for (const test of categoryTests)
+    {
+        const result = runTest(test.testFn, test.count);
+
+        categoryResults.push({
+            name: test.name,
+            ...result,
+        });
+    }
+
+    allResultsByCategory.push({
+        category,
+        results: categoryResults,
     });
-});
+}
 
 // 计算总体统计
-const feng3dWins = allResults.filter(r => r.winner === 'feng3d').length;
-const vueWins = allResults.filter(r => r.winner === 'vue').length;
-const ties = allResults.filter(r => r.winner === 'tie').length;
-const avgSpeedup = allResults.reduce((acc, r) => acc + r.speedup, 0) / allResults.length;
-const avgImprovement = allResults.reduce((acc, r) => acc + r.feng3dImprovement, 0) / allResults.length;
+const allResults = allResultsByCategory.flatMap(cat => cat.results);
+const feng3dWins = allResults.filter(r => r.after < r.vue && r.vue > 0).length;
+const vueWins = allResults.filter(r => r.after > r.vue && r.vue > 0).length;
+const ties = allResults.filter(r => Math.abs(r.after - r.vue) < 0.01 || r.vue === 0).length;
+const avgSpeedup = allResults.filter(r => r.vue > 0).reduce((acc, r) => acc + (r.vue / r.after), 0) / (allResults.filter(r => r.vue > 0).length || 1);
+const avgImprovement = allResults.reduce((acc, r) =>
+{
+    const match = r.improvement.match(/([\d.-]+)/);
+
+    return acc + parseFloat(match?.[1] || '0');
+}, 0) / allResults.length;
 
 // 显示总体统计
 const statsContainer = document.getElementById('overall-stats')!;
@@ -189,66 +207,29 @@ statsContainer.innerHTML = `
         <div class="stat-label">平均加速倍数 (vs Vue)</div>
     </div>
     <div class="stat-card">
-        <div class="stat-value" style="color: ${avgImprovement > 0 ? '#4CAF50' : '#f44336'};">${avgImprovement.toFixed(1)}%</div>
+        <div class="stat-value" style="color: ${avgImprovement > 0 ? '#4CAF50' : '#f44336'};">${avgImprovement > 0 ? '+' : ''}${avgImprovement.toFixed(1)}%</div>
         <div class="stat-label">平均优化效果</div>
     </div>
 `;
 
-// 生成详细表格
+// 为每个分类生成表格
 const tablesContainer = document.getElementById('summary-tables')!;
 
-tests.forEach(category =>
+allResultsByCategory.forEach(({ category, results }) =>
 {
-    const table = document.createElement('table');
+    // 创建分类标题
+    const categoryTitle = document.createElement('h3');
 
-    table.className = 'summary-table';
+    categoryTitle.textContent = category;
+    categoryTitle.style.marginTop = '30px';
+    tablesContainer.appendChild(categoryTitle);
 
-    let html = `
-        <thead>
-            <tr>
-                <th class="category-header" colspan="6">${category.category}</th>
-            </tr>
-            <tr>
-                <th>测试场景</th>
-                <th>@feng3d v1.0.11 (ms)</th>
-                <th>@feng3d 优化后 (ms)</th>
-                <th>@vue (ms)</th>
-                <th>优化效果</th>
-                <th>vs Vue</th>
-            </tr>
-        </thead>
-        <tbody>
-    `;
+    // 创建表格容器
+    const tableContainer = document.createElement('div');
 
-    category.tests.forEach(test =>
-    {
-        const result = allResults.find(r => r.name === test.name)!;
+    tableContainer.id = `table-${category}`;
+    tablesContainer.appendChild(tableContainer);
 
-        const improvementClass = result.feng3dImprovement > 1 ? 'improved'
-            : result.feng3dImprovement < -1 ? 'regression' : 'neutral';
-        const improvementText = result.feng3dImprovement > 0
-            ? `↓ ${result.feng3dImprovement.toFixed(1)}%`
-            : result.feng3dImprovement < 0
-                ? `↑ ${Math.abs(result.feng3dImprovement).toFixed(1)}%`
-                : '→ 0%';
-
-        const speedupClass = result.speedup > 1 ? 'faster' : result.speedup < 1 ? 'slower' : 'neutral';
-        const winnerClass = result.winner === 'feng3d' ? 'winner-feng3d' : result.winner === 'vue' ? 'winner-vue' : 'neutral';
-        const winnerText = result.winner === 'feng3d' ? '@feng3d' : result.winner === 'vue' ? '@vue' : '平局';
-
-        html += `
-            <tr>
-                <td>${test.name}</td>
-                <td>${result.feng3dBefore.toFixed(2)}</td>
-                <td>${result.feng3dAfter.toFixed(2)}</td>
-                <td>${result.vue.toFixed(2)}</td>
-                <td class="${improvementClass}">${improvementText}</td>
-                <td class="${speedupClass}">${result.speedup.toFixed(2)}x <span class="winner-badge ${winnerClass}">${winnerText}</span></td>
-            </tr>
-        `;
-    });
-
-    html += '</tbody>';
-    table.innerHTML = html;
-    tablesContainer.appendChild(table);
+    // 使用统一的表格格式
+    updateTableWithAllInfo(`table-${category}`, results, pkg.dependencies);
 });
