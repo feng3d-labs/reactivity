@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>性能对比汇总</title>
+    <link rel="stylesheet" href="../../resources/files/main.css">
+    <style>
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .summary-table th,
+        .summary-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .summary-table th {
+            background-color: var(--secondary-background-color);
+            font-weight: 500;
+        }
+
+        .faster {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .slower {
+            color: #f44336;
+            font-weight: bold;
+        }
+
+        .neutral {
+            color: var(--secondary-text-color);
+        }
+
+        .speed-indicator {
+            display: inline-block;
+            width: 100px;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-left: 10px;
+        }
+
+        .speed-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.5s ease;
+        }
+
+        .category-header {
+            background-color: var(--color-blue) !important;
+            color: white !important;
+        }
+
+        .winner-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .winner-feng3d {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .winner-vue {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .overall-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background-color: var(--secondary-background-color);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--color-blue);
+        }
+
+        .stat-label {
+            margin-top: 8px;
+            color: var(--secondary-text-color);
+        }
+    </style>
+</head>
+
+<body>
+    <h1>性能对比汇总</h1>
+
+    <h2>版本信息</h2>
+    <div class="result-container">
+        <div class="result-title">@feng3d/reactivity <span id="feng3d-version"></span></div>
+    </div>
+    <div class="result-container">
+        <div class="result-title">@vue/reactivity <span id="vue-version"></span></div>
+    </div>
+
+    <h2>总体统计</h2>
+    <div class="overall-stats" id="overall-stats"></div>
+
+    <h2>详细对比</h2>
+    <div id="summary-tables"></div>
+
+    <h2>技术分析</h2>
+    <div class="result-container">
+        <h3>@feng3d/reactivity 核心优势</h3>
+        <ul>
+            <li><strong>脏标记机制</strong>：自下而上的状态维护，变化只冒泡一次到父节点</li>
+            <li><strong>最小化代理开销</strong>：直接访问 ref.value，无额外 Proxy 包装</li>
+            <li><strong>高效批处理</strong>：批处理使用栈管理，避免重复依赖通知</li>
+            <li><strong>精确依赖追踪</strong>：依赖收集直接存储在响应式对象中</li>
+        </ul>
+    </div>
+
+    <div class="result-container">
+        <h3>@vue/reactivity 设计特点</h3>
+        <ul>
+            <li><strong>版本号机制</strong>：自上而下的状态维护，每次访问检查版本号</li>
+            <li><strong>Proxy 全面包装</strong>：所有响应式对象都经过 Proxy 处理</li>
+            <li><strong>队列式批处理</strong>：批处理使用队列调度，需要额外管理开销</li>
+            <li><strong>双向依赖维护</strong>：依赖关系需要双向维护，内存占用较高</li>
+        </ul>
+    </div>
+
+    <div class="result-container">
+        <h3>适用场景建议</h3>
+        <ul>
+            <li><strong>@feng3d/reactivity</strong>：适合复杂嵌套场景、大规模数据更新、性能敏感应用</li>
+            <li><strong>@vue/reactivity</strong>：适合 Vue 生态集成、中小型应用、与 Vue 组件深度配合</li>
+        </ul>
+    </div>
+
+    <h2>测试场景说明</h2>
+    <div class="result-container">
+        <ul>
+            <li><strong>基础操作</strong>：ref、computed 基本操作的创建和访问性能</li>
+            <li><strong>数组操作</strong>：大数组的读写、迭代、增删操作性能</li>
+            <li><strong>嵌套对象</strong>：深层嵌套对象的访问和更新性能</li>
+            <li><strong>effect 追踪</strong>：依赖收集和 effect 触发性能</li>
+            <li><strong>批量更新</strong>：批量更新多个响应式值的性能</li>
+            <li><strong>Map/Set 集合</strong>：响应式集合操作的增删改查性能</li>
+            <li><strong>复杂情况取值</strong>：极端嵌套场景下的计算性能</li>
+        </ul>
+    </div>
+
+    <script type="module" src="./index.ts"></script>
+</body>
+
+</html>
