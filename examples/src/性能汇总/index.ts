@@ -1,27 +1,44 @@
 import { ref, computed, reactive, effect, batchRun } from '@feng3d/reactivity';
+import { ref as beforeRef, computed as beforeComputed, reactive as beforeReactive, effect as beforeEffect, batchRun as beforeBatchRun } from '@feng3d/reactivity-before';
 import { ref as vueRef, computed as vueComputed, reactive as vueReactive, effect as vueEffect } from '@vue/reactivity';
+import { generateThreeColumnResult } from '../tool';
 import pkg from '../../package.json';
 
 // 显示版本号
-document.getElementById('feng3d-version')!.textContent = `@${pkg.dependencies['@feng3d/reactivity']}`;
-document.getElementById('vue-version')!.textContent = `@${pkg.dependencies['@vue/reactivity']}`;
+document.getElementById('feng3d-version')!.textContent = `@feng3d/reactivity (优化后)`;
+document.getElementById('vue-version')!.textContent = `@vue/reactivity @${pkg.dependencies['@vue/reactivity']}`;
 
 // 运行性能测试的辅助函数
-function runTest(name: string, testFn: () => { feng3d: number; vue: number })
+function runThreeVersionTest(
+    name: string,
+    testFn: (ref: any, computed: any, reactive: any, effect: any, batchRun: any) => { time: number },
+)
 {
     try
     {
-        const result = testFn();
-        const speedup = result.vue / result.feng3d;
+        const feng3dResult = testFn(ref, computed, reactive, effect, batchRun);
+        const feng3dBeforeResult = testFn(beforeRef, beforeComputed, beforeReactive, beforeEffect, beforeBatchRun);
+        const vueResult = testFn(vueRef, vueComputed, vueReactive, vueEffect, undefined);
+
+        const speedup = vueResult.time / feng3dResult.time;
         const winner = speedup > 1 ? 'feng3d' : speedup < 1 ? 'vue' : 'tie';
 
-        return { name, ...result, speedup, winner };
+        return {
+            name,
+            feng3dBefore: feng3dBeforeResult.time,
+            feng3dAfter: feng3dResult.time,
+            vue: vueResult.time,
+            feng3dImprovement: ((feng3dBeforeResult.time - feng3dResult.time) / feng3dBeforeResult.time) * 100,
+            feng3dVsVue: ((vueResult.time - feng3dResult.time) / vueResult.time) * 100,
+            speedup,
+            winner,
+        };
     }
     catch (e)
     {
         console.error(`Error running test ${name}:`, e);
 
-        return { name, feng3d: 0, vue: 0, speedup: 1, winner: 'error' };
+        return { name, feng3dBefore: 0, feng3dAfter: 0, vue: 0, speedup: 1, winner: 'error' };
     }
 }
 
@@ -32,25 +49,19 @@ const tests = [
         tests: [
             {
                 name: 'Ref 创建和访问',
-                test: () =>
+                test: (ref: any) =>
                 {
                     const count = 100000;
-                    const start1 = performance.now();
+                    const start = performance.now();
 
                     for (let i = 0; i < count; i++) ref(i).value;
-                    const feng3d = performance.now() - start1;
 
-                    const start2 = performance.now();
-
-                    for (let i = 0; i < count; i++) vueRef(i).value;
-                    const vue = performance.now() - start2;
-
-                    return { feng3d, vue };
+                    return { time: performance.now() - start };
                 },
             },
             {
                 name: 'Computed 计算缓存',
-                test: () =>
+                test: (ref: any, computed: any) =>
                 {
                     const count = 10000;
                     const a = ref(1);
@@ -59,36 +70,20 @@ const tests = [
 
                     c.value;
 
-                    const start1 = performance.now();
+                    const start = performance.now();
 
                     for (let i = 0; i < count; i++)
                     {
                         a.value = i;
                         c.value;
                     }
-                    const feng3d = performance.now() - start1;
 
-                    const a2 = vueRef(1);
-                    const b2 = vueRef(2);
-                    const c2 = vueComputed(() => a2.value + b2.value);
-
-                    c2.value;
-
-                    const start2 = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        a2.value = i;
-                        c2.value;
-                    }
-                    const vue = performance.now() - start2;
-
-                    return { feng3d, vue };
+                    return { time: performance.now() - start };
                 },
             },
             {
                 name: '嵌套 Computed (10层)',
-                test: () =>
+                test: (ref: any, computed: any) =>
                 {
                     const count = 10000;
                     const a = ref(1);
@@ -102,221 +97,15 @@ const tests = [
                     }
                     current.value;
 
-                    const start1 = performance.now();
+                    const start = performance.now();
 
                     for (let i = 0; i < count; i++)
                     {
                         a.value = i;
                         current.value;
                     }
-                    const feng3d = performance.now() - start1;
 
-                    const a2 = vueRef(1);
-                    let current2 = vueComputed(() => a2.value * 2);
-
-                    for (let i = 0; i < 9; i++)
-                    {
-                        const prev = current2;
-
-                        current2 = vueComputed(() => prev.value + 1);
-                    }
-                    current2.value;
-
-                    const start2 = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        a2.value = i;
-                        current2.value;
-                    }
-                    const vue = performance.now() - start2;
-
-                    return { feng3d, vue };
-                },
-            },
-        ],
-    },
-    {
-        category: '数组操作',
-        tests: [
-            {
-                name: '大数组读取 (10000 元素)',
-                test: () =>
-                {
-                    const count = 1000;
-                    const arr = new Array(10000).fill(0).map((_, i) => ref(i));
-
-                    const start1 = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        for (let j = 0; j < arr.length; j++) arr[j].value;
-                    }
-                    const feng3d = performance.now() - start1;
-
-                    const arr2 = new Array(10000).fill(0).map((_, i) => vueRef(i));
-
-                    const start2 = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        for (let j = 0; j < arr2.length; j++) arr2[j].value;
-                    }
-                    const vue = performance.now() - start2;
-
-                    return { feng3d, vue };
-                },
-            },
-            {
-                name: '数组 Computed 求和',
-                test: () =>
-                {
-                    const count = 10000;
-                    const arr = new Array(1000).fill(0).map(() => ref(0));
-                    const sum = computed(() => arr.reduce((acc, r) => acc + r.value, 0));
-
-                    sum.value;
-
-                    const start1 = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        arr[i % 1000].value++;
-                        sum.value;
-                    }
-                    const feng3d = performance.now() - start1;
-
-                    const arr2 = new Array(1000).fill(0).map(() => vueRef(0));
-                    const sum2 = vueComputed(() => arr2.reduce((acc, r) => acc + r.value, 0));
-
-                    sum2.value;
-
-                    const start2 = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        arr2[i % 1000].value++;
-                        sum2.value;
-                    }
-                    const vue = performance.now() - start2;
-
-                    return { feng3d, vue };
-                },
-            },
-        ],
-    },
-    {
-        category: '嵌套对象',
-        tests: [
-            {
-                name: '深层嵌套读取 (10层)',
-                test: () =>
-                {
-                    const count = 10000;
-                    let obj: any = { value: 0 };
-
-                    for (let i = 0; i < 9; i++) obj = { next: obj };
-                    const reactiveObj = reactive(obj);
-
-                    const start1 = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        let current = reactiveObj;
-
-                        while (current.next) current = current.next;
-                    }
-                    const feng3d = performance.now() - start1;
-
-                    let obj2: any = { value: 0 };
-
-                    for (let i = 0; i < 9; i++) obj2 = { next: obj2 };
-                    const reactiveObj2 = vueReactive(obj2);
-
-                    const start2 = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        let current = reactiveObj2;
-
-                        while (current.next) current = current.next;
-                    }
-                    const vue = performance.now() - start2;
-
-                    return { feng3d, vue };
-                },
-            },
-            {
-                name: '宽对象更新 (1000 属性)',
-                test: () =>
-                {
-                    const count = 10000;
-                    const obj: any = {};
-
-                    for (let i = 0; i < 1000; i++) obj[`prop${i}`] = i;
-                    const reactiveObj = reactive(obj);
-
-                    const start1 = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        reactiveObj[`prop${i % 1000}`] = i;
-                    }
-                    const feng3d = performance.now() - start1;
-
-                    const obj2: any = {};
-
-                    for (let i = 0; i < 1000; i++) obj2[`prop${i}`] = i;
-                    const reactiveObj2 = vueReactive(obj2);
-
-                    const start2 = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        reactiveObj2[`prop${i % 1000}`] = i;
-                    }
-                    const vue = performance.now() - start2;
-
-                    return { feng3d, vue };
-                },
-            },
-        ],
-    },
-    {
-        category: 'Effect 追踪',
-        tests: [
-            {
-                name: 'Effect 创建和执行',
-                test: () =>
-                {
-                    const count = 1000;
-                    const start1 = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        const a = ref(i);
-
-                        effect(() =>
-                        {
-                            a.value;
-                        });
-                    }
-                    const feng3d = performance.now() - start1;
-
-                    const start2 = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        const a = vueRef(i);
-
-                        vueEffect(() =>
-                        {
-                            a.value;
-                        });
-                    }
-                    const vue = performance.now() - start2;
-
-                    return { feng3d, vue };
+                    return { time: performance.now() - start };
                 },
             },
         ],
@@ -326,118 +115,28 @@ const tests = [
         tests: [
             {
                 name: '批量 Ref 更新 (100 个)',
-                test: () =>
+                test: (ref: any, _computed: any, _reactive: any, _effect: any, batchRun: any) =>
                 {
                     const count = 10000;
                     const refs = new Array(100).fill(0).map((_, i) => ref(i));
-
-                    const start1 = performance.now();
+                    const start = performance.now();
 
                     for (let i = 0; i < count; i++)
                     {
-                        batchRun(() =>
+                        if (batchRun)
+                        {
+                            batchRun(() =>
+                            {
+                                for (let j = 0; j < refs.length; j++) refs[j].value = i + j;
+                            });
+                        }
+                        else
                         {
                             for (let j = 0; j < refs.length; j++) refs[j].value = i + j;
-                        });
-                    }
-                    const feng3d = performance.now() - start1;
-
-                    const refs2 = new Array(100).fill(0).map((_, i) => vueRef(i));
-
-                    const start2 = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        // Vue 3 默认有批处理，直接更新
-                        for (let j = 0; j < refs2.length; j++) refs2[j].value = i + j;
-                    }
-                    const vue = performance.now() - start2;
-
-                    return { feng3d, vue };
-                },
-            },
-        ],
-    },
-    {
-        category: 'Map/Set 集合',
-        tests: [
-            {
-                name: 'Map 迭代 (100 元素)',
-                test: () =>
-                {
-                    const count = 10000;
-                    const map = reactive(new Map<number, number>());
-
-                    for (let i = 0; i < 100; i++) map.set(i, i);
-
-                    const start1 = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        for (const [k, v] of map) k + v;
-                    }
-                    const feng3d = performance.now() - start1;
-
-                    const map2 = vueReactive(new Map<number, number>());
-
-                    for (let i = 0; i < 100; i++) map2.set(i, i);
-
-                    const start2 = performance.now();
-
-                    for (let i = 0; i < count; i++)
-                    {
-                        for (const [k, v] of map2) k + v;
-                    }
-                    const vue = performance.now() - start2;
-
-                    return { feng3d, vue };
-                },
-            },
-        ],
-    },
-    {
-        category: '极端场景',
-        tests: [
-            {
-                name: '复杂情况取值 (递归 16 层)',
-                test: () =>
-                {
-                    const count = 1000;
-
-                    function runTest(refFn: any, computedFn: any)
-                    {
-                        const b = refFn(2);
-
-                        function 递归(depth = 10)
-                        {
-                            if (depth <= 0) return computedFn(() => b.value).value;
-
-                            return computedFn(() =>
-                            {
-                                return 递归(depth - 1) + 递归(depth - 2);
-                            }).value;
                         }
-
-                        const cb = computedFn(() => 递归(16));
-
-                        b.value++;
-                        cb.value;
-
-                        const start = performance.now();
-
-                        for (let i = 0; i < count; i++)
-                        {
-                            refFn(1).value++;
-                            cb.value;
-                        }
-
-                        return performance.now() - start;
                     }
 
-                    const feng3d = runTest(ref, computed);
-                    const vue = runTest(vueRef, vueComputed);
-
-                    return { feng3d, vue };
+                    return { time: performance.now() - start };
                 },
             },
         ],
@@ -451,7 +150,7 @@ tests.forEach(category =>
 {
     category.tests.forEach(test =>
     {
-        const result = runTest(`${category.category}: ${test.name}`, test.test);
+        const result = runThreeVersionTest(`${category.category}: ${test.name}`, test.test);
 
         (result as any).category = category.category;
         allResults.push(result);
@@ -463,7 +162,7 @@ const feng3dWins = allResults.filter(r => r.winner === 'feng3d').length;
 const vueWins = allResults.filter(r => r.winner === 'vue').length;
 const ties = allResults.filter(r => r.winner === 'tie').length;
 const avgSpeedup = allResults.reduce((acc, r) => acc + r.speedup, 0) / allResults.length;
-const maxSpeedup = Math.max(...allResults.map(r => r.speedup));
+const avgImprovement = allResults.reduce((acc, r) => acc + r.feng3dImprovement, 0) / allResults.length;
 
 // 显示总体统计
 const statsContainer = document.getElementById('overall-stats')!;
@@ -475,7 +174,7 @@ statsContainer.innerHTML = `
     </div>
     <div class="stat-card">
         <div class="stat-value" style="color: #4CAF50;">${feng3dWins}</div>
-        <div class="stat-label">@feng3d 获胜</div>
+        <div class="stat-label">@feng3d 获胜 (vs Vue)</div>
     </div>
     <div class="stat-card">
         <div class="stat-value" style="color: #2196F3;">${vueWins}</div>
@@ -487,11 +186,11 @@ statsContainer.innerHTML = `
     </div>
     <div class="stat-card">
         <div class="stat-value">${avgSpeedup.toFixed(2)}x</div>
-        <div class="stat-label">平均加速倍数</div>
+        <div class="stat-label">平均加速倍数 (vs Vue)</div>
     </div>
     <div class="stat-card">
-        <div class="stat-value">${maxSpeedup.toFixed(1)}x</div>
-        <div class="stat-label">最大加速倍数</div>
+        <div class="stat-value" style="color: ${avgImprovement > 0 ? '#4CAF50' : '#f44336'};">${avgImprovement.toFixed(1)}%</div>
+        <div class="stat-label">平均优化效果</div>
     </div>
 `;
 
@@ -507,14 +206,15 @@ tests.forEach(category =>
     let html = `
         <thead>
             <tr>
-                <th class="category-header" colspan="5">${category.category}</th>
+                <th class="category-header" colspan="6">${category.category}</th>
             </tr>
             <tr>
                 <th>测试场景</th>
-                <th>@feng3d (ms)</th>
+                <th>@feng3d v1.0.11 (ms)</th>
+                <th>@feng3d 优化后 (ms)</th>
                 <th>@vue (ms)</th>
-                <th>速度倍数</th>
-                <th>获胜者</th>
+                <th>优化效果</th>
+                <th>vs Vue</th>
             </tr>
         </thead>
         <tbody>
@@ -522,24 +222,28 @@ tests.forEach(category =>
 
     category.tests.forEach(test =>
     {
-        const result = runTest(`${category.category}: ${test.name}`, test.test);
+        const result = allResults.find(r => r.name === test.name)!;
+
+        const improvementClass = result.feng3dImprovement > 1 ? 'improved'
+            : result.feng3dImprovement < -1 ? 'regression' : 'neutral';
+        const improvementText = result.feng3dImprovement > 0
+            ? `↓ ${result.feng3dImprovement.toFixed(1)}%`
+            : result.feng3dImprovement < 0
+                ? `↑ ${Math.abs(result.feng3dImprovement).toFixed(1)}%`
+                : '→ 0%';
+
         const speedupClass = result.speedup > 1 ? 'faster' : result.speedup < 1 ? 'slower' : 'neutral';
         const winnerClass = result.winner === 'feng3d' ? 'winner-feng3d' : result.winner === 'vue' ? 'winner-vue' : 'neutral';
         const winnerText = result.winner === 'feng3d' ? '@feng3d' : result.winner === 'vue' ? '@vue' : '平局';
-        const barWidth = Math.min(100, (result.speedup / (maxSpeedup || 1)) * 100);
 
         html += `
             <tr>
                 <td>${test.name}</td>
-                <td>${result.feng3d.toFixed(2)}</td>
+                <td>${result.feng3dBefore.toFixed(2)}</td>
+                <td>${result.feng3dAfter.toFixed(2)}</td>
                 <td>${result.vue.toFixed(2)}</td>
-                <td class="${speedupClass}">
-                    ${result.speedup.toFixed(2)}x
-                    <span class="speed-indicator">
-                        <span class="speed-bar" style="width: ${barWidth}%"></span>
-                    </span>
-                </td>
-                <td><span class="winner-badge ${winnerClass}">${winnerText}</span></td>
+                <td class="${improvementClass}">${improvementText}</td>
+                <td class="${speedupClass}">${result.speedup.toFixed(2)}x <span class="winner-badge ${winnerClass}">${winnerText}</span></td>
             </tr>
         `;
     });

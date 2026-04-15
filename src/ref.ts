@@ -2,7 +2,7 @@ import { batchRun } from './batch';
 import { Reactivity } from './Reactivity';
 import { toReactive } from './reactive';
 import { ReactiveFlags } from './shared/constants';
-import { hasChanged, toRaw } from './shared/general';
+import { hasChanged, isObject, toRaw } from './shared/general';
 
 /**
  * 创建一个引用，该引用的值可以被响应式系统追踪和更新。
@@ -98,16 +98,26 @@ export class RefReactivity<T = any> extends Reactivity<T> implements Ref<T>
     set value(v: T)
     {
         const oldValue = this._rawValue;
-        const newValue = toRaw(v);
+        const newValue = this._isObject ? toRaw(v) : v;
 
         if (!hasChanged(oldValue, newValue)) return;
+
+        // 优化：如果没有依赖，不需要批处理
+
+        if (this._parents.size === 0)
+        {
+            this._rawValue = newValue;
+            this._value = this._isObject ? toReactive(newValue) : newValue;
+
+            return;
+        }
 
         batchRun(() =>
         {
             this.trigger();
 
             this._rawValue = newValue;
-            this._value = toReactive(newValue);
+            this._value = this._isObject ? toReactive(newValue) : newValue;
         });
     }
 
@@ -122,6 +132,15 @@ export class RefReactivity<T = any> extends Reactivity<T> implements Ref<T>
     private _rawValue: T;
 
     /**
+     * 值是否为对象类型。
+     *
+     * 用于优化：简单类型不需要调用 toRaw/toReactive。
+     *
+     * @private
+     */
+    private _isObject: boolean;
+
+    /**
      * 创建引用反应式节点。
      *
      * @param value 要包装的值
@@ -129,8 +148,9 @@ export class RefReactivity<T = any> extends Reactivity<T> implements Ref<T>
     constructor(value: T)
     {
         super();
-        this._rawValue = toRaw(value);
-        this._value = toReactive(value);
+        this._isObject = isObject(value);
+        this._rawValue = this._isObject ? toRaw(value) : value;
+        this._value = this._isObject ? toReactive(value) : value;
     }
 }
 

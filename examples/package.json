@@ -11,14 +11,18 @@
     "types": "tsc",
     "watch": "tsc -w"
   },
+  "workspaces": [
+    ".."
+  ],
   "devDependencies": {
     "fast-glob": "^3.3.3",
     "rimraf": "^6.1.3",
-    "typescript": "^6.0.2",
+    "typescript": "^5.8.3",
     "vite": "^8.0.8"
   },
   "dependencies": {
-    "@feng3d/reactivity": "1.0.12",
+    "@feng3d/reactivity": "file:../",
+    "@feng3d/reactivity-before": "npm:@feng3d/reactivity@1.0.11",
     "@vue/reactivity": "^3.5.32"
   }
 }

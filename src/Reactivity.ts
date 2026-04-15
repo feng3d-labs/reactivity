@@ -54,15 +54,12 @@ export class Reactivity<T = any>
      */
     track()
     {
-        if (!Reactivity.activeReactivity || !_shouldTrack) return;
-
-        // 连接父节点和子节点。
+        // 快速返回：无父节点或不需要跟踪
         const parent = Reactivity.activeReactivity;
 
-        if (parent)
-        {
-            this._parents.set(parent, parent._version);
-        }
+        if (!parent || !_shouldTrack) return;
+
+        this._parents.set(parent, parent._version);
     }
 
     /**
