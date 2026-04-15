@@ -19,27 +19,6 @@
             overflow-x: auto;
         }
 
-        .result-container {
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-top: 10px;
-            margin-bottom: 10px;
-        }
-
-        .result-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .result-time {
-            margin-bottom: 5px;
-        }
-
-        .analysis-label {
-            font-weight: bold;
-            color: #666;
-        }
-
         .summary-table {
             width: 100%;
             border-collapse: collapse;
@@ -71,37 +50,43 @@
         .neutral {
             color: var(--secondary-text-color);
         }
+
+        .info-section {
+            background-color: var(--secondary-background-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .info-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .info-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .info-list li {
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 
 <body>
     <h1>基础操作性能对比</h1>
 
+    <div class="info-section">
+        <h3>测试规则</h3>
+        <ul class="info-list">
+            <li><strong>测试内容</strong>: 创建 100,000 个 ref，遍历更新每个 ref 的值，然后读取所有值</li>
+            <li><strong>对比版本</strong>: @feng3d/reactivity v1.0.11（优化前）、当前版本（优化后）、@vue/reactivity 最新版本</li>
+        </ul>
+    </div>
+
     <h2>三列对比结果</h2>
     <div id="three-column-results"></div>
-
-    <h2>详细结果</h2>
-    <div class="result-container">
-        <div class="result-title">@feng3d/reactivity 优化后<span id="feng3d-version"></span></div>
-        <div class="result-time">时间: <span id="feng3d-time">未提供</span> 毫秒</div>
-    </div>
-    <div class="result-container">
-        <div class="result-title">@feng3d/reactivity 优化前<span id="feng3d-before-version"></span></div>
-        <div class="result-time">时间: <span id="feng3d-before-time">未提供</span> 毫秒</div>
-    </div>
-    <div class="result-container">
-        <div class="result-title">@vue/reactivity<span id="vue-version"></span></div>
-        <div class="result-time">时间: <span id="vue-time">未提供</span> 毫秒</div>
-    </div>
-
-    <h2>分析</h2>
-    <div class="result-container">
-        <div class="result-time"><span class="analysis-label">@feng3d/reactivity 优化后:</span> <span id="feng3d-分析">未提供</span></div>
-        <div class="result-time"><span class="analysis-label">@feng3d/reactivity 优化前:</span> <span id="feng3d-before-分析">未提供</span></div>
-        <div class="result-time"><span class="analysis-label">@vue/reactivity:</span> <span id="vue-分析">未提供</span></div>
-        <div class="result-time"><span class="analysis-label">优化效果:</span> <span id="optimization-分析">未提供</span></div>
-        <div class="result-time"><span class="analysis-label">结果一致性:</span> <span id="result-一致性">未提供</span></div>
-    </div>
 
     <h2>测试代码</h2>
     <pre id="test-code">
