@@ -45,12 +45,10 @@ export function effect<T = any>(fn: () => T): Effect
  */
 export class EffectReactivity<T = any> extends ComputedReactivity<T> implements Effect
 {
-    /**
-     * 是否为启用, 默认为 true。
-     *
-     * 启用时，会立即执行函数。
-     */
-    private _isEnable = true;
+    /** 是否启用 */
+    private _enabled = true;
+    /** 暂停期间是否有依赖变化 */
+    private _pending = false;
 
     constructor(func: (oldValue?: T) => T)
     {
@@ -69,7 +67,7 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
      */
     pause()
     {
-        this._isEnable = false;
+        this._enabled = false;
     }
 
     /**
@@ -79,13 +77,14 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
      */
     resume()
     {
-        if (this._isEnable) return;
-        this._isEnable = true;
-        if (EffectReactivity.pausedQueueEffects.has(this))
-        {
-            EffectReactivity.pausedQueueEffects.delete(this);
-            this.trigger();
-        }
+        if (this._enabled) return;
+
+        const hadPending = this._pending;
+
+        this._enabled = true;
+        this._pending = false;
+
+        if (hadPending) this.trigger();
     }
 
     /**
@@ -95,8 +94,8 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
      */
     stop()
     {
-        this._isEnable = false;
-        EffectReactivity.pausedQueueEffects.delete(this);
+        this._enabled = false;
+        this._pending = false;
     }
 
     /**
@@ -106,18 +105,12 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
      */
     trigger()
     {
-        // 优化：快速路径 - 如果未启用，直接加入暂停队列
-        if (!this._isEnable)
+        // 优化：快速路径 - 如果未启用，标记为待处理
+        if (!this._enabled)
         {
-            EffectReactivity.pausedQueueEffects.add(this);
+            this._pending = true;
 
             return;
-        }
-
-        // 优化：effect 通常没有父节点，跳过 super.trigger()
-        if (this._parents.size > 0)
-        {
-            super.trigger();
         }
 
         // 优化：直接调用 batch()，避免函数分配
@@ -136,8 +129,6 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
         }
     }
 
-    private static pausedQueueEffects = new WeakSet<EffectReactivity>();
-
     /**
      * 执行当前节点。
      *
@@ -145,7 +136,7 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
      */
     run(): void
     {
-        if (this._isEnable)
+        if (this._enabled)
         {
             super.run();
         }
