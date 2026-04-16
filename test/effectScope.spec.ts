@@ -1,4 +1,4 @@
-import { describe, expect, it, test, vi } from 'vitest';
+import { assert, describe, expect, it } from 'vitest';
 
 import { effect, effectScope, EffectScope, getCurrentScope, onScopeDispose, reactive, ref } from '../src';
 import { nextTick } from './nextTick';
@@ -7,11 +7,14 @@ describe('响应式/effect/作用域', () =>
 {
     it('应运行', () =>
     {
-        const fnSpy = vi.fn(() =>
-        { });
+        let fnTimes = 0;
 
-        effectScope().run(fnSpy);
-        expect(fnSpy).toHaveBeenCalledTimes(1);
+        effectScope().run(() =>
+        {
+            fnTimes++;
+        });
+
+        assert.strictEqual(fnTimes, 1);
     });
 
     it('应接受零参数', () =>
@@ -232,24 +235,30 @@ describe('响应式/effect/作用域', () =>
 
     it('没有活动 effect 作用域时调用 onScopeDispose() 应警告', () =>
     {
-        const spy = vi.fn();
+        let spyTimes = 0;
         const scope = effectScope();
 
         scope.run(() =>
         {
-            onScopeDispose(spy);
+            onScopeDispose(() =>
+            {
+                spyTimes++;
+            });
         });
 
-        expect(spy).toHaveBeenCalledTimes(0);
+        assert.strictEqual(spyTimes, 0);
 
-        onScopeDispose(spy);
+        onScopeDispose(() =>
+        {
+            spyTimes++;
+        });
 
         // expect(
         //     '[警告] onScopeDispose() 在没有活动的 effect 作用域时被调用，无法关联。',
         // ).toHaveBeenWarned()
 
         scope.stop();
-        expect(spy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(spyTimes, 1);
     });
 
     it('停止子作用域后应从父作用域解引用（无内存泄漏）', () =>
@@ -297,30 +306,34 @@ describe('响应式/effect/作用域', () =>
     it('应暂停/恢复 EffectScope', async () =>
     {
         const counter = reactive({ num: 0 });
-        const fnSpy = vi.fn(() => counter.num);
+        let fnTimes = 0;
         const scope = new EffectScope();
 
         scope.run(() =>
         {
-            effect(fnSpy);
+            effect(() =>
+            {
+                fnTimes++;
+                counter.num;
+            });
         });
 
-        expect(fnSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
 
         counter.num++;
         await nextTick();
-        expect(fnSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(fnTimes, 2);
 
         scope.pause();
         counter.num++;
         await nextTick();
-        expect(fnSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(fnTimes, 2);
 
         counter.num++;
         await nextTick();
-        expect(fnSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(fnTimes, 2);
 
         scope.resume();
-        expect(fnSpy).toHaveBeenCalledTimes(3);
+        assert.strictEqual(fnTimes, 3);
     });
 });

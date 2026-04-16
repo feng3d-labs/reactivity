@@ -1,4 +1,4 @@
-import { describe, expect, it, test, vi } from 'vitest';
+import { assert, describe, expect, it, test, vi } from 'vitest';
 import { batchRun, Effect, effect, reactive, toRaw } from '../src';
 import { EffectReactivity } from '../src/effect';
 
@@ -6,11 +6,14 @@ describe('响应式/effect', () =>
 {
     it('传入的函数应执行一次（被 effect 包裹）', () =>
     {
-        const fnSpy = vi.fn(() =>
-        { });
+        let fnTimes = 0;
 
-        effect(fnSpy);
-        expect(fnSpy).toHaveBeenCalledTimes(1);
+        effect(() =>
+        {
+            fnTimes++;
+        });
+
+        assert.strictEqual(fnTimes, 1);
     });
 
     it('应观察基本属性', () =>
@@ -282,16 +285,18 @@ describe('响应式/effect', () =>
             [key]: true,
         }) as any;
 
-        const spy = vi.fn(() =>
+        let times = 0;
+
+        effect(() =>
         {
+            times++;
             key in obj;
         });
 
-        effect(spy);
-        expect(spy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(times, 1);
 
         obj[key] = false;
-        expect(spy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(times, 1);
     });
 
     it('应支持在观察 Symbol 键属性时操作数组', () =>
@@ -371,17 +376,25 @@ describe('响应式/effect', () =>
             getDummy;
         const obj = reactive({ prop: 'value' });
 
-        const getSpy = vi.fn(() => (getDummy = obj.prop));
-        const hasSpy = vi.fn(() => (hasDummy = 'prop' in obj));
+        let getTimes = 0;
+        let hasTimes = 0;
 
-        effect(getSpy);
-        effect(hasSpy);
+        effect(() =>
+        {
+            getTimes++;
+            getDummy = obj.prop;
+        });
+        effect(() =>
+        {
+            hasTimes++;
+            hasDummy = 'prop' in obj;
+        });
 
         expect(getDummy).toBe('value');
         expect(hasDummy).toBe(true);
         obj.prop = 'value';
-        expect(getSpy).toHaveBeenCalledTimes(1);
-        expect(hasSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(getTimes, 1);
+        assert.strictEqual(hasTimes, 1);
         expect(getDummy).toBe('value');
         expect(hasDummy).toBe(true);
     });
@@ -440,15 +453,19 @@ describe('响应式/effect', () =>
     it('应避免与自身的隐式无限递归循环', () =>
     {
         const counter = reactive({ num: 0 });
+        let counterTimes = 0;
 
-        const counterSpy = vi.fn(() => counter.num++);
+        effect(() =>
+        {
+            counterTimes++;
+            counter.num++;
+        });
 
-        effect(counterSpy);
         expect(counter.num).toBe(1);
-        expect(counterSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(counterTimes, 1);
         counter.num = 4;
         expect(counter.num).toBe(5);
-        expect(counterSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(counterTimes, 2);
     });
 
     it('使用 Array.prototype.push/unshift/pop/shift 时应避免无限递归循环', () =>
@@ -456,69 +473,99 @@ describe('响应式/effect', () =>
         (['push', 'unshift'] as const).forEach((key) =>
         {
             const arr = reactive<number[]>([]);
-            const counterSpy1 = vi.fn(() => (arr[key] as any)(1));
-            const counterSpy2 = vi.fn(() => (arr[key] as any)(2));
+            let counterTimes1 = 0;
+            let counterTimes2 = 0;
 
-            effect(counterSpy1);
-            effect(counterSpy2);
+            effect(() =>
+            {
+                counterTimes1++;
+                (arr[key] as any)(1);
+            });
+            effect(() =>
+            {
+                counterTimes2++;
+                (arr[key] as any)(2);
+            });
+
             expect(arr.length).toBe(2);
-            expect(counterSpy1).toHaveBeenCalledTimes(1);
-            expect(counterSpy2).toHaveBeenCalledTimes(1);
+            assert.strictEqual(counterTimes1, 1);
+            assert.strictEqual(counterTimes2, 1);
         });
         (['pop', 'shift'] as const).forEach((key) =>
         {
             const arr = reactive<number[]>([1, 2, 3, 4]);
-            const counterSpy1 = vi.fn(() => (arr[key] as any)());
-            const counterSpy2 = vi.fn(() => (arr[key] as any)());
+            let counterTimes1 = 0;
+            let counterTimes2 = 0;
 
-            effect(counterSpy1);
-            effect(counterSpy2);
+            effect(() =>
+            {
+                counterTimes1++;
+                (arr[key] as any)();
+            });
+            effect(() =>
+            {
+                counterTimes2++;
+                (arr[key] as any)();
+            });
+
             expect(arr.length).toBe(2);
-            expect(counterSpy1).toHaveBeenCalledTimes(1);
-            expect(counterSpy2).toHaveBeenCalledTimes(1);
+            assert.strictEqual(counterTimes1, 1);
+            assert.strictEqual(counterTimes2, 1);
         });
     });
 
     it('应允许显式递归原始函数循环', () =>
     {
         const counter = reactive({ num: 0 });
-        const numSpy = vi.fn(() =>
+        let numTimes = 0;
+
+        const fn = () =>
         {
+            numTimes++;
             counter.num++;
             if (counter.num < 10)
             {
-                numSpy();
+                fn();
             }
-        });
+        };
 
-        effect(numSpy);
+        effect(fn);
         expect(counter.num).toEqual(10);
-        expect(numSpy).toHaveBeenCalledTimes(10);
+        assert.strictEqual(numTimes, 10);
     });
 
     it('应避免与其他 effect 的无限循环', () =>
     {
         const nums = reactive({ num1: 0, num2: 1 });
 
-        const spy1 = vi.fn(() => (nums.num1 = nums.num2));
-        const spy2 = vi.fn(() => (nums.num2 = nums.num1));
+        let spy1Times = 0;
+        let spy2Times = 0;
 
-        effect(spy1);
-        effect(spy2);
+        effect(() =>
+        {
+            spy1Times++;
+            nums.num1 = nums.num2;
+        });
+        effect(() =>
+        {
+            spy2Times++;
+            nums.num2 = nums.num1;
+        });
+
         expect(nums.num1).toBe(1);
         expect(nums.num2).toBe(1);
-        expect(spy1).toHaveBeenCalledTimes(1);
-        expect(spy2).toHaveBeenCalledTimes(1);
+        assert.strictEqual(spy1Times, 1);
+        assert.strictEqual(spy2Times, 1);
         nums.num2 = 4;
         expect(nums.num1).toBe(4);
         expect(nums.num2).toBe(4);
-        expect(spy1).toHaveBeenCalledTimes(2);
-        expect(spy2).toHaveBeenCalledTimes(2);
+        assert.strictEqual(spy1Times, 2);
+        assert.strictEqual(spy2Times, 2);
         nums.num1 = 10;
         expect(nums.num1).toBe(10);
         expect(nums.num2).toBe(10);
-        expect(spy1).toHaveBeenCalledTimes(3);
-        expect(spy2).toHaveBeenCalledTimes(3);
+        assert.strictEqual(spy1Times, 3);
+        assert.strictEqual(spy2Times, 3);
     });
 
     it('应返回函数的新响应式版本', () =>
@@ -541,47 +588,47 @@ describe('响应式/effect', () =>
     {
         let dummy;
         const obj = reactive({ prop: 'value', run: false });
+        let conditionalTimes = 0;
 
-        const conditionalSpy = vi.fn(() =>
+        effect(() =>
         {
+            conditionalTimes++;
             dummy = obj.run ? obj.prop : 'other';
         });
 
-        effect(conditionalSpy);
-
         expect(dummy).toBe('other');
-        expect(conditionalSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(conditionalTimes, 1);
         obj.prop = 'Hi';
         expect(dummy).toBe('other');
-        expect(conditionalSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(conditionalTimes, 1);
         obj.run = true;
         expect(dummy).toBe('Hi');
-        expect(conditionalSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(conditionalTimes, 2);
         obj.prop = 'World';
         expect(dummy).toBe('World');
-        expect(conditionalSpy).toHaveBeenCalledTimes(3);
+        assert.strictEqual(conditionalTimes, 3);
     });
 
     it('修改非活动分支中使用的属性不应触发', () =>
     {
         let dummy;
         const obj = reactive({ prop: 'value', run: true });
+        let conditionalTimes = 0;
 
-        const conditionalSpy = vi.fn(() =>
+        effect(() =>
         {
+            conditionalTimes++;
             dummy = obj.run ? obj.prop : 'other';
         });
 
-        effect(conditionalSpy);
-
         expect(dummy).toBe('value');
-        expect(conditionalSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(conditionalTimes, 1);
         obj.run = false;
         expect(dummy).toBe('other');
-        expect(conditionalSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(conditionalTimes, 2);
         obj.prop = 'value2';
         expect(dummy).toBe('other');
-        expect(conditionalSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(conditionalTimes, 2);
     });
 
     it('应使用清理回退处理深度 effect 递归', () =>
@@ -612,8 +659,10 @@ describe('响应式/effect', () =>
         const input = reactive({ a: 1, b: 2, c: 0 });
         const output = reactive({ fx1: 0, fx2: 0 });
 
-        const fx1Spy = vi.fn(() =>
+        let fx1Times = 0;
+        const fx1 = effect(() =>
         {
+            fx1Times++;
             let result = 0;
 
             if (input.c < 2) result += input.a;
@@ -621,10 +670,10 @@ describe('响应式/effect', () =>
             output.fx1 = result;
         });
 
-        const fx1 = effect(fx1Spy);
-
-        const fx2Spy = vi.fn(() =>
+        let fx2Times = 0;
+        const fx2 = effect(() =>
         {
+            fx2Times++;
             let result = 0;
 
             if (input.c > 1) result += input.a;
@@ -632,65 +681,66 @@ describe('响应式/effect', () =>
             output.fx2 = result + output.fx1;
         });
 
-        const fx2 = effect(fx2Spy);
-
         expect(fx1).not.toBeNull();
         expect(fx2).not.toBeNull();
 
         expect(output.fx1).toBe(1);
         expect(output.fx2).toBe(2 + 1);
-        expect(fx1Spy).toHaveBeenCalledTimes(1);
-        expect(fx2Spy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fx1Times, 1);
+        assert.strictEqual(fx2Times, 1);
 
-        fx1Spy.mockClear();
-        fx2Spy.mockClear();
+        fx1Times = 0;
+        fx2Times = 0;
         input.b = 3;
         expect(output.fx1).toBe(1);
         expect(output.fx2).toBe(3 + 1);
-        expect(fx1Spy).toHaveBeenCalledTimes(0);
-        expect(fx2Spy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fx1Times, 0);
+        assert.strictEqual(fx2Times, 1);
 
-        fx1Spy.mockClear();
-        fx2Spy.mockClear();
+        fx1Times = 0;
+        fx2Times = 0;
         input.c = 1;
         expect(output.fx1).toBe(1);
         expect(output.fx2).toBe(3 + 1);
-        expect(fx1Spy).toHaveBeenCalledTimes(1);
-        expect(fx2Spy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fx1Times, 1);
+        assert.strictEqual(fx2Times, 1);
 
-        fx1Spy.mockClear();
-        fx2Spy.mockClear();
+        fx1Times = 0;
+        fx2Times = 0;
         input.c = 2;
         expect(output.fx1).toBe(3);
         expect(output.fx2).toBe(1 + 3 + 3);
-        expect(fx1Spy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fx1Times, 1);
 
         // 由于 fx1 变化而调用
-        expect(fx2Spy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fx2Times, 1);
 
-        fx1Spy.mockClear();
-        fx2Spy.mockClear();
+        fx1Times = 0;
+        fx2Times = 0;
         input.c = 3;
         expect(output.fx1).toBe(3);
         expect(output.fx2).toBe(1 + 3);
-        expect(fx1Spy).toHaveBeenCalledTimes(1);
-        expect(fx2Spy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fx1Times, 1);
+        assert.strictEqual(fx2Times, 1);
 
-        fx1Spy.mockClear();
-        fx2Spy.mockClear();
+        fx1Times = 0;
+        fx2Times = 0;
         input.a = 10;
         expect(output.fx1).toBe(3);
         expect(output.fx2).toBe(10 + 3);
-        expect(fx1Spy).toHaveBeenCalledTimes(0);
-        expect(fx2Spy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fx1Times, 0);
+        assert.strictEqual(fx2Times, 1);
     });
 
     it('单次变更不应多次运行', () =>
     {
         let dummy;
         const obj = reactive<Record<string, number>>({});
-        const fnSpy = vi.fn(() =>
+        let fnTimes = 0;
+
+        effect(() =>
         {
+            fnTimes++;
             for (const key in obj)
             {
                 dummy = obj[key];
@@ -698,12 +748,10 @@ describe('响应式/effect', () =>
             dummy = obj.prop;
         });
 
-        effect(fnSpy);
-
-        expect(fnSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
         obj.prop = 16;
         expect(dummy).toBe(16);
-        expect(fnSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(fnTimes, 2);
     });
 
     it('应允许嵌套 effect', () =>
@@ -711,36 +759,42 @@ describe('响应式/effect', () =>
         const nums = reactive({ num1: 0, num2: 1, num3: 2 });
         const dummy: any = {};
 
-        const childSpy = vi.fn(() => (dummy.num1 = nums.num1));
-        const childeffect = effect(childSpy) as EffectReactivity;
-        const parentSpy = vi.fn(() =>
+        let childTimes = 0;
+        const childeffect = effect(() =>
         {
+            childTimes++;
+            dummy.num1 = nums.num1;
+        }) as EffectReactivity;
+
+        let parentTimes = 0;
+
+        effect(() =>
+        {
+            parentTimes++;
             dummy.num2 = nums.num2;
             // 使用 effect(func).run(true) 来代替 @vue/reactivity 中的 effect(func)()
             childeffect.run();
             dummy.num3 = nums.num3;
         });
 
-        effect(parentSpy);
-
         expect(dummy).toEqual({ num1: 0, num2: 1, num3: 2 });
-        expect(parentSpy).toHaveBeenCalledTimes(1);
-        expect(childSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(parentTimes, 1);
+        assert.strictEqual(childTimes, 2);
         // 这应该只调用 childeffect
         nums.num1 = 4;
         expect(dummy).toEqual({ num1: 4, num2: 1, num3: 2 });
-        expect(parentSpy).toHaveBeenCalledTimes(1);
-        expect(childSpy).toHaveBeenCalledTimes(3);
+        assert.strictEqual(parentTimes, 1);
+        assert.strictEqual(childTimes, 3);
         // 这调用 parenteffect，parenteffect 调用 childeffect 一次
         nums.num2 = 10;
         expect(dummy).toEqual({ num1: 4, num2: 10, num3: 2 });
-        expect(parentSpy).toHaveBeenCalledTimes(2);
-        expect(childSpy).toHaveBeenCalledTimes(4);
+        assert.strictEqual(parentTimes, 2);
+        assert.strictEqual(childTimes, 4);
         // 这调用 parenteffect，parenteffect 调用 childeffect 一次
         nums.num3 = 7;
         expect(dummy).toEqual({ num1: 4, num2: 10, num3: 7 });
-        expect(parentSpy).toHaveBeenCalledTimes(3);
-        expect(childSpy).toHaveBeenCalledTimes(5);
+        assert.strictEqual(parentTimes, 3);
+        assert.strictEqual(childTimes, 5);
     });
 
     it('应观察 JSON 方法', () =>
@@ -837,11 +891,15 @@ describe('响应式/effect', () =>
         const obj = reactive({
             foo: NaN,
         });
-        const fnSpy = vi.fn(() => obj.foo);
+        let fnTimes = 0;
 
-        effect(fnSpy);
+        effect(() =>
+        {
+            fnTimes++;
+            obj.foo;
+        });
         obj.foo = NaN;
-        expect(fnSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
     });
 
     it('数组长度设为 0 时应触发所有 effect', () =>
@@ -877,23 +935,31 @@ describe('响应式/effect', () =>
     {
         const obj = reactive({ foo: 1 });
         const observed: any = reactive({ obj });
-        const fnSpy = vi.fn(() => observed.obj);
+        let fnTimes = 0;
 
-        effect(fnSpy);
+        effect(() =>
+        {
+            fnTimes++;
+            observed.obj;
+        });
 
-        expect(fnSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
         observed.obj = obj;
-        expect(fnSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
 
         const obj2 = reactive({ foo: 1 });
         const observed2: any = reactive({ obj2 });
-        const fnSpy2 = vi.fn(() => observed2.obj2);
+        let fn2Times = 0;
 
-        effect(fnSpy2);
+        effect(() =>
+        {
+            fn2Times++;
+            observed2.obj2;
+        });
 
-        expect(fnSpy2).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fn2Times, 1);
         observed2.obj2 = obj2;
-        expect(fnSpy2).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fn2Times, 1);
     });
 
     it('用字符串设置长度时应触发', () =>
@@ -920,39 +986,42 @@ describe('响应式/effect', () =>
     {
         const obj: any = reactive({});
         let has = false;
-        const fnSpy = vi.fn();
+        let fnTimes = 0;
 
         effect(() =>
         {
-            fnSpy();
+            fnTimes++;
             has = obj.hasOwnProperty('foo');
         });
-        expect(fnSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
         expect(has).toBe(false);
 
         obj.foo = 1;
-        expect(fnSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(fnTimes, 2);
         expect(has).toBe(true);
 
         delete obj.foo;
-        expect(fnSpy).toHaveBeenCalledTimes(3);
+        assert.strictEqual(fnTimes, 3);
         expect(has).toBe(false);
 
         // 不应在不相关的键上触发
         obj.bar = 2;
-        expect(fnSpy).toHaveBeenCalledTimes(3);
+        assert.strictEqual(fnTimes, 3);
         expect(has).toBe(false);
     });
 
     it('批处理时应只触发一次', () =>
     {
         const counter = reactive({ num: 0 });
+        let counterTimes = 0;
 
-        const counterSpy = vi.fn(() => counter.num);
+        effect(() =>
+        {
+            counterTimes++;
+            counter.num;
+        });
 
-        effect(counterSpy);
-
-        counterSpy.mockClear();
+        counterTimes = 0;
 
         batchRun(() =>
         {
@@ -960,52 +1029,62 @@ describe('响应式/effect', () =>
             counter.num++;
         });
 
-        expect(counterSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(counterTimes, 1);
     });
 
     test('应暂停/恢复 effect', () =>
     {
         const obj = reactive({ foo: 1 });
-        const fnSpy = vi.fn(() => obj.foo);
-        const runner = effect(fnSpy);
+        let fnTimes = 0;
 
-        expect(fnSpy).toHaveBeenCalledTimes(1);
+        const runner = effect(() =>
+        {
+            fnTimes++;
+            obj.foo;
+        });
+
+        assert.strictEqual(fnTimes, 1);
         expect(obj.foo).toBe(1);
 
         runner.pause();
         obj.foo++;
-        expect(fnSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
         expect(obj.foo).toBe(2);
 
         runner.resume();
-        expect(fnSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(fnTimes, 2);
         expect(obj.foo).toBe(2);
 
         obj.foo++;
-        expect(fnSpy).toHaveBeenCalledTimes(3);
+        assert.strictEqual(fnTimes, 3);
         expect(obj.foo).toBe(3);
     });
 
     test('调用 resume 时应立即执行一次', () =>
     {
         const obj = reactive({ foo: 1 });
-        const fnSpy = vi.fn(() => obj.foo);
-        const runner = effect(fnSpy);
+        let fnTimes = 0;
 
-        expect(fnSpy).toHaveBeenCalledTimes(1);
+        const runner = effect(() =>
+        {
+            fnTimes++;
+            obj.foo;
+        });
+
+        assert.strictEqual(fnTimes, 1);
         expect(obj.foo).toBe(1);
 
         runner.pause();
         obj.foo++;
-        expect(fnSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
         expect(obj.foo).toBe(2);
 
         obj.foo++;
-        expect(fnSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
         expect(obj.foo).toBe(3);
 
         runner.resume();
-        expect(fnSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(fnTimes, 2);
         expect(obj.foo).toBe(3);
     });
 
@@ -1056,16 +1135,17 @@ describe('响应式/effect', () =>
     {
         const obj = reactive({ a: 1, b: 2, c: 3 });
 
-        const effectSpy = vi.fn(() =>
+        let effectTimes = 0;
+
+        effect(() =>
         {
+            effectTimes++;
+
             // 访问所有属性
             return obj.a + obj.b + obj.c;
         });
 
-        effect(effectSpy);
-        expect(effectSpy).toHaveBeenCalledTimes(1);
-
-        effectSpy.mockClear();
+        assert.strictEqual(effectTimes, 1);
 
         // 在同一个同步代码块中修改多个属性
         // 这会多次触发同一个 effect
@@ -1075,7 +1155,7 @@ describe('响应式/effect', () =>
 
         // 由于响应式系统的特性，每次修改都会立即触发 effect
         // 但同一个 effect 在同一批次中不应被重复添加
-        expect(effectSpy.mock.calls.length).toBeGreaterThanOrEqual(1);
+        expect(effectTimes).toBeGreaterThanOrEqual(1);
     });
 
     test('嵌套对象属性修改时不应有重复警告', () =>

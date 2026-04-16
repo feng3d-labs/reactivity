@@ -1,4 +1,4 @@
-import { describe, expect, it, test, vi } from 'vitest';
+import { assert, describe, expect, it, test, vi } from 'vitest';
 import { effect, isReactive, reactive, toRaw } from '../../src';
 
 describe('响应式/集合', () =>
@@ -6,9 +6,9 @@ describe('响应式/集合', () =>
     function coverCollectionFn(collection: Map<any, any>, fnName: string)
     {
         const spy = vi.fn();
-        const proxy = reactive(collection)
+        const proxy = reactive(collection);
 
-      ; (collection as any)[fnName] = spy;
+        ; (collection as any)[fnName] = spy;
 
         return [proxy as any, spy];
     }
@@ -254,31 +254,35 @@ describe('响应式/集合', () =>
         {
             let dummy;
             const map = reactive(new Map());
-            const mapSpy = vi.fn(() => (dummy = map.get('key')));
+            let mapTimes = 0;
 
-            effect(mapSpy);
+            effect(() =>
+            {
+                mapTimes++;
+                dummy = map.get('key');
+            });
 
             expect(dummy).toBe(undefined);
-            expect(mapSpy).toHaveBeenCalledTimes(1);
+            assert.strictEqual(mapTimes, 1);
             // map.get('key') 没有发生变化，不用触发（此处与 @vue/reactivity 不同，值没有发生变化，不用触发）
             map.set('key', undefined);
             expect(dummy).toBe(undefined);
-            expect(mapSpy).toHaveBeenCalledTimes(1);
+            assert.strictEqual(mapTimes, 1);
             map.set('key', 'value');
             expect(dummy).toBe('value');
-            expect(mapSpy).toHaveBeenCalledTimes(2);
+            assert.strictEqual(mapTimes, 2);
             map.set('key', 'value');
             expect(dummy).toBe('value');
-            expect(mapSpy).toHaveBeenCalledTimes(2);
+            assert.strictEqual(mapTimes, 2);
             map.delete('key');
             expect(dummy).toBe(undefined);
-            expect(mapSpy).toHaveBeenCalledTimes(3);
+            assert.strictEqual(mapTimes, 3);
             map.delete('key');
             expect(dummy).toBe(undefined);
-            expect(mapSpy).toHaveBeenCalledTimes(3);
+            assert.strictEqual(mapTimes, 3);
             map.clear();
             expect(dummy).toBe(undefined);
-            expect(mapSpy).toHaveBeenCalledTimes(3);
+            assert.strictEqual(mapTimes, 3);
         });
 
         it('不应观察原始数据', () =>
@@ -418,11 +422,15 @@ describe('响应式/集合', () =>
         it('新旧值都是 NaN 时不应触发', () =>
         {
             const map = reactive(new Map([['foo', NaN]]));
-            const mapSpy = vi.fn(() => map.get('foo'));
+            let mapTimes = 0;
 
-            effect(mapSpy);
+            effect(() =>
+            {
+                mapTimes++;
+                map.get('foo');
+            });
             map.set('foo', NaN);
-            expect(mapSpy).toHaveBeenCalledTimes(1);
+            assert.strictEqual(mapTimes, 1);
         });
 
         it('原始 map 中的响应式键应工作', () =>
@@ -485,33 +493,35 @@ describe('响应式/集合', () =>
         it('设置现有键时不应触发键迭代', () =>
         {
             const map = reactive(new Map());
-            const spy = vi.fn();
+            let spyTimes = 0;
+            const keysArray: any[][] = [];
 
             effect(() =>
             {
+                spyTimes++;
                 const keys: any[] = [];
 
                 for (const key of map.keys())
                 {
                     keys.push(key);
                 }
-                spy(keys);
+                keysArray.push(keys);
             });
 
-            expect(spy).toHaveBeenCalledTimes(1);
-            expect(spy.mock.calls[0][0]).toMatchObject([]);
+            assert.strictEqual(spyTimes, 1);
+            expect(keysArray[0]).toMatchObject([]);
 
             map.set('a', 0);
-            expect(spy).toHaveBeenCalledTimes(2);
-            expect(spy.mock.calls[1][0]).toMatchObject(['a']);
+            assert.strictEqual(spyTimes, 2);
+            expect(keysArray[1]).toMatchObject(['a']);
 
             map.set('b', 0);
-            expect(spy).toHaveBeenCalledTimes(3);
-            expect(spy.mock.calls[2][0]).toMatchObject(['a', 'b']);
+            assert.strictEqual(spyTimes, 3);
+            expect(keysArray[2]).toMatchObject(['a', 'b']);
 
             // 键没有改变，不应触发
             map.set('b', 1);
-            expect(spy).toHaveBeenCalledTimes(3);
+            assert.strictEqual(spyTimes, 3);
         });
 
         it('非响应式键只应触发 Map.has 一次', () =>

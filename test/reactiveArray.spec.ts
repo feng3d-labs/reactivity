@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, test } from 'vitest';
 import { computed, effect, isReactive, isRef, reactive, ref, toRaw } from '../src';
 
 describe('响应式/reactive/数组', () =>
@@ -109,13 +109,20 @@ describe('响应式/reactive/数组', () =>
     {
         const identityMethods = ['includes', 'indexOf', 'lastIndexOf'] as const;
 
-        function instrumentArr(rawTarget: any[])
+        function instrumentArr(rawTarget: any[], callCounts: Map<string, number>)
         {
             identityMethods.forEach((key) =>
             {
-                const spy = vi.fn(rawTarget[key] as any);
+                const originalMethod = rawTarget[key] as any;
 
-                rawTarget[key] = spy;
+                callCounts.set(key, 0);
+
+                rawTarget[key] = (...args: any[]) =>
+                {
+                    callCounts.set(key, (callCounts.get(key) || 0) + 1);
+
+                    return originalMethod.apply(rawTarget, args);
+                };
             });
         }
 
@@ -128,28 +135,28 @@ describe('响应式/reactive/数组', () =>
         {
             identityMethods.forEach((key) =>
             {
-                (rawTarget[key] as any).mockClear();
                 // 重新链接到原型方法
                 rawTarget[key] = Array.prototype[key] as any;
             });
         }
 
-        function expectHaveBeenCalledTimes(rawTarget: any[], times: number)
+        function expectHaveBeenCalledTimes(callCounts: Map<string, number>, times: number)
         {
             identityMethods.forEach((key) =>
             {
-                expect(rawTarget[key]).toHaveBeenCalledTimes(times);
+                assert.strictEqual(callCounts.get(key), times);
             });
         }
 
         test('不存在的原始值应调用一次', () =>
         {
             const reactiveArr = reactive([]);
+            const callCounts = new Map<string, number>();
 
-            instrumentArr(toRaw(reactiveArr));
+            instrumentArr(toRaw(reactiveArr), callCounts);
             const searchResult = searchValue(reactiveArr, {});
 
-            expectHaveBeenCalledTimes(toRaw(reactiveArr), 1);
+            expectHaveBeenCalledTimes(callCounts, 1);
             expect(searchResult).toStrictEqual([false, -1, -1]);
 
             unInstrumentArr(toRaw(reactiveArr));
@@ -159,11 +166,12 @@ describe('响应式/reactive/数组', () =>
         {
             const existReactiveValue = reactive({});
             const reactiveArr = reactive([existReactiveValue, existReactiveValue]);
+            const callCounts = new Map<string, number>();
 
-            instrumentArr(toRaw(reactiveArr));
+            instrumentArr(toRaw(reactiveArr), callCounts);
             const searchResult = searchValue(reactiveArr, existReactiveValue);
 
-            expectHaveBeenCalledTimes(toRaw(reactiveArr), 1);
+            expectHaveBeenCalledTimes(callCounts, 1);
             expect(searchResult).toStrictEqual([true, 0, 1]);
 
             unInstrumentArr(toRaw(reactiveArr));
@@ -172,11 +180,12 @@ describe('响应式/reactive/数组', () =>
         test('不存在的响应式值应调用两次', () =>
         {
             const reactiveArr = reactive([]);
+            const callCounts = new Map<string, number>();
 
-            instrumentArr(toRaw(reactiveArr));
+            instrumentArr(toRaw(reactiveArr), callCounts);
             const searchResult = searchValue(reactiveArr, reactive({}));
 
-            expectHaveBeenCalledTimes(toRaw(reactiveArr), 2);
+            expectHaveBeenCalledTimes(callCounts, 2);
             expect(searchResult).toStrictEqual([false, -1, -1]);
 
             unInstrumentArr(toRaw(reactiveArr));
@@ -186,11 +195,12 @@ describe('响应式/reactive/数组', () =>
         {
             const existRaw = {};
             const reactiveArr = reactive([existRaw, existRaw]);
+            const callCounts = new Map<string, number>();
 
-            instrumentArr(toRaw(reactiveArr));
+            instrumentArr(toRaw(reactiveArr), callCounts);
             const searchResult = searchValue(reactiveArr, reactive(existRaw));
 
-            expectHaveBeenCalledTimes(toRaw(reactiveArr), 2);
+            expectHaveBeenCalledTimes(callCounts, 2);
             expect(searchResult).toStrictEqual([true, 0, 1]);
 
             unInstrumentArr(toRaw(reactiveArr));
@@ -200,15 +210,16 @@ describe('响应式/reactive/数组', () =>
     test('数组上的 delete 不应触发长度依赖', () =>
     {
         const arr = reactive([1, 2, 3]);
-        const fn = vi.fn();
+        let fnTimes = 0;
 
         effect(() =>
         {
-            fn(arr.length);
+            fnTimes++;
+            arr.length;
         });
-        expect(fn).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
         delete arr[1];
-        expect(fn).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
     });
 
     test('应跟踪带索引的 hasOwnProperty 调用', () =>
@@ -232,7 +243,7 @@ describe('响应式/reactive/数组', () =>
     test('数组上的 shift 应只触发一次依赖', () =>
     {
         const arr = reactive([1, 2, 3]);
-        const fn = vi.fn();
+        let fnTimes = 0;
 
         effect(() =>
         {
@@ -240,68 +251,70 @@ describe('响应式/reactive/数组', () =>
             {
                 arr[i];
             }
-            fn();
+            fnTimes++;
         });
-        expect(fn).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
         arr.shift();
-        expect(fn).toHaveBeenCalledTimes(2);
+        assert.strictEqual(fnTimes, 2);
     });
 
     // #6018
     test('边缘情况：调用数组长度减少的变更方法时避免在 deleteProperty 中触发 effect', () =>
     {
         const arr = ref([1]);
-        const fn1 = vi.fn();
-        const fn2 = vi.fn();
+        let fn1Times = 0;
+        let fn2Times = 0;
 
         effect(() =>
         {
-            fn1();
+            fn1Times++;
             if (arr.value.length > 0)
             {
                 arr.value.slice();
-                fn2();
+                fn2Times++;
             }
         });
-        expect(fn1).toHaveBeenCalledTimes(1);
-        expect(fn2).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fn1Times, 1);
+        assert.strictEqual(fn2Times, 1);
         arr.value.splice(0);
-        expect(fn1).toHaveBeenCalledTimes(2);
-        expect(fn2).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fn1Times, 2);
+        assert.strictEqual(fn2Times, 1);
     });
 
     test('在数组上添加现有索引不应触发长度依赖', () =>
     {
         const array = new Array(3);
         const observed = reactive(array);
-        const fn = vi.fn();
+        let fnTimes = 0;
 
         effect(() =>
         {
-            fn(observed.length);
+            fnTimes++;
+            observed.length;
         });
-        expect(fn).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
         observed[1] = 1;
-        expect(fn).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
     });
 
     test('在数组上添加非整数属性不应触发长度依赖', () =>
     {
         const array: any[] & { x?: string } = new Array(3);
         const observed = reactive(array);
-        const fn = vi.fn();
+        let fnTimes = 0;
 
         effect(() =>
         {
-            fn(observed.length);
+            fnTimes++;
+            observed.length;
         });
-        expect(fn).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
         observed.x = 'x';
-        expect(fn).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
         observed[-1] = 'x';
-        expect(fn).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
         observed[NaN] = 'x';
-        expect(fn).toHaveBeenCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
     });
 
     // #2427
@@ -364,10 +377,10 @@ describe('响应式/reactive/数组', () =>
 
         test('读取 + 标识', () =>
         {
-            const ref = original[1];
+            const refValue = original[1];
 
-            expect(ref).toBe(toRaw(original)[1]);
-            expect(original.indexOf(ref)).toBe(1);
+            expect(refValue).toBe(toRaw(original)[1]);
+            expect(original.indexOf(refValue)).toBe(1);
         });
     });
 
@@ -601,7 +614,6 @@ describe('响应式/reactive/数组', () =>
         });
 
         // Node 20+
-        // @ts-expect-error tests are not limited to es2016
         test.skipIf(!Array.prototype.toReversed)('toReversed', () =>
         {
             const array = reactive([1, { val: 2 }]);
@@ -615,11 +627,9 @@ describe('响应式/reactive/数组', () =>
         });
 
         // Node 20+
-        // @ts-expect-error tests are not limited to es2016
         test.skipIf(!Array.prototype.toSpliced)('toSpliced', () =>
         {
             const array = reactive([1, 2, 3]);
-            // @ts-expect-error
             const result = computed(() => array.toSpliced(1, 1, -2));
 
             expect(result.value).toStrictEqual([1, -2, 3]);
@@ -672,16 +682,17 @@ describe('响应式/reactive/数组', () =>
                     return super.findIndex((obj) => obj.id === bar);
                 }
 
+                // @ts-expect-error
                 findLast(foo: any, bar: any, baz: any)
                 {
                     expect(foo).toBe('foo');
                     expect(bar).toBe('bar');
                     expect(baz).toBe('baz');
-                    // @ts-expect-error our code is limited to es2016 but user code is not
 
                     return super.findLast((obj) => obj.id === bar);
                 }
 
+                // @ts-expect-error
                 findLastIndex(foo: any, bar: any, baz: any)
                 {
                     expect(foo).toBe('foo');
