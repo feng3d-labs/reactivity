@@ -1,7 +1,6 @@
 import { batch, batchRun, getBatchDepth } from './batch';
-import { ComputedReactivity } from './computed';
 import { activeEffectScope } from './effectScope';
-import { Reactivity } from './Reactivity';
+import { forceTrack, Reactivity } from './Reactivity';
 
 /**
  * 性能优化尝试记录：
@@ -35,7 +34,7 @@ import { Reactivity } from './Reactivity';
  * 3. 真有需求，可以使用 effect(func).run(true) 来代替 @vue/reactivity 中的 effect(func)() 。
  *
  */
-export function effect<T = any>(fn: () => T): Effect
+export function effect(fn: () => void): Effect
 {
     return new EffectReactivity(fn);
 }
@@ -43,21 +42,31 @@ export function effect<T = any>(fn: () => T): Effect
 /**
  * 效果反应式节点。
  */
-export class EffectReactivity<T = any> extends ComputedReactivity<T> implements Effect
+export class EffectReactivity implements Effect
 {
     /** 是否启用 */
     private _enabled = true;
     /** 暂停期间是否有依赖变化 */
     private _pending = false;
 
-    constructor(func: (oldValue?: T) => T)
+    private _isRunning = false;
+
+    protected _func: () => void;
+
+    constructor(func: () => void)
     {
-        super(func);
+        this._func = func;
         if (activeEffectScope && activeEffectScope.active)
         {
             activeEffectScope.effects.push(this);
         }
         this.runIfDirty();
+    }
+
+    runIfDirty()
+    {
+        // 执行计算
+        this.run();
     }
 
     /**
@@ -136,14 +145,32 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
      */
     run(): void
     {
+        if (this._isRunning) return;
+        this._isRunning = true;
+
         if (this._enabled)
         {
-            super.run();
+            // 不受嵌套的 effect 影响
+            forceTrack(() =>
+            {
+                // 保存当前节点作为父节点
+                const parentReactiveNode = Reactivity.activeReactivity;
+
+                // 设置当前节点为活跃节点
+                Reactivity.activeReactivity = this;
+
+                this._func();
+
+                // 执行完毕后恢复父节点
+                Reactivity.activeReactivity = parentReactiveNode;
+            });
         }
         else
         {
-            this._func(this._value);
+            this._func();
         }
+
+        this._isRunning = false;
     }
 }
 

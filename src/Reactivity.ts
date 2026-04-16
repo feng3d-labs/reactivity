@@ -1,4 +1,6 @@
 import { type ComputedReactivity } from './computed';
+import { EffectReactivity } from './effect';
+import { isComputedReactivity } from './util';
 
 /**
  * 反应式节点基类。
@@ -44,6 +46,8 @@ export class Reactivity<T = any>
      */
     _parents = new Map<ComputedReactivity, number>();
 
+    _effects = new Set<EffectReactivity>();
+
     /**
      * 建立依赖关系。
      *
@@ -59,7 +63,14 @@ export class Reactivity<T = any>
 
         if (!parent || !_shouldTrack) return;
 
-        this._parents.set(parent, parent._version);
+        if (isComputedReactivity(parent))
+        {
+            this._parents.set(parent, parent._version);
+        }
+        else
+        {
+            this._effects.add(parent);
+        }
     }
 
     /**
@@ -88,6 +99,9 @@ export class Reactivity<T = any>
 
         //
         this._parents.clear();
+
+        //
+        this._effects.forEach(e => e.trigger());
     }
 
     /**
@@ -98,7 +112,7 @@ export class Reactivity<T = any>
      *
      * @internal
      */
-    static activeReactivity: ComputedReactivity | undefined;
+    static activeReactivity: ComputedReactivity | EffectReactivity | undefined;
 }
 
 /**

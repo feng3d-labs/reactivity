@@ -5,7 +5,7 @@ import { 多effect追踪 } from './effect追踪';
 import { updateTableWithAllInfo } from '../tool';
 import pkg from '../../package.json';
 
-const count = 1000;
+const count = 10000;
 const runs = 3;
 
 // 运行三版本测试，运行3次

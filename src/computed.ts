@@ -54,6 +54,8 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      */
     readonly __v_isRef = true;
 
+    readonly __v_isComputedReactivity = true;
+
     /**
      * 计算函数。
      *

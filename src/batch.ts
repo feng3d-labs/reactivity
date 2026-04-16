@@ -1,5 +1,7 @@
 import { ComputedReactivity } from './computed';
+import { EffectReactivity } from './effect';
 import { Reactivity } from './Reactivity';
+import { isComputedReactivity } from './util';
 
 /**
  * 性能优化尝试记录：
@@ -41,12 +43,12 @@ export function getBatchDepth(): number
 /**
  * 待运行的效果队列。
  */
-let _needEffectDeps: ComputedReactivity[] = [];
+let _needEffectDeps: (ComputedReactivity | EffectReactivity)[] = [];
 
 /**
  * 已运行的效果队列。
  */
-let _isRunedDeps: ComputedReactivity[] = [];
+let _isRunedDeps: (ComputedReactivity | EffectReactivity)[] = [];
 
 /**
  * 合批处理依赖。
@@ -58,7 +60,7 @@ let _isRunedDeps: ComputedReactivity[] = [];
  * @param dep 要处理的依赖
  * @param isRunning 依赖是否正在运行
  */
-export function batch(dep: ComputedReactivity, isRunning: boolean): void
+export function batch(dep: ComputedReactivity | EffectReactivity, isRunning: boolean): void
 {
     if (isRunning)
     {
@@ -123,12 +125,15 @@ export function batchRun<T>(fn: () => T): T
 
         computed.forEach((dep) =>
         {
-            // 此时依赖以及子依赖都已经运行过了，只需修复与子节点关系
-            dep._children.forEach((_version, node) =>
+            if (isComputedReactivity(dep))
             {
-                node._parents.set(dep, dep._version);
-            });
-            dep._children.clear();
+                // 此时依赖以及子依赖都已经运行过了，只需修复与子节点关系
+                dep._children.forEach((_version, node) =>
+                {
+                    node._parents.set(dep, dep._version);
+                });
+                dep._children.clear();
+            }
         });
     }
 
