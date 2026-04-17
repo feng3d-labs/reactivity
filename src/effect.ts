@@ -17,7 +17,7 @@ import { Reactivity } from './Reactivity';
  * 3. 真有需求，可以使用 effect(func).run(true) 来代替 @vue/reactivity 中的 effect(func)() 。
  *
  */
-export function effect<T = any>(fn: () => T): Effect
+export function effect(fn: () => void): Effect
 {
     return new EffectReactivity(fn);
 }
@@ -25,14 +25,14 @@ export function effect<T = any>(fn: () => T): Effect
 /**
  * 效果反应式节点。
  */
-export class EffectReactivity<T = any> extends ComputedReactivity<T> implements Effect
+export class EffectReactivity extends ComputedReactivity<void> implements Effect
 {
     /** 是否启用 */
     private _enabled = true;
     /** 暂停期间是否有依赖变化 */
     private _pending = false;
 
-    constructor(func: (oldValue?: T) => T)
+    constructor(func: () => void)
     {
         super(func);
         if (activeEffectScope && activeEffectScope.active)
