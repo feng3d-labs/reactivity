@@ -27,12 +27,10 @@ export function effect<T = any>(fn: () => T): Effect
  */
 export class EffectReactivity<T = any> extends ComputedReactivity<T> implements Effect
 {
-    /**
-     * 是否为启用, 默认为 true。
-     *
-     * 启用时，会立即执行函数。
-     */
-    private _isEnable = true;
+    /** 是否启用 */
+    private _enabled = true;
+    /** 暂停期间是否有依赖变化 */
+    private _pending = false;
 
     constructor(func: (oldValue?: T) => T)
     {
@@ -51,7 +49,7 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
      */
     pause()
     {
-        this._isEnable = false;
+        this._enabled = false;
     }
 
     /**
@@ -61,11 +59,11 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
      */
     resume()
     {
-        if (this._isEnable) return;
-        this._isEnable = true;
-        if (EffectReactivity.pausedQueueEffects.has(this))
+        if (this._enabled) return;
+        this._enabled = true;
+        if (this._pending)
         {
-            EffectReactivity.pausedQueueEffects.delete(this);
+            this._pending = false;
             this.trigger();
         }
     }
@@ -77,8 +75,8 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
      */
     stop()
     {
-        this._isEnable = false;
-        EffectReactivity.pausedQueueEffects.delete(this);
+        this._enabled = false;
+        this._pending = false;
     }
 
     /**
@@ -92,19 +90,17 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
         {
             super.trigger();
 
-            if (this._isEnable)
+            if (this._enabled)
             {
                 // 合批时需要判断是否已经运行的依赖。
                 batch(this, Reactivity.activeReactivity === this);
             }
             else
             {
-                EffectReactivity.pausedQueueEffects.add(this);
+                this._pending = true;
             }
         });
     }
-
-    private static pausedQueueEffects = new WeakSet<EffectReactivity>();
 
     /**
      * 执行当前节点。
@@ -113,7 +109,7 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
      */
     run(): void
     {
-        if (this._isEnable)
+        if (this._enabled)
         {
             super.run();
         }
