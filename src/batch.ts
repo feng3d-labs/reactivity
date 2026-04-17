@@ -48,7 +48,7 @@ let _needEffectDeps: (ComputedReactivity | EffectReactivity)[] = [];
 /**
  * 已运行的效果队列。
  */
-let _isRunedDeps: (ComputedReactivity | EffectReactivity)[] = [];
+let _isRunedDeps: ComputedReactivity[] = [];
 
 /**
  * 合批处理依赖。
@@ -64,13 +64,16 @@ export function batch(dep: ComputedReactivity | EffectReactivity, isRunning: boo
 {
     if (isRunning)
     {
-        // 如果依赖已经在队列中，直接返回，避免重复添加
-        if (_isRunedDeps.indexOf(dep) !== -1)
+        if (isComputedReactivity(dep))
         {
-            return;
-        }
+            // 如果依赖已经在队列中，直接返回，避免重复添加
+            if (_isRunedDeps.indexOf(dep) !== -1)
+            {
+                return;
+            }
 
-        _isRunedDeps.push(dep);
+            _isRunedDeps.push(dep);
+        }
     }
     else
     {
@@ -116,23 +119,6 @@ export function batchRun<T>(fn: () => T): T
         return result;
     }
 
-    // 处理已经运行过的依赖（computed）
-    if (_isRunedDeps.length > 0)
-    {
-        const computed = [..._isRunedDeps];
-
-        _isRunedDeps = [];
-
-        computed.forEach((dep) =>
-        {
-            if (isComputedReactivity(dep))
-            {
-                // 此时依赖以及子依赖都已经运行过了，只需修复与子节点关系
-                dep._fixChildren();
-            }
-        });
-    }
-
     // 批次处理待运行的依赖
     if (_needEffectDeps.length > 0)
     {
@@ -151,6 +137,16 @@ export function batchRun<T>(fn: () => T): T
 
             Reactivity.activeReactivity = pre;
         });
+    }
+
+    // 处理已经运行过的依赖（computed）
+    if (_isRunedDeps.length > 0)
+    {
+        _isRunedDeps.forEach((dep) =>
+        {
+            dep._fixChildren();
+        });
+        _isRunedDeps.length = 0;
     }
 
     return result;
