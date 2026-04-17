@@ -142,35 +142,6 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
     }
 
     /**
-     * 执行计算。
-     *
-     * 执行计算函数，更新当前值。
-     * 在计算过程中会：
-     * 1. 强制启用依赖跟踪
-     * 2. 保存并设置当前活动节点
-     * 3. 执行计算函数
-     * 4. 恢复活动节点
-     */
-    run()
-    {
-        // 不受嵌套的 effect 影响
-        forceTrack(() =>
-        {
-            // 保存当前节点作为父节点
-            const parentReactiveNode = Reactivity.activeReactivity;
-
-            // 设置当前节点为活跃节点
-            Reactivity.activeReactivity = this as any;
-
-            this._version++;
-            this._value = this._func(this._value);
-
-            // 执行完毕后恢复父节点
-            Reactivity.activeReactivity = parentReactiveNode;
-        });
-    }
-
-    /**
      * 检查并执行计算。
      *
      * 检查当前节点是否需要重新计算：
@@ -190,8 +161,21 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
             // 立即去除脏标记，避免循环多重计算
             this._isDirty = false;
 
-            // 执行计算
-            this.run();
+            // 不受嵌套的 effect 影响
+            forceTrack(() =>
+            {
+                // 保存当前节点作为父节点
+                const parentReactiveNode = Reactivity.activeReactivity;
+
+                // 设置当前节点为活跃节点
+                Reactivity.activeReactivity = this;
+
+                this._version++;
+                this._value = this._func(this._value);
+
+                // 执行完毕后恢复父节点
+                Reactivity.activeReactivity = parentReactiveNode;
+            });
         }
     }
 

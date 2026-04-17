@@ -179,6 +179,7 @@ export class EffectReactivity implements Effect
         }
         else
         {
+            this._version++;
             this._func();
         }
 
