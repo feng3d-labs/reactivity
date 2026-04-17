@@ -83,8 +83,6 @@ export class EffectReactivity extends ComputedReactivity<void> implements Effect
 
         batchRun(() =>
         {
-            super.trigger();
-
             // 合批时需要判断是否已经运行的依赖。
             batch(this, Reactivity.activeReactivity === this);
         });
