@@ -1,5 +1,6 @@
 import { batch } from './batch';
 import { Reactivity, forceTrack } from './Reactivity';
+import { ReactiveFlags } from './shared/constants';
 
 /**
  * 创建计算反应式对象。
@@ -52,7 +53,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      *
      * @internal
      */
-    readonly __v_isRef = true;
+    readonly [ReactiveFlags.IS_REF] = true;
 
     /**
      * 计算函数。
