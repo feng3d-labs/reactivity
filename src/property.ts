@@ -92,11 +92,6 @@ export class PropertyReactivity<T, K extends keyof T> extends Reactivity<T>
         }
     }
 
-    triggerIfChanged()
-    {
-
-    }
-
     /**
      * 追踪属性的变化。
      *

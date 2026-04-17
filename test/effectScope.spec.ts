@@ -1,7 +1,6 @@
 import { assert, describe, expect, it } from 'vitest';
 
 import { effect, effectScope, EffectScope, getCurrentScope, onScopeDispose, reactive, ref } from '../src';
-import { nextTick } from './nextTick';
 
 describe('响应式/effect/作用域', () =>
 {
@@ -321,16 +320,13 @@ describe('响应式/effect/作用域', () =>
         assert.strictEqual(fnTimes, 1);
 
         counter.num++;
-        await nextTick();
         assert.strictEqual(fnTimes, 2);
 
         scope.pause();
         counter.num++;
-        await nextTick();
         assert.strictEqual(fnTimes, 2);
 
         counter.num++;
-        await nextTick();
         assert.strictEqual(fnTimes, 2);
 
         scope.resume();
