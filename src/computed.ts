@@ -54,8 +54,6 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      */
     readonly __v_isRef = true;
 
-    readonly __v_isComputedReactivity = true;
-
     /**
      * 计算函数。
      *
@@ -67,18 +65,23 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
     /**
      * 失效子节点集合。
      *
-     * 需要用来检验依赖项是否变化，仅当存在变化时进行执行计算函数。
+     * 记录所有依赖此计算属性的子节点。
+     * 当计算属性重新计算时，会通知这些子节点。
      *
      * @private
      */
     _children = new Map<Reactivity, any>();
 
     /**
-     * 是否第一次运行。
+     * 脏标记。
+     *
+     * 表示计算属性是否需要重新计算。
+     * 当依赖发生变化时，会设置此标记。
+     * 重新计算后会清除此标记。
      *
      * @private
      */
-    _isFirstRun = true;
+    _isDirty = true;
 
     /**
      * 版本号。
@@ -137,6 +140,35 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
     }
 
     /**
+     * 执行计算。
+     *
+     * 执行计算函数，更新当前值。
+     * 在计算过程中会：
+     * 1. 强制启用依赖跟踪
+     * 2. 保存并设置当前活动节点
+     * 3. 执行计算函数
+     * 4. 恢复活动节点
+     */
+    run()
+    {
+        // 不受嵌套的 effect 影响
+        forceTrack(() =>
+        {
+            // 保存当前节点作为父节点
+            const parentReactiveNode = Reactivity.activeReactivity;
+
+            // 设置当前节点为活跃节点
+            Reactivity.activeReactivity = this as any;
+
+            this._version++;
+            this._value = this._func(this._value);
+
+            // 执行完毕后恢复父节点
+            Reactivity.activeReactivity = parentReactiveNode;
+        });
+    }
+
+    /**
      * 检查并执行计算。
      *
      * 检查当前节点是否需要重新计算：
@@ -147,29 +179,17 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      */
     runIfDirty()
     {
-        // 检查是否需要计算
-        const isNeedRun = this._isFirstRun || this.isChildrenChanged();
+        // 检查是否存在失效子节点字典
+        this._isDirty = this._isDirty || this.isChildrenChanged();
 
-        if (isNeedRun)
+        // 标记为脏的情况下，执行计算
+        if (this._isDirty)
         {
             // 立即去除脏标记，避免循环多重计算
-            this._isFirstRun = false;
+            this._isDirty = false;
 
-            // 不受嵌套的 effect 影响
-            forceTrack(() =>
-            {
-                // 保存当前节点作为父节点
-                const parentReactiveNode = Reactivity.activeReactivity;
-
-                // 设置当前节点为活跃节点
-                Reactivity.activeReactivity = this;
-
-                this._version++;
-                this._value = this._func(this._value);
-
-                // 执行完毕后恢复父节点
-                Reactivity.activeReactivity = parentReactiveNode;
-            });
+            // 执行计算
+            this.run();
         }
     }
 
@@ -191,46 +211,43 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
     {
         if (this._children.size === 0) return false;
 
+        // 检查是否存在子节点发生变化
+        let isChanged = false;
+
         // 避免在检查过程建立依赖关系
         const preReactiveNode = Reactivity.activeReactivity;
 
-        Reactivity.activeReactivity = undefined;
+        Reactivity.activeReactivity = null;
 
         // 检查子节点是否发生变化
-        for (const [node, value] of this._children)
+        this._children.forEach((value, node) =>
         {
+            if (isChanged) return;
             if (node.value !== value)
             {
-                // 清空子节点
-                this._children.clear();
-                Reactivity.activeReactivity = preReactiveNode;
+                // 子节点变化，需要重新计算
+                isChanged = true;
 
-                return true;
+                return;
             }
-        }
-
-        Reactivity.activeReactivity = preReactiveNode;
+        });
 
         // 恢复父节点
-        this._fixChildren();
+        Reactivity.activeReactivity = preReactiveNode;
 
-        return false;
-    }
-
-    /**
-     * @private
-     *
-     * 修复与子节点关系
-     */
-    _fixChildren()
-    {
-        // 修复与子节点关系
-        this._children.forEach((version, node) =>
+        if (!isChanged)
         {
-            node._parents.set(this, this._version);
-        });
+            // 修复与子节点关系
+            this._children.forEach((version, node) =>
+            {
+                node._parents.set(this, this._version);
+            });
+        }
 
         // 清空子节点
         this._children.clear();
+
+        return isChanged;
     }
 }
+

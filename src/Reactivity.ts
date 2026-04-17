@@ -1,6 +1,4 @@
 import { type ComputedReactivity } from './computed';
-import { EffectReactivity } from './effect';
-import { isComputedReactivity } from './util';
 
 /**
  * 反应式节点基类。
@@ -31,7 +29,7 @@ export class Reactivity<T = any>
     /**
      * @private
      */
-    _value!: T;
+    _value: T;
 
     /**
      * 父反应节点集合。
@@ -46,8 +44,6 @@ export class Reactivity<T = any>
      */
     _parents = new Map<ComputedReactivity, number>();
 
-    _effects: [effect: EffectReactivity, version: number][] = [];
-
     /**
      * 建立依赖关系。
      *
@@ -58,18 +54,14 @@ export class Reactivity<T = any>
      */
     track()
     {
-        // 快速返回：无父节点或不需要跟踪
+        if (!Reactivity.activeReactivity || !_shouldTrack) return;
+
+        // 连接父节点和子节点。
         const parent = Reactivity.activeReactivity;
 
-        if (!parent || !_shouldTrack) return;
-
-        if (isComputedReactivity(parent))
+        if (parent)
         {
             this._parents.set(parent, parent._version);
-        }
-        else
-        {
-            this._effects.push([parent, parent._version]);
         }
     }
 
@@ -99,16 +91,6 @@ export class Reactivity<T = any>
 
         //
         this._parents.clear();
-
-        //
-        this._effects.forEach(e =>
-        {
-            const effect = e[0];
-
-            if (effect._version !== e[1]) return;
-
-            effect.trigger()
-        });
     }
 
     /**
@@ -119,7 +101,7 @@ export class Reactivity<T = any>
      *
      * @internal
      */
-    static activeReactivity: ComputedReactivity | EffectReactivity | undefined;
+    static activeReactivity: ComputedReactivity;
 }
 
 /**

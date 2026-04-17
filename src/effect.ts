@@ -1,24 +1,7 @@
-import { batch, batchRun, getBatchDepth } from './batch';
+import { batch, batchRun } from './batch';
+import { ComputedReactivity } from './computed';
 import { activeEffectScope } from './effectScope';
-import { forceTrack, Reactivity } from './Reactivity';
-
-/**
- * 性能优化尝试记录：
- *
- * 当前保留的有效优化（经测试验证有效）：
- *
- * 1. 快速路径检查：
- *    - 未启用的 effect 直接加入暂停队列，避免后续处理
- *
- * 2. 跳过 super.trigger()：
- *    - effect 通常没有父节点（不像 computed），跳过不必要的调用
- *
- * 3. 避免嵌套批次：
- *    - 使用 getBatchDepth() 检查，已在批次中时直接加入队列
- *    - 避免创建不必要的 batchRun 包装函数
- *
- * 性能测试结果：约 3.5-4 倍于 @vue/reactivity（2026-04-16 测试）
- */
+import { Reactivity } from './Reactivity';
 
 /**
  * 创建效果反应式节点。
@@ -34,7 +17,7 @@ import { forceTrack, Reactivity } from './Reactivity';
  * 3. 真有需求，可以使用 effect(func).run(true) 来代替 @vue/reactivity 中的 effect(func)() 。
  *
  */
-export function effect(fn: () => void): Effect
+export function effect<T = any>(fn: () => T): Effect
 {
     return new EffectReactivity(fn);
 }
@@ -42,42 +25,23 @@ export function effect(fn: () => void): Effect
 /**
  * 效果反应式节点。
  */
-export class EffectReactivity implements Effect
+export class EffectReactivity<T = any> extends ComputedReactivity<T> implements Effect
 {
-    /** 是否启用 */
-    private _enabled = true;
-    /** 暂停期间是否有依赖变化 */
-    private _pending = false;
-
-    private _isRunning = false;
-
     /**
-     * 版本号。
+     * 是否为启用, 默认为 true。
      *
-     * 每次重新计算后自动递增。
-     * 用于判断子节点中的父节点引用是否过期。
-     * 当子节点发现父节点的版本号不匹配时，会重新建立依赖关系。
-     *
-     * @private
+     * 启用时，会立即执行函数。
      */
-    _version = -1;
+    private _isEnable = true;
 
-    protected _func: () => void;
-
-    constructor(func: () => void)
+    constructor(func: (oldValue?: T) => T)
     {
-        this._func = func;
+        super(func);
         if (activeEffectScope && activeEffectScope.active)
         {
             activeEffectScope.effects.push(this);
         }
         this.runIfDirty();
-    }
-
-    runIfDirty()
-    {
-        // 执行计算
-        this.run();
     }
 
     /**
@@ -87,7 +51,7 @@ export class EffectReactivity implements Effect
      */
     pause()
     {
-        this._enabled = false;
+        this._isEnable = false;
     }
 
     /**
@@ -97,14 +61,13 @@ export class EffectReactivity implements Effect
      */
     resume()
     {
-        if (this._enabled) return;
-
-        const hadPending = this._pending;
-
-        this._enabled = true;
-        this._pending = false;
-
-        if (hadPending) this.trigger();
+        if (this._isEnable) return;
+        this._isEnable = true;
+        if (EffectReactivity.pausedQueueEffects.has(this))
+        {
+            EffectReactivity.pausedQueueEffects.delete(this);
+            this.trigger();
+        }
     }
 
     /**
@@ -114,8 +77,8 @@ export class EffectReactivity implements Effect
      */
     stop()
     {
-        this._enabled = false;
-        this._pending = false;
+        this._isEnable = false;
+        EffectReactivity.pausedQueueEffects.delete(this);
     }
 
     /**
@@ -125,29 +88,23 @@ export class EffectReactivity implements Effect
      */
     trigger()
     {
-        // 优化：快速路径 - 如果未启用，标记为待处理
-        if (!this._enabled)
+        batchRun(() =>
         {
-            this._pending = true;
+            super.trigger();
 
-            return;
-        }
-
-        // 优化：直接调用 batch()，避免函数分配
-        // 检查是否正在运行（作为 computed 的内部依赖）
-        const isRunning = Reactivity.activeReactivity === this;
-
-        if (isRunning || getBatchDepth() > 0)
-        {
-            // 已在批次上下文中，直接加入队列
-            batch(this, isRunning);
-        }
-        else
-        {
-            // 创建新的批次上下文
-            batchRun(() => batch(this, false));
-        }
+            if (this._isEnable)
+            {
+                // 合批时需要判断是否已经运行的依赖。
+                batch(this, Reactivity.activeReactivity === this);
+            }
+            else
+            {
+                EffectReactivity.pausedQueueEffects.add(this);
+            }
+        });
     }
+
+    private static pausedQueueEffects = new WeakSet<EffectReactivity>();
 
     /**
      * 执行当前节点。
@@ -156,34 +113,14 @@ export class EffectReactivity implements Effect
      */
     run(): void
     {
-        if (this._isRunning) return;
-        this._isRunning = true;
-
-        if (this._enabled)
+        if (this._isEnable)
         {
-            // 不受嵌套的 effect 影响
-            forceTrack(() =>
-            {
-                // 保存当前节点作为父节点
-                const parentReactiveNode = Reactivity.activeReactivity;
-
-                // 设置当前节点为活跃节点
-                Reactivity.activeReactivity = this;
-
-                this._version++;
-                this._func();
-
-                // 执行完毕后恢复父节点
-                Reactivity.activeReactivity = parentReactiveNode;
-            });
+            super.run();
         }
         else
         {
-            this._version++;
-            this._func();
+            this._func(this._value);
         }
-
-        this._isRunning = false;
     }
 }
 

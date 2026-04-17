@@ -41,7 +41,7 @@ export function reactive<T extends object>(target: T): Reactive<T>
         return target;
     }
 
-    if ((target as any)[ReactiveFlags.RAW])
+    if (target[ReactiveFlags.RAW])
     {
         return target as any;
     }
