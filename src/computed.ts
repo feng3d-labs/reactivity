@@ -74,15 +74,11 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
     _children = new Map<Reactivity, any>();
 
     /**
-     * 脏标记。
-     *
-     * 表示计算属性是否需要重新计算。
-     * 当依赖发生变化时，会设置此标记。
-     * 重新计算后会清除此标记。
+     * 是否第一次运行。
      *
      * @private
      */
-    _isDirty = true;
+    _isFirstRun = true;
 
     /**
      * 版本号。
@@ -151,14 +147,13 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      */
     runIfDirty()
     {
-        // 检查是否需要重新计算
-        const isDirty = this._isDirty || this.isChildrenChanged();
+        // 检查是否需要计算
+        const isNeedRun = this._isFirstRun || this.isChildrenChanged();
 
-        // 标记为脏的情况下，执行计算
-        if (isDirty)
+        if (isNeedRun)
         {
             // 立即去除脏标记，避免循环多重计算
-            this._isDirty = false;
+            this._isFirstRun = false;
 
             // 不受嵌套的 effect 影响
             forceTrack(() =>
