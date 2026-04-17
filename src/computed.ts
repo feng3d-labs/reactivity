@@ -239,16 +239,31 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
 
         if (!isChanged)
         {
-            // 修复与子节点关系
-            this._children.forEach((version, node) =>
-            {
-                node._parents.set(this, this._version);
-            });
+            this._fixChildren();
         }
+        else
+        {
+            // 清空子节点
+            this._children.clear();
+        }
+
+        return isChanged;
+    }
+
+    /**
+     * @private
+     *
+     * 修复与子节点关系
+     */
+    _fixChildren()
+    {
+        // 修复与子节点关系
+        this._children.forEach((version, node) =>
+        {
+            node._parents.set(this, this._version);
+        });
 
         // 清空子节点
         this._children.clear();
-
-        return isChanged;
     }
 }

@@ -128,11 +128,7 @@ export function batchRun<T>(fn: () => T): T
             if (isComputedReactivity(dep))
             {
                 // 此时依赖以及子依赖都已经运行过了，只需修复与子节点关系
-                dep._children.forEach((_version, node) =>
-                {
-                    node._parents.set(dep, dep._version);
-                });
-                dep._children.clear();
+                dep._fixChildren();
             }
         });
     }
