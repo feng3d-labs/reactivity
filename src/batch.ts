@@ -61,27 +61,39 @@ export function batchRun<T>(fn: () => T): T
         return;
     }
 
-    // 处理已经运行过的依赖
-    _isNeedFixComputed.forEach((dep) =>
+    if (_isNeedFixComputed.length > 0)
     {
-        // 修复与子节点关系
-        dep._fixChildren();
-    });
-    _isNeedFixComputed.length = 0;
+        const computes = [..._isNeedFixComputed];
 
-    // 批次处理待运行的依赖
-    _needEffectDeps.forEach((dep) =>
+        _isNeedFixComputed.length = 0;
+
+        // 处理已经运行过的依赖
+        computes.forEach((dep) =>
+        {
+            // 修复与子节点关系
+            dep._fixChildren();
+        });
+    }
+
+    // 批次处理待运行的 effect
+    if (_needEffectDeps.length > 0)
     {
-        // 独立执行回调，避免影响其他依赖
-        const pre = Reactivity.activeReactivity;
+        const effects = [..._needEffectDeps];
 
-        Reactivity.activeReactivity = null;
+        _needEffectDeps.length = 0;
 
-        dep.runIfDirty();
+        effects.forEach((dep) =>
+        {
+            // 独立执行回调，避免影响其他依赖
+            const pre = Reactivity.activeReactivity;
 
-        Reactivity.activeReactivity = pre;
-    });
-    _needEffectDeps.length = 0;
+            Reactivity.activeReactivity = null;
+
+            dep.runIfDirty();
+
+            Reactivity.activeReactivity = pre;
+        });
+    }
 
     return result;
 }
