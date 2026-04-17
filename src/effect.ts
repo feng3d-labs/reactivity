@@ -51,6 +51,17 @@ export class EffectReactivity implements Effect
 
     private _isRunning = false;
 
+    /**
+     * 版本号。
+     *
+     * 每次重新计算后自动递增。
+     * 用于判断子节点中的父节点引用是否过期。
+     * 当子节点发现父节点的版本号不匹配时，会重新建立依赖关系。
+     *
+     * @private
+     */
+    _version = -1;
+
     protected _func: () => void;
 
     constructor(func: () => void)
@@ -159,6 +170,7 @@ export class EffectReactivity implements Effect
                 // 设置当前节点为活跃节点
                 Reactivity.activeReactivity = this;
 
+                this._version++;
                 this._func();
 
                 // 执行完毕后恢复父节点

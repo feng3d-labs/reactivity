@@ -46,7 +46,7 @@ export class Reactivity<T = any>
      */
     _parents = new Map<ComputedReactivity, number>();
 
-    _effects = new Set<EffectReactivity>();
+    _effects: [effect: EffectReactivity, version: number][] = [];
 
     /**
      * 建立依赖关系。
@@ -69,7 +69,7 @@ export class Reactivity<T = any>
         }
         else
         {
-            this._effects.add(parent);
+            this._effects.push([parent, parent._version]);
         }
     }
 
@@ -101,7 +101,14 @@ export class Reactivity<T = any>
         this._parents.clear();
 
         //
-        this._effects.forEach(e => e.trigger());
+        this._effects.forEach(e =>
+        {
+            const effect = e[0];
+
+            if (effect._version !== e[1]) return;
+
+            effect.trigger()
+        });
     }
 
     /**
