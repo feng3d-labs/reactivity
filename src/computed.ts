@@ -1,4 +1,4 @@
-import { batch } from './batch';
+import { needFix } from './batch';
 import { Reactivity, forceTrack } from './Reactivity';
 import { ReactiveFlags } from './shared/constants';
 
@@ -130,7 +130,9 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
         // 正在运行时被触发，需要在运行结束后修复父子节点关系
         if (Reactivity.activeReactivity === this)
         {
-            batch(this, Reactivity.activeReactivity === this);
+            needFix(this);
+
+            return;
         }
 
         super.trigger();
@@ -185,8 +187,17 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
             // 立即去除脏标记，避免循环多重计算
             this._isFirstRun = false;
 
+            // 清空子节点
+            this._children.clear();
+
             // 执行计算
             this.run();
+
+        }
+        else
+        {
+            // 修复与子节点关系
+            this._fixChildren();
         }
     }
 
@@ -231,17 +242,6 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
 
         // 恢复父节点
         Reactivity.activeReactivity = preReactiveNode;
-
-        if (!isChanged)
-        {
-            // 修复与子节点关系
-            this._fixChildren();
-        }
-        else
-        {
-            // 清空子节点
-            this._children.clear();
-        }
 
         return isChanged;
     }

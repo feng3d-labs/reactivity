@@ -1,38 +1,32 @@
 import { ComputedReactivity } from './computed';
+import { EffectReactivity } from './effect';
 import { Reactivity } from './Reactivity';
+
+export function needFix(dep: ComputedReactivity)
+{
+    // 如果依赖已经在队列中，直接返回，避免重复添加
+    if (_isNeedFixComputed.indexOf(dep) !== -1)
+    {
+        return;
+    }
+
+    _isNeedFixComputed.push(dep);
+}
 
 /**
  * 合批处理依赖。
  *
- * 将依赖添加到待处理队列中，根据依赖的运行状态决定处理方式：
- * 1. 如果依赖正在运行，添加到已运行队列
- * 2. 如果依赖未运行，添加到待运行队列
- *
  * @param dep 要处理的依赖
- * @param isRunning 依赖是否正在运行
  */
-export function batch(dep: ComputedReactivity, isRunning: boolean): void
+export function batch(dep: EffectReactivity): void
 {
-    if (isRunning)
+    // 如果依赖已经在队列中，直接返回，避免重复添加
+    if (_needEffectDeps.indexOf(dep) !== -1)
     {
-        // 如果依赖已经在队列中，直接返回，避免重复添加
-        if (_isRunedDeps.indexOf(dep) !== -1)
-        {
-            return;
-        }
-
-        _isRunedDeps.push(dep);
+        return;
     }
-    else
-    {
-        // 如果依赖已经在队列中，直接返回，避免重复添加
-        if (_needEffectDeps.indexOf(dep) !== -1)
-        {
-            return;
-        }
 
-        _needEffectDeps.push(dep);
-    }
+    _needEffectDeps.push(dep);
 }
 
 /**
@@ -68,35 +62,26 @@ export function batchRun<T>(fn: () => T): T
     }
 
     // 处理已经运行过的依赖
-    if (_isRunedDeps.length > 0)
+    _isNeedFixComputed.forEach((dep) =>
     {
-        _isRunedDeps.forEach((dep) =>
-        {
-            // 此时依赖以及子依赖都已经运行过了，只需修复与子节点关系
-            __DEV__ && console.assert(dep._isFirstRun === false, 'dep._isFirstRun === false');
-
-            // 修复与子节点关系
-            dep._fixChildren();
-        });
-        _isRunedDeps.length = 0;
-    }
+        // 修复与子节点关系
+        dep._fixChildren();
+    });
+    _isNeedFixComputed.length = 0;
 
     // 批次处理待运行的依赖
-    if (_needEffectDeps.length > 0)
+    _needEffectDeps.forEach((dep) =>
     {
-        _needEffectDeps.forEach((dep) =>
-        {
-            // 独立执行回调，避免影响其他依赖
-            const pre = Reactivity.activeReactivity;
+        // 独立执行回调，避免影响其他依赖
+        const pre = Reactivity.activeReactivity;
 
-            Reactivity.activeReactivity = null;
+        Reactivity.activeReactivity = null;
 
-            dep.runIfDirty();
+        dep.runIfDirty();
 
-            Reactivity.activeReactivity = pre;
-        });
-        _needEffectDeps.length = 0;
-    }
+        Reactivity.activeReactivity = pre;
+    });
+    _needEffectDeps.length = 0;
 
     return result;
 }
@@ -115,7 +100,7 @@ let _batchDepth = 0;
  * 存储需要执行但尚未执行的依赖。
  * 在批次执行结束后，会统一处理这些依赖。
  */
-const _needEffectDeps: ComputedReactivity[] = [];
+const _needEffectDeps: EffectReactivity[] = [];
 
 /**
  * 已运行的依赖队列。
@@ -123,4 +108,4 @@ const _needEffectDeps: ComputedReactivity[] = [];
  * 存储已经执行过的依赖。
  * 这些依赖只需要修复与子节点的关系，不需要重新执行。
  */
-const _isRunedDeps: ComputedReactivity[] = [];
+const _isNeedFixComputed: ComputedReactivity[] = [];

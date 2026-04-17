@@ -1,4 +1,4 @@
-import { batch, batchRun } from './batch';
+import { batch, batchRun, needFix } from './batch';
 import { ComputedReactivity } from './computed';
 import { activeEffectScope } from './effectScope';
 import { Reactivity } from './Reactivity';
@@ -81,10 +81,18 @@ export class EffectReactivity extends ComputedReactivity<void> implements Effect
     {
         if (!this._enabled) return;
 
+        // 正在运行时被触发，需要在运行结束后修复父子节点关系
+        if (Reactivity.activeReactivity === this)
+        {
+            needFix(this);
+
+            return;
+        }
+
         batchRun(() =>
         {
             // 合批时需要判断是否已经运行的依赖。
-            batch(this, Reactivity.activeReactivity === this);
+            batch(this);
         });
     }
 
