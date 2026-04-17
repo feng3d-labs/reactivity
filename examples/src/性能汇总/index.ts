@@ -119,7 +119,8 @@ function runTest(
         after: avgFeng3d,
         vue: avgVue,
         improvement: improvementText,
-        consistency: `@feng3d 与 @vue 结果${resultsMatch ? '一致' : '不一致'} ✅`,
+        consistency: `@feng3d 与 @vue 结果${resultsMatch ? '一致' : '不一致'} ${resultsMatch ? '✅' : '❌'}`,
+        isConsistent: resultsMatch,
     };
 }
 

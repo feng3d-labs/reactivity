@@ -104,6 +104,7 @@ export function updateTableWithAllInfo(
         analysis?: string;
         vueAnalysis?: string;
         consistency?: string;
+        isConsistent?: boolean;
     }>,
     _pkgDeps?: any,
 )
@@ -275,7 +276,7 @@ export function updateTableWithAllInfo(
                 </td>
                 <td>${result.vue.toFixed(2)} <span class="ratio-tooltip" data-tooltip="基准倍率" style="color: #888;">(${vueRatio}x)</span></td>
                 <td style="font-size: 12px;">${conclusion}</td>
-                <td style="font-size: 12px;">${result.consistency || '-'}</td>
+                <td style="font-size: 12px; ${result.isConsistent === false ? 'color: #f44336;' : ''}">${result.consistency || '-'}</td>
             </tr>
         `;
     });

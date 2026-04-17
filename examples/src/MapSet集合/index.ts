@@ -33,6 +33,7 @@ const tableData: Array<{
     vue: number;
     improvement: string;
     consistency: string;
+    isConsistent: boolean;
 }> = [];
 
 for (let i = 0; i < runs; i++)
@@ -50,7 +51,8 @@ for (let i = 0; i < runs; i++)
         after: feng3dResults[i].time,
         vue: vueResults[i].time,
         improvement: improvementText,
-        consistency: `@feng3d 与 @vue 结果${resultsMatch ? '一致' : '不一致'} ✅`,
+        consistency: `@feng3d 与 @vue 结果${resultsMatch ? '一致' : '不一致'} ${resultsMatch ? '✅' : '❌'}`,
+        isConsistent: resultsMatch,
     });
 }
 
@@ -67,7 +69,8 @@ tableData.push({
     after: avgFeng3d,
     vue: avgVue,
     improvement: avgImprovementText,
-    consistency: `@feng3d 与 @vue 结果${resultsMatch ? '一致' : '不一致'} ✅`,
+    consistency: `@feng3d 与 @vue 结果${resultsMatch ? '一致' : '不一致'} ${resultsMatch ? '✅' : '❌'}`,
+    isConsistent: resultsMatch,
 });
 
 updateTableWithAllInfo('three-column-results', tableData, pkg.dependencies);
