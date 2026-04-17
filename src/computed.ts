@@ -176,10 +176,10 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
     runIfDirty()
     {
         // 检查是否存在失效子节点字典
-        this._isFirstRun = this._isFirstRun || this.isChildrenChanged();
+        const needRun = this._isFirstRun || this.isChildrenChanged();
 
         // 标记为脏的情况下，执行计算
-        if (this._isFirstRun)
+        if (needRun)
         {
             // 立即去除脏标记，避免循环多重计算
             this._isFirstRun = false;
