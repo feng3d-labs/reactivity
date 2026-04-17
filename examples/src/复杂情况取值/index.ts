@@ -1,25 +1,76 @@
 import { computed, ref } from '@feng3d/reactivity';
+import { computed as beforeComputed, ref as beforeRef } from '@feng3d/reactivity-before';
 import { computed as vueComputed, ref as vueRef } from '@vue/reactivity';
-import { updateResults } from './tool';
 import { 复杂情况取值 } from './复杂情况取值';
+import { updateTableWithAllInfo } from '../tool';
 import pkg from '../../package.json';
 
-vueComputed;
-vueRef;
-
 const count = 10000;
+const runs = 3;
 
-// 显示版本号
-document.getElementById('feng3d-version')!.textContent = `@${pkg.dependencies['@feng3d/reactivity']}`;
-document.getElementById('vue-version')!.textContent = `@${pkg.dependencies['@vue/reactivity']}`;
+const feng3dResults: Array<{ time: number; values: number[] }> = [];
+const feng3dBeforeResults: Array<{ time: number; values: number[] }> = [];
+const vueResults: Array<{ time: number; values: number[] }> = [];
 
-// 初始化展示
-updateResults({
-    code: `复杂情况取值(ref, computed, ${count});\n\n` + 复杂情况取值.toString(),
-    feng3dResult: 复杂情况取值(ref, computed, count),
-    vueResult: 复杂情况取值(vueRef, vueComputed, count),
-    结论: {
-        vue: `@vue/reactivity 自上而下的使用版本号进行维护状态，当全局有变化时（ref(1).value++ 标记变化）每次取值时都会遍历整个树的子节点比对版本号判断是否需要重新计算。`,
-        feng3d: `@feng3d/reactivity 自下而上的使用脏标记进行维护状态，当发生变化时只会冒泡一次到父节点，全局有变化时（ref(1).value++ 标记变化）并不会触发重新计算。`,
-    },
+for (let i = 0; i < runs; i++)
+{
+    feng3dResults.push(复杂情况取值(ref, computed, count));
+    feng3dBeforeResults.push(复杂情况取值(beforeRef, beforeComputed, count));
+    vueResults.push(复杂情况取值(vueRef, vueComputed, count));
+}
+
+const avgFeng3d = feng3dResults.reduce((sum, r) => sum + r.time, 0) / runs;
+const avgFeng3dBefore = feng3dBeforeResults.reduce((sum, r) => sum + r.time, 0) / runs;
+const avgVue = vueResults.reduce((sum, r) => sum + r.time, 0) / runs;
+const resultsMatch = JSON.stringify(feng3dResults[0].values) === JSON.stringify(vueResults[0].values);
+
+document.getElementById('test-code')!.textContent = `复杂情况取值(ref, computed, ${count}); // 运行 ${runs} 次\n\n` + 复杂情况取值.toString();
+
+const tableData: Array<{
+    name: string;
+    before: number;
+    after: number;
+    vue: number;
+    improvement: string;
+    consistency: string;
+    isConsistent: boolean;
+}> = [];
+
+for (let i = 0; i < runs; i++)
+{
+    const improvement = ((feng3dBeforeResults[i].time - feng3dResults[i].time) / feng3dBeforeResults[i].time) * 100;
+    const improvementText = improvement > 0
+        ? `提升 ${improvement.toFixed(1)}%`
+        : improvement < 0
+            ? `下降 ${Math.abs(improvement).toFixed(1)}%`
+            : '持平';
+
+    tableData.push({
+        name: `复杂情况取值 (第 ${i + 1} 次)`,
+        before: feng3dBeforeResults[i].time,
+        after: feng3dResults[i].time,
+        vue: vueResults[i].time,
+        improvement: improvementText,
+        consistency: `@feng3d 与 @vue 结果${resultsMatch ? '一致' : '不一致'} ${resultsMatch ? '✅' : '❌'}`,
+        isConsistent: resultsMatch,
+    });
+}
+
+const avgImprovement = ((avgFeng3dBefore - avgFeng3d) / avgFeng3dBefore) * 100;
+const avgImprovementText = avgImprovement > 0
+    ? `提升 ${avgImprovement.toFixed(1)}%`
+    : avgImprovement < 0
+        ? `下降 ${Math.abs(avgImprovement).toFixed(1)}%`
+        : '持平';
+
+tableData.push({
+    name: '复杂情况取值 (平均)',
+    before: avgFeng3dBefore,
+    after: avgFeng3d,
+    vue: avgVue,
+    improvement: avgImprovementText,
+    consistency: `@feng3d 与 @vue 结果${resultsMatch ? '一致' : '不一致'} ${resultsMatch ? '✅' : '❌'}`,
+    isConsistent: resultsMatch,
 });
+
+updateTableWithAllInfo('three-column-results', tableData, pkg.dependencies);

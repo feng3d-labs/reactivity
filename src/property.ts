@@ -54,7 +54,7 @@ export class PropertyReactivity<T, K extends keyof T> extends Reactivity<T>
         // 处理特殊字段，这些字段
         if (this._key === 'length')
         {
-            v = (this._target as any)['length'];
+            v = this._target['length'];
         }
         else if (isSymbol(this._key))
         {
@@ -90,11 +90,6 @@ export class PropertyReactivity<T, K extends keyof T> extends Reactivity<T>
         {
             this._value = (target as any)[key as any];
         }
-    }
-
-    triggerIfChanged()
-    {
-
     }
 
     /**

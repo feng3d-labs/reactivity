@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>优化前后性能对比</title>
+    <link rel="stylesheet" href="../../resources/files/main.css">
+    <style>
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .summary-table th,
+        .summary-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .summary-table th {
+            background-color: var(--secondary-background-color);
+            font-weight: 500;
+        }
+
+        .improved {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .regression {
+            color: #f44336;
+            font-weight: bold;
+        }
+
+        .neutral {
+            color: var(--secondary-text-color);
+        }
+
+        .overall-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background-color: var(--secondary-background-color);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--color-blue);
+        }
+
+        .stat-label {
+            margin-top: 8px;
+            color: var(--secondary-text-color);
+        }
+
+        .optimization-list {
+            margin: 20px 0;
+            padding-left: 20px;
+        }
+
+        .optimization-list li {
+            margin: 8px 0;
+        }
+
+        .code-change {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>优化前后性能对比</h1>
+
+    <h2>优化内容</h2>
+    <div class="result-container">
+        <h3>已实施的优化：</h3>
+        <ul class="optimization-list">
+            <li>
+                <strong>track() 优化</strong> - 简化条件检查逻辑
+                <div class="code-change">// 优化前：两次条件检查
+if (!Reactivity.activeReactivity || !_shouldTrack) return;
+const parent = Reactivity.activeReactivity;
+if (parent) { ... }
+
+// 优化后：单次检查
+const parent = Reactivity.activeReactivity;
+if (!parent || !_shouldTrack) return;</div>
+            </li>
+            <li>
+                <strong>set value() 按需批处理</strong> - 无依赖时跳过 batchRun
+                <div class="code-change">// 如果没有依赖，不需要批处理
+if (this._parents.size === 0) {
+    this._rawValue = newValue;
+    this._value = toReactive(newValue);
+    return;
+}</div>
+            </li>
+            <li>
+                <strong>简单类型短路</strong> - 非对象类型跳过 toRaw/toReactive
+                <div class="code-change">private _isObject: boolean;
+// 构造函数中缓存类型
+this._isObject = isObject(value);
+// 使用时跳过不必要调用
+this._rawValue = this._isObject ? toRaw(value) : value;</div>
+            </li>
+        </ul>
+    </div>
+
+    <h2>版本信息</h2>
+    <div class="result-container">
+        <div class="result-title">@feng3d/reactivity 优化前 vs 优化后</div>
+    </div>
+
+    <h2>总体统计</h2>
+    <div class="overall-stats" id="overall-stats"></div>
+
+    <h2>详细对比</h2>
+    <div id="summary-tables"></div>
+
+    <h2>优化分析</h2>
+    <div class="result-container">
+        <h3>预期效果</h3>
+        <ul>
+            <li><strong>track() 优化</strong>：减少每次依赖收集时的条件判断开销</li>
+            <li><strong>按需批处理</strong>：无依赖的 ref 更新跳过批处理流程</li>
+            <li><strong>简单类型短路</strong>：数字/字符串等基本类型跳过响应式转换</li>
+        </ul>
+    </div>
+
+    <div class="result-container">
+        <h3>实际效果</h3>
+        <p id="analysis-text">加载中...</p>
+    </div>
+
+    <script type="module" src="./index.ts"></script>
+</body>
+
+</html>

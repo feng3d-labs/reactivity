@@ -1,5 +1,6 @@
-import { batch } from './batch';
+import { needFix } from './batch';
 import { Reactivity, forceTrack } from './Reactivity';
+import { ReactiveFlags } from './shared/constants';
 
 /**
  * 创建计算反应式对象。
@@ -52,7 +53,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      *
      * @internal
      */
-    readonly __v_isRef = true;
+    readonly [ReactiveFlags.IS_REF] = true;
 
     /**
      * 计算函数。
@@ -73,15 +74,11 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
     _children = new Map<Reactivity, any>();
 
     /**
-     * 脏标记。
-     *
-     * 表示计算属性是否需要重新计算。
-     * 当依赖发生变化时，会设置此标记。
-     * 重新计算后会清除此标记。
+     * 是否第一次运行。
      *
      * @private
      */
-    _isDirty = true;
+    _isFirstRun = true;
 
     /**
      * 版本号。
@@ -133,7 +130,9 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
         // 正在运行时被触发，需要在运行结束后修复父子节点关系
         if (Reactivity.activeReactivity === this)
         {
-            batch(this, Reactivity.activeReactivity === this);
+            needFix(this);
+
+            return;
         }
 
         super.trigger();
@@ -172,24 +171,33 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      * 检查并执行计算。
      *
      * 检查当前节点是否需要重新计算：
-     * 1. 如果脏标记为 true，需要重新计算
+     * 1. 如果是第一次运行，需要重新计算
      * 2. 如果子节点发生变化，需要重新计算
      *
-     * 重新计算后会清除脏标记。
+     * 重新计算后会清除首次运行标记。
      */
     runIfDirty()
     {
         // 检查是否存在失效子节点字典
-        this._isDirty = this._isDirty || this.isChildrenChanged();
+        const needRun = this._isFirstRun || this.isChildrenChanged();
 
         // 标记为脏的情况下，执行计算
-        if (this._isDirty)
+        if (needRun)
         {
             // 立即去除脏标记，避免循环多重计算
-            this._isDirty = false;
+            this._isFirstRun = false;
+
+            // 清空子节点
+            this._children.clear();
 
             // 执行计算
             this.run();
+
+        }
+        else
+        {
+            // 修复与子节点关系
+            this._fixChildren();
         }
     }
 
@@ -217,7 +225,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
         // 避免在检查过程建立依赖关系
         const preReactiveNode = Reactivity.activeReactivity;
 
-        Reactivity.activeReactivity = undefined;
+        Reactivity.activeReactivity = null;
 
         // 检查子节点是否发生变化
         this._children.forEach((value, node) =>
@@ -235,19 +243,24 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
         // 恢复父节点
         Reactivity.activeReactivity = preReactiveNode;
 
-        if (!isChanged)
+        return isChanged;
+    }
+
+    /**
+     * @private
+     *
+     * 修复与子节点关系
+     */
+    _fixChildren()
+    {
+        // 修复与子节点关系
+        this._children.forEach((_version, node) =>
         {
-            // 修复与子节点关系
-            this._children.forEach((version, node) =>
-            {
-                node._parents.set(this, this._version);
-            });
-        }
+            node._parents.set(this, this._version);
+        });
 
         // 清空子节点
         this._children.clear();
-
-        return isChanged;
     }
 }
 

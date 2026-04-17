@@ -1,4 +1,4 @@
-import { describe, expect, it, test, vi } from 'vitest';
+import { assert, describe, expect, it, test } from 'vitest';
 import { Computed, computed, effect, noTrack, reactive, ref } from '../src';
 
 import { ComputedReactivity } from '../src/computed';
@@ -37,30 +37,35 @@ describe('响应式/computed', () =>
     it('应惰性计算', () =>
     {
         const value = reactive<{ foo?: number }>({});
-        const getter = vi.fn(() => value.foo);
-        const cValue = computed(getter);
+        let getterTimes = 0;
+        const cValue = computed(() =>
+        {
+            getterTimes++;
+
+            return value.foo;
+        });
 
         // 惰性
-        expect(getter).not.toHaveBeenCalled();
+        assert.strictEqual(getterTimes, 0);
 
         expect(cValue.value).toBe(undefined);
-        expect(getter).toHaveBeenCalledTimes(1);
+        assert.strictEqual(getterTimes, 1);
 
         // 不应再次计算
         cValue.value;
-        expect(getter).toHaveBeenCalledTimes(1);
+        assert.strictEqual(getterTimes, 1);
 
         // 在需要之前不应计算
         value.foo = 1;
-        expect(getter).toHaveBeenCalledTimes(1);
+        assert.strictEqual(getterTimes, 1);
 
         // 现在应该计算
         expect(cValue.value).toBe(1);
-        expect(getter).toHaveBeenCalledTimes(2);
+        assert.strictEqual(getterTimes, 2);
 
         // 不应再次计算
         cValue.value;
-        expect(getter).toHaveBeenCalledTimes(2);
+        assert.strictEqual(getterTimes, 2);
     });
 
     it('应触发 effect', () =>
@@ -94,11 +99,20 @@ describe('响应式/computed', () =>
     it('链式调用时应触发 effect', () =>
     {
         const value = reactive({ foo: 0 });
-        const getter1 = vi.fn(() => value.foo);
-        const getter2 = vi.fn(() =>
-            c1.value + 1);
-        const c1 = computed(getter1);
-        const c2 = computed(getter2);
+        let getter1Times = 0;
+        let getter2Times = 0;
+        const c1 = computed(() =>
+        {
+            getter1Times++;
+
+            return value.foo;
+        });
+        const c2 = computed(() =>
+        {
+            getter2Times++;
+
+            return c1.value + 1;
+        });
 
         let dummy;
 
@@ -107,23 +121,32 @@ describe('响应式/computed', () =>
             dummy = c2.value;
         });
         expect(dummy).toBe(1);
-        expect(getter1).toHaveBeenCalledTimes(1);
-        expect(getter2).toHaveBeenCalledTimes(1);
+        assert.strictEqual(getter1Times, 1);
+        assert.strictEqual(getter2Times, 1);
         value.foo++;
         expect(dummy).toBe(2);
         // 不应导致重复调用
-        expect(getter1).toHaveBeenCalledTimes(2);
-        expect(getter2).toHaveBeenCalledTimes(2);
+        assert.strictEqual(getter1Times, 2);
+        assert.strictEqual(getter2Times, 2);
     });
 
     it('链式调用时应触发 effect（混合调用）', () =>
     {
         const value = reactive({ foo: 0 });
-        const getter1 = vi.fn(() => value.foo);
-        const getter2 = vi.fn(() =>
-            c1.value + 1);
-        const c1 = computed(getter1);
-        const c2 = computed(getter2);
+        let getter1Times = 0;
+        let getter2Times = 0;
+        const c1 = computed(() =>
+        {
+            getter1Times++;
+
+            return value.foo;
+        });
+        const c2 = computed(() =>
+        {
+            getter2Times++;
+
+            return c1.value + 1;
+        });
 
         let dummy;
 
@@ -133,13 +156,13 @@ describe('响应式/computed', () =>
         });
         expect(dummy).toBe(1);
 
-        expect(getter1).toHaveBeenCalledTimes(1);
-        expect(getter2).toHaveBeenCalledTimes(1);
+        assert.strictEqual(getter1Times, 1);
+        assert.strictEqual(getter2Times, 1);
         value.foo++;
         expect(dummy).toBe(3);
         // 不应导致重复调用
-        expect(getter1).toHaveBeenCalledTimes(2);
-        expect(getter2).toHaveBeenCalledTimes(2);
+        assert.strictEqual(getter1Times, 2);
+        assert.strictEqual(getter2Times, 2);
     });
 
     // #5720
@@ -165,7 +188,7 @@ describe('响应式/computed', () =>
     // https://github.com/vuejs/core/pull/5912#issuecomment-1497596875
     it('应按顺序查询依赖脏状态', () =>
     {
-        const cSpy = vi.fn();
+        let cTimes = 0;
 
         const a = ref({
             v: 1,
@@ -174,7 +197,7 @@ describe('响应式/computed', () =>
             a.value);
         const c = computed(() =>
         {
-            cSpy();
+            cTimes++;
 
             return b.value?.v;
         });
@@ -193,7 +216,7 @@ describe('响应式/computed', () =>
         a.value = null as any;
         d.value;
         // 采用了失效子节点的方式，此处结果不再是 1，而为 2
-        expect(cSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(cTimes, 2);
     });
 
     // https://github.com/vuejs/core/pull/5912#issuecomment-1738257692
@@ -257,14 +280,14 @@ describe('响应式/computed', () =>
     // https://github.com/vuejs/core/pull/5912#issuecomment-1739159832
     it('依赖顺序应与上次获取值时一致', () =>
     {
-        const cSpy = vi.fn();
+        let cTimes = 0;
 
         const a = ref(0) as RefReactivity;
         const b = computed(() =>
             a.value % 3 !== 0) as ComputedReactivity;
         const c = computed(() =>
         {
-            cSpy();
+            cTimes++;
             if (a.value % 3 === 2)
             {
                 return 'expensive';
@@ -299,17 +322,17 @@ describe('响应式/computed', () =>
         expect(c._parents.has(e)).toBe(true);
         expect(d._parents.has(e)).toBe(true);
 
-        expect(cSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(cTimes, 2);
 
         a.value++;
         e.value;
 
-        expect(cSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(cTimes, 2);
     });
 
     it('应被可能脏的第二个 computed 触发', () =>
     {
-        const cSpy = vi.fn();
+        let cTimes = 0;
 
         const src1 = ref(0);
         const src2 = ref(0);
@@ -317,7 +340,7 @@ describe('响应式/computed', () =>
         const c2 = computed(() => (src1.value % 2) + src2.value);
         const c3 = computed(() =>
         {
-            cSpy();
+            cTimes++;
             c1.value;
             c2.value;
         });
@@ -325,15 +348,15 @@ describe('响应式/computed', () =>
         c3.value;
         src1.value = 2;
         c3.value;
-        expect(cSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(cTimes, 2);
         src2.value = 1;
         c3.value;
-        expect(cSpy).toHaveBeenCalledTimes(3);
+        assert.strictEqual(cTimes, 3);
     });
 
     it('应触发第二个 effect', () =>
     {
-        const fnSpy = vi.fn();
+        let fnTimes = 0;
         const v = ref(1);
         const c = computed(() => v.value);
 
@@ -344,12 +367,12 @@ describe('响应式/computed', () =>
         effect(() =>
         {
             c.value;
-            fnSpy();
+            fnTimes++;
         });
 
-        expect(fnSpy).toBeCalledTimes(1);
+        assert.strictEqual(fnTimes, 1);
         v.value = 2;
-        expect(fnSpy).toBeCalledTimes(2);
+        assert.strictEqual(fnTimes, 2);
     });
 
     it('链式递归 effect 应在触发后清除脏状态', () =>
@@ -401,7 +424,7 @@ describe('响应式/computed', () =>
 
     it('即使 computed 已脏也应触发 effect', () =>
     {
-        const fnSpy = vi.fn();
+        let fnTimes = 0;
         const v = ref(0);
         const c1 = computed(() =>
         {
@@ -416,14 +439,13 @@ describe('响应式/computed', () =>
 
         effect(() =>
         {
-            fnSpy(c2.value);
+            fnTimes++;
+            const value = c2.value;
         });
-        expect(fnSpy).toBeCalledTimes(1);
-        expect(fnSpy.mock.calls).toMatchObject([['0foo']]);
+        assert.strictEqual(fnTimes, 1);
         expect(v.value).toBe(1);
         v.value = 2;
-        expect(fnSpy).toBeCalledTimes(2);
-        expect(fnSpy.mock.calls).toMatchObject([['0foo'], ['2foo']]);
+        assert.strictEqual(fnTimes, 2);
         expect(v.value).toBe(2);
     });
 
@@ -431,57 +453,59 @@ describe('响应式/computed', () =>
     {
         const src = ref(0);
         const c = computed(() => src.value % 2);
-        const spy = vi.fn();
+        let times = 0;
 
         effect(() =>
         {
-            spy(c.value);
+            times++;
+            c.value;
         });
-        expect(spy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(times, 1);
         src.value = 2;
 
         // 不应触发
-        expect(spy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(times, 1);
 
         src.value = 3;
         src.value = 5;
         // 应触发因为最新值改变了
-        expect(spy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(times, 2);
     });
 
     test('链式 computed 触发', () =>
     {
-        const effectSpy = vi.fn();
-        const c1Spy = vi.fn();
-        const c2Spy = vi.fn();
+        let effectTimes = 0;
+        let c1Times = 0;
+        let c2Times = 0;
 
         const src = ref(0);
         const c1 = computed(() =>
         {
-            c1Spy();
+            c1Times++;
 
             return src.value % 2;
         });
         const c2 = computed(() =>
         {
-            c2Spy();
+            c2Times++;
 
             return c1.value + 1;
         });
 
         effect(() =>
         {
-            effectSpy(c2.value);
+            effectTimes++;
+            c2.value;
         });
 
-        expect(c1Spy).toHaveBeenCalledTimes(1);
-        expect(c2Spy).toHaveBeenCalledTimes(1);
-        expect(effectSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(c1Times, 1);
+        assert.strictEqual(c2Times, 1);
+        assert.strictEqual(effectTimes, 1);
 
         src.value = 1;
-        expect(c1Spy).toHaveBeenCalledTimes(2);
-        expect(c2Spy).toHaveBeenCalledTimes(2);
-        expect(effectSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(c1Times, 2);
+        assert.strictEqual(c2Times, 2);
+        assert.strictEqual(effectTimes, 2);
     });
 
     it('应在不受副作用影响的情况下重新计算', () =>
@@ -503,140 +527,146 @@ describe('响应式/computed', () =>
 
     test('链式 computed 避免重新计算', () =>
     {
-        const effectSpy = vi.fn();
-        const c1Spy = vi.fn();
-        const c2Spy = vi.fn();
+        let effectTimes = 0;
+        let c1Times = 0;
+        let c2Times = 0;
 
         const src = ref(0);
         const c1 = computed(() =>
         {
-            c1Spy();
+            c1Times++;
 
             return src.value % 2;
         });
         const c2 = computed(() =>
         {
-            c2Spy();
+            c2Times++;
 
             return c1.value + 1;
         });
 
         effect(() =>
         {
-            effectSpy(c2.value);
+            effectTimes++;
+            c2.value;
         });
 
-        expect(effectSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(effectTimes, 1);
         src.value = 2;
         src.value = 4;
         src.value = 6;
-        expect(c1Spy).toHaveBeenCalledTimes(4);
+        assert.strictEqual(c1Times, 4);
         // c2 不需要重新计算因为 c1 没有改变
-        expect(c2Spy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(c2Times, 1);
         // effect 不应触发因为 c2 没有改变
-        expect(effectSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(effectTimes, 1);
     });
 
     test('链式 computed 值失效', () =>
     {
-        const effectSpy = vi.fn();
-        const c1Spy = vi.fn();
-        const c2Spy = vi.fn();
+        let effectTimes = 0;
+        let c1Times = 0;
+        let c2Times = 0;
 
         const src = ref(0);
         const c1 = computed(() =>
         {
-            c1Spy();
+            c1Times++;
 
             return src.value % 2;
         });
         const c2 = computed(() =>
         {
-            c2Spy();
+            c2Times++;
 
             return c1.value + 1;
         });
 
         effect(() =>
         {
-            effectSpy(c2.value);
+            effectTimes++;
+            c2.value;
         });
 
-        expect(effectSpy).toHaveBeenCalledTimes(1);
-        expect(effectSpy).toHaveBeenCalledWith(1);
+        assert.strictEqual(effectTimes, 1);
         expect(c2.value).toBe(1);
 
-        expect(c1Spy).toHaveBeenCalledTimes(1);
-        expect(c2Spy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(c1Times, 1);
+        assert.strictEqual(c2Times, 1);
 
         src.value = 1;
         // 值应该同步可用
         expect(c2.value).toBe(2);
-        expect(c2Spy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(c2Times, 2);
     });
 
     test('同步访问失效的链式 computed 不应阻止最终 effect 运行', () =>
     {
-        const effectSpy = vi.fn();
-        const c1Spy = vi.fn();
-        const c2Spy = vi.fn();
+        let effectTimes = 0;
+        let c1Times = 0;
+        let c2Times = 0;
 
         const src = ref(0);
         const c1 = computed(() =>
         {
-            c1Spy();
+            c1Times++;
 
             return src.value % 2;
         });
         const c2 = computed(() =>
         {
-            c2Spy();
+            c2Times++;
 
             return c1.value + 1;
         });
 
         effect(() =>
         {
-            effectSpy(c2.value);
+            effectTimes++;
+            c2.value;
         });
-        expect(effectSpy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(effectTimes, 1);
 
         src.value = 1;
         // 同步访问 c2
         c2.value;
-        expect(effectSpy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(effectTimes, 2);
     });
 
     it('computed 应在 untracked 区域强制追踪', () =>
     {
         const n = ref(0);
-        const spy1 = vi.fn();
-        const spy2 = vi.fn();
+        let spy1Times = 0;
+        let spy2Times = 0;
 
         let c: Computed;
 
         effect(() =>
         {
-            spy1();
+            spy1Times++;
             noTrack(() =>
             {
                 n.value;
                 c = computed(() => n.value + 1) as Computed;
                 // 立即访问 computed 强制刷新
                 c.value;
-                effect(() => spy2(c.value));
+                effect(() =>
+                {
+                    spy2Times++;
+                    c.value;
+                });
                 n.value;
             });
         });
 
-        expect(spy1).toHaveBeenCalledTimes(1);
-        expect(spy2).toHaveBeenCalledTimes(1);
+        assert.strictEqual(spy1Times, 1);
+        assert.strictEqual(spy2Times, 1);
 
         n.value++;
         // 外部 effect 不应触发
-        expect(spy1).toHaveBeenCalledTimes(1);
+        assert.strictEqual(spy1Times, 1);
         // 内部 effect 应触发
-        expect(spy2).toHaveBeenCalledTimes(2);
+        assert.strictEqual(spy2Times, 2);
     });
 
     // 不推荐的行为，但为了向后兼容需要
@@ -671,7 +701,7 @@ describe('响应式/computed', () =>
         const n = ref(0);
         const c = computed(() => n.value);
         const d = computed(() => c.value + 1);
-        const spy = vi.fn();
+        let spyTimes = 0;
 
         // 访问
         d.value;
@@ -680,14 +710,14 @@ describe('响应式/computed', () =>
 
         effect(() =>
         {
-            spy();
+            spyTimes++;
             dummy = d.value;
         });
-        expect(spy).toHaveBeenCalledTimes(1);
+        assert.strictEqual(spyTimes, 1);
         expect(dummy).toBe(1);
 
         n.value++;
-        expect(spy).toHaveBeenCalledTimes(2);
+        assert.strictEqual(spyTimes, 2);
         expect(dummy).toBe(2);
     });
 

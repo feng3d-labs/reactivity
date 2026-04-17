@@ -1,4 +1,4 @@
-import { batch, batchRun } from './batch';
+import { batch, batchRun, needFix } from './batch';
 import { ComputedReactivity } from './computed';
 import { activeEffectScope } from './effectScope';
 import { Reactivity } from './Reactivity';
@@ -17,7 +17,7 @@ import { Reactivity } from './Reactivity';
  * 3. 真有需求，可以使用 effect(func).run(true) 来代替 @vue/reactivity 中的 effect(func)() 。
  *
  */
-export function effect<T = any>(fn: () => T): Effect
+export function effect(fn: () => void): Effect
 {
     return new EffectReactivity(fn);
 }
@@ -25,16 +25,12 @@ export function effect<T = any>(fn: () => T): Effect
 /**
  * 效果反应式节点。
  */
-export class EffectReactivity<T = any> extends ComputedReactivity<T> implements Effect
+export class EffectReactivity extends ComputedReactivity<void> implements Effect
 {
-    /**
-     * 是否为启用, 默认为 true。
-     *
-     * 启用时，会立即执行函数。
-     */
-    private _isEnable = true;
+    /** 是否启用 */
+    private _enabled = true;
 
-    constructor(func: (oldValue?: T) => T)
+    constructor(func: () => void)
     {
         super(func);
         if (activeEffectScope && activeEffectScope.active)
@@ -51,7 +47,7 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
      */
     pause()
     {
-        this._isEnable = false;
+        this._enabled = false;
     }
 
     /**
@@ -61,13 +57,9 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
      */
     resume()
     {
-        if (this._isEnable) return;
-        this._isEnable = true;
-        if (EffectReactivity.pausedQueueEffects.has(this))
-        {
-            EffectReactivity.pausedQueueEffects.delete(this);
-            this.trigger();
-        }
+        if (this._enabled) return;
+        this._enabled = true;
+        this.trigger();
     }
 
     /**
@@ -77,8 +69,7 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
      */
     stop()
     {
-        this._isEnable = false;
-        EffectReactivity.pausedQueueEffects.delete(this);
+        this._enabled = false;
     }
 
     /**
@@ -88,23 +79,22 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
      */
     trigger()
     {
+        if (!this._enabled) return;
+
+        // 正在运行时被触发，需要在运行结束后修复父子节点关系
+        if (Reactivity.activeReactivity === this)
+        {
+            needFix(this);
+
+            return;
+        }
+
         batchRun(() =>
         {
-            super.trigger();
-
-            if (this._isEnable)
-            {
-                // 合批时需要判断是否已经运行的依赖。
-                batch(this, Reactivity.activeReactivity === this);
-            }
-            else
-            {
-                EffectReactivity.pausedQueueEffects.add(this);
-            }
+            // 合批时需要判断是否已经运行的依赖。
+            batch(this);
         });
     }
-
-    private static pausedQueueEffects = new WeakSet<EffectReactivity>();
 
     /**
      * 执行当前节点。
@@ -113,7 +103,7 @@ export class EffectReactivity<T = any> extends ComputedReactivity<T> implements 
      */
     run(): void
     {
-        if (this._isEnable)
+        if (this._enabled)
         {
             super.run();
         }

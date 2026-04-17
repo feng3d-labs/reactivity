@@ -309,4 +309,4 @@ const builtInSymbols = new Set(
  *
  * 用于过滤不需要追踪的属性名。
  */
-const isNonTrackableKeys = /* @__PURE__ */ makeMap(`__proto__,__v_isRef,__isVue`);
+const isNonTrackableKeys = /* @__PURE__ */ makeMap(`__proto__,__isVue`);

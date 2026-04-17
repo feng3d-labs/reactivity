@@ -1,4 +1,4 @@
-import { describe, expect, it, test, vi } from 'vitest';
+import { assert, describe, expect, it, test, vi } from 'vitest';
 import { effect, isReactive, reactive, toRaw } from '../../src';
 
 describe('响应式/集合', () =>
@@ -71,28 +71,32 @@ describe('响应式/集合', () =>
             let dummy;
             const key = {};
             const map = reactive(new WeakMap());
-            const mapSpy = vi.fn(() => (dummy = map.get(key)));
+            let mapTimes = 0;
 
-            effect(mapSpy);
+            effect(() =>
+            {
+                mapTimes++;
+                dummy = map.get(key);
+            });
 
             expect(dummy).toBe(undefined);
-            expect(mapSpy).toHaveBeenCalledTimes(1);
+            assert.strictEqual(mapTimes, 1);
             // 与 @vue/reactivity 不同，map.get(key) 没有发生变化不会触发
             map.set(key, undefined);
             expect(dummy).toBe(undefined);
-            expect(mapSpy).toHaveBeenCalledTimes(1);
+            assert.strictEqual(mapTimes, 1);
             map.set(key, 'value');
             expect(dummy).toBe('value');
-            expect(mapSpy).toHaveBeenCalledTimes(2);
+            assert.strictEqual(mapTimes, 2);
             map.set(key, 'value');
             expect(dummy).toBe('value');
-            expect(mapSpy).toHaveBeenCalledTimes(2);
+            assert.strictEqual(mapTimes, 2);
             map.delete(key);
             expect(dummy).toBe(undefined);
-            expect(mapSpy).toHaveBeenCalledTimes(3);
+            assert.strictEqual(mapTimes, 3);
             map.delete(key);
             expect(dummy).toBe(undefined);
-            expect(mapSpy).toHaveBeenCalledTimes(3);
+            assert.strictEqual(mapTimes, 3);
         });
 
         it('不应观察原始数据', () =>
@@ -157,11 +161,15 @@ describe('响应式/集合', () =>
             const key = {};
 
             map.set(key, NaN);
-            const mapSpy = vi.fn(() => map.get(key));
+            let mapTimes = 0;
 
-            effect(mapSpy);
+            effect(() =>
+            {
+                mapTimes++;
+                map.get(key);
+            });
             map.set(key, NaN);
-            expect(mapSpy).toHaveBeenCalledTimes(1);
+            assert.strictEqual(mapTimes, 1);
         });
 
         it('WeakMap.set 调用应返回代理', () =>

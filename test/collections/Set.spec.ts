@@ -1,4 +1,4 @@
-import { describe, vi, it, expect } from 'vitest';
+import { assert, describe, vi, it, expect } from 'vitest';
 import { effect, isReactive, reactive, toRaw } from '../../src';
 
 describe('响应式/集合', () =>
@@ -219,27 +219,31 @@ describe('响应式/集合', () =>
         {
             let dummy;
             const set = reactive(new Set());
-            const setSpy = vi.fn(() => (dummy = set.has('value')));
+            let setTimes = 0;
 
-            effect(setSpy);
+            effect(() =>
+            {
+                setTimes++;
+                dummy = set.has('value');
+            });
 
             expect(dummy).toBe(false);
-            expect(setSpy).toHaveBeenCalledTimes(1);
+            assert.strictEqual(setTimes, 1);
             set.add('value');
             expect(dummy).toBe(true);
-            expect(setSpy).toHaveBeenCalledTimes(2);
+            assert.strictEqual(setTimes, 2);
             set.add('value');
             expect(dummy).toBe(true);
-            expect(setSpy).toHaveBeenCalledTimes(2);
+            assert.strictEqual(setTimes, 2);
             set.delete('value');
             expect(dummy).toBe(false);
-            expect(setSpy).toHaveBeenCalledTimes(3);
+            assert.strictEqual(setTimes, 3);
             set.delete('value');
             expect(dummy).toBe(false);
-            expect(setSpy).toHaveBeenCalledTimes(3);
+            assert.strictEqual(setTimes, 3);
             set.clear();
             expect(dummy).toBe(false);
-            expect(setSpy).toHaveBeenCalledTimes(3);
+            assert.strictEqual(setTimes, 3);
         });
 
         it('不应观察原始数据', () =>
@@ -338,20 +342,24 @@ describe('响应式/集合', () =>
             let dummy;
             const key = {};
             const set = reactive(new Set());
-            const setSpy = vi.fn(() => (dummy = set.has(key)));
+            let setTimes = 0;
 
-            effect(setSpy);
+            effect(() =>
+            {
+                setTimes++;
+                dummy = set.has(key);
+            });
 
             expect(dummy).toBe(false);
-            expect(setSpy).toHaveBeenCalledTimes(1);
+            assert.strictEqual(setTimes, 1);
 
             set.add({});
             expect(dummy).toBe(false);
-            expect(setSpy).toHaveBeenCalledTimes(1);
+            assert.strictEqual(setTimes, 1);
 
             set.add(key);
             expect(dummy).toBe(true);
-            expect(setSpy).toHaveBeenCalledTimes(2);
+            assert.strictEqual(setTimes, 2);
         });
 
         it('不应用 Proxy 污染原始 Set', () =>
