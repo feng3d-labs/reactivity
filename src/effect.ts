@@ -29,8 +29,6 @@ export class EffectReactivity extends ComputedReactivity<void> implements Effect
 {
     /** 是否启用 */
     private _enabled = true;
-    /** 暂停期间是否有依赖变化 */
-    private _pending = false;
 
     constructor(func: () => void)
     {
@@ -61,11 +59,7 @@ export class EffectReactivity extends ComputedReactivity<void> implements Effect
     {
         if (this._enabled) return;
         this._enabled = true;
-        if (this._pending)
-        {
-            this._pending = false;
-            this.trigger();
-        }
+        this.trigger();
     }
 
     /**
@@ -76,7 +70,6 @@ export class EffectReactivity extends ComputedReactivity<void> implements Effect
     stop()
     {
         this._enabled = false;
-        this._pending = false;
     }
 
     /**
@@ -86,19 +79,14 @@ export class EffectReactivity extends ComputedReactivity<void> implements Effect
      */
     trigger()
     {
+        if (!this._enabled) return;
+
         batchRun(() =>
         {
             super.trigger();
 
-            if (this._enabled)
-            {
-                // 合批时需要判断是否已经运行的依赖。
-                batch(this, Reactivity.activeReactivity === this);
-            }
-            else
-            {
-                this._pending = true;
-            }
+            // 合批时需要判断是否已经运行的依赖。
+            batch(this, Reactivity.activeReactivity === this);
         });
     }
 
