@@ -681,29 +681,29 @@ describe('响应式/effect', () =>
             output.fx2 = result + output.fx1;
         });
 
-        // expect(fx1).not.toBeNull();
-        // expect(fx2).not.toBeNull();
+        expect(fx1).not.toBeNull();
+        expect(fx2).not.toBeNull();
 
-        // expect(output.fx1).toBe(1);
-        // expect(output.fx2).toBe(2 + 1);
-        // assert.strictEqual(fx1Times, 1);
-        // assert.strictEqual(fx2Times, 1);
+        expect(output.fx1).toBe(1);
+        expect(output.fx2).toBe(2 + 1);
+        assert.strictEqual(fx1Times, 1);
+        assert.strictEqual(fx2Times, 1);
 
-        // fx1Times = 0;
-        // fx2Times = 0;
+        fx1Times = 0;
+        fx2Times = 0;
         input.b = 3;
-        // expect(output.fx1).toBe(1);
-        // expect(output.fx2).toBe(3 + 1);
-        // assert.strictEqual(fx1Times, 0);
-        // assert.strictEqual(fx2Times, 1);
+        expect(output.fx1).toBe(1);
+        expect(output.fx2).toBe(3 + 1);
+        assert.strictEqual(fx1Times, 0);
+        assert.strictEqual(fx2Times, 1);
 
-        // fx1Times = 0;
-        // fx2Times = 0;
+        fx1Times = 0;
+        fx2Times = 0;
         input.c = 1;
-        // expect(output.fx1).toBe(1);
-        // expect(output.fx2).toBe(3 + 1);
-        // assert.strictEqual(fx1Times, 1);
-        // assert.strictEqual(fx2Times, 1);
+        expect(output.fx1).toBe(1);
+        expect(output.fx2).toBe(3 + 1);
+        assert.strictEqual(fx1Times, 1);
+        assert.strictEqual(fx2Times, 1);
 
         fx1Times = 0;
         fx2Times = 0;
