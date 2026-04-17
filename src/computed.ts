@@ -67,8 +67,7 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
     /**
      * 失效子节点集合。
      *
-     * 记录所有依赖此计算属性的子节点。
-     * 当计算属性重新计算时，会通知这些子节点。
+     * 需要用来检验依赖项是否变化，仅当存在变化时进行执行计算函数。
      *
      * @private
      */
@@ -197,41 +196,30 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
     {
         if (this._children.size === 0) return false;
 
-        // 检查是否存在子节点发生变化
-        let isChanged = false;
-
         // 避免在检查过程建立依赖关系
         const preReactiveNode = Reactivity.activeReactivity;
 
         Reactivity.activeReactivity = undefined;
 
         // 检查子节点是否发生变化
-        this._children.forEach((value, node) =>
+        for (const [node, value] of this._children)
         {
-            if (isChanged) return;
             if (node.value !== value)
             {
-                // 子节点变化，需要重新计算
-                isChanged = true;
+                // 清空子节点
+                this._children.clear();
+                Reactivity.activeReactivity = preReactiveNode;
 
-                return;
+                return true;
             }
-        });
+        }
 
-        // 恢复父节点
         Reactivity.activeReactivity = preReactiveNode;
 
-        if (!isChanged)
-        {
-            this._fixChildren();
-        }
-        else
-        {
-            // 清空子节点
-            this._children.clear();
-        }
+        // 恢复父节点
+        this._fixChildren();
 
-        return isChanged;
+        return false;
     }
 
     /**
