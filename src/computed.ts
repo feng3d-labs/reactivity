@@ -73,15 +73,11 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
     _children = new Map<Reactivity, any>();
 
     /**
-     * 脏标记。
-     *
-     * 表示计算属性是否需要重新计算。
-     * 当依赖发生变化时，会设置此标记。
-     * 重新计算后会清除此标记。
+     * 是否第一次运行。
      *
      * @private
      */
-    _isDirty = true;
+    _isFirstRun = true;
 
     /**
      * 版本号。
@@ -172,21 +168,21 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
      * 检查并执行计算。
      *
      * 检查当前节点是否需要重新计算：
-     * 1. 如果脏标记为 true，需要重新计算
+     * 1. 如果是第一次运行，需要重新计算
      * 2. 如果子节点发生变化，需要重新计算
      *
-     * 重新计算后会清除脏标记。
+     * 重新计算后会清除首次运行标记。
      */
     runIfDirty()
     {
         // 检查是否存在失效子节点字典
-        this._isDirty = this._isDirty || this.isChildrenChanged();
+        this._isFirstRun = this._isFirstRun || this.isChildrenChanged();
 
         // 标记为脏的情况下，执行计算
-        if (this._isDirty)
+        if (this._isFirstRun)
         {
             // 立即去除脏标记，避免循环多重计算
-            this._isDirty = false;
+            this._isFirstRun = false;
 
             // 执行计算
             this.run();
@@ -238,16 +234,32 @@ export class ComputedReactivity<T = any> extends Reactivity<T>
         if (!isChanged)
         {
             // 修复与子节点关系
-            this._children.forEach((version, node) =>
-            {
-                node._parents.set(this, this._version);
-            });
+            this._fixChildren();
         }
+        else
+        {
+            // 清空子节点
+            this._children.clear();
+        }
+
+        return isChanged;
+    }
+
+    /**
+     * @private
+     *
+     * 修复与子节点关系
+     */
+    _fixChildren()
+    {
+        // 修复与子节点关系
+        this._children.forEach((_version, node) =>
+        {
+            node._parents.set(this, this._version);
+        });
 
         // 清空子节点
         this._children.clear();
-
-        return isChanged;
     }
 }
 
