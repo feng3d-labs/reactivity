@@ -8,9 +8,6 @@ export default defineConfig({
     json: {
         stringify: true,
     },
-    define: {
-        __DEV__: process.env.NODE_ENV === 'development' ? true : false,
-    },
     publicDir: 'resources',
     build: {
         rollupOptions: {
